@@ -134,7 +134,7 @@ execute <- function(command) {
   if(is.null(pageobj$websocket))
     stop("There is no open page. Use 'openPage()' to create a new one.")
   
-  pageobj$websocket$send( command )  
+  pageobj$websocket$send( toJSON(c("COM", command)) )  
 }
 
 #closes a preiously opened page (if any)
@@ -149,3 +149,13 @@ closePage <- function() {
   rm( list=ls(pageobj), envir=pageobj )
 }
 
+#sends a variable with a specified name to the page
+#varName - name of the variable
+#data - variable to send
+#keepAsVector - if TRUE, variables with length 1 will be arrays, otherwise they will be converted to atomic types
+sendData <- function(varName, data, keepAsVector = F) {
+  if(is.null(pageobj$websocket))
+    stop("There is no open page. Use 'openPage()' to create a new one.")
+  
+  pageobj$websocket$send( toJSON(c("DATA", varName, toJSON(data), keepAsVector)))
+}

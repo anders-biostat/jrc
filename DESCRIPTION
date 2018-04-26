@@ -7,4 +7,4 @@ Author: Simon Anders, Svetlana Ovchinnikova
 Maintainer: Simon Anders <sanders@fs.tum.de>
 Description: to be filled in
 License: GPL-3
-Imports: httpuv, jsonlite, utils, stringr
+Imports: httpuv, jsonlite, utils, stringr, later, jsonlite
