@@ -1,0 +1,10 @@
+Package: JsRCom
+Type: Package
+Title: Exchange commands between R and JavaScript
+Version: 0.0.1
+Date: 2018-04-25
+Author: Simon Anders, Svetlana Ovchinnikova 
+Maintainer: Simon Anders <sanders@fs.tum.de>
+Description: to be filled in
+License: GPL-3
+Imports: httpuv, jsonlite, utils, stringr
