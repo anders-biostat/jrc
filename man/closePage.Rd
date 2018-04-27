@@ -2,8 +2,10 @@
 % Please edit documentation in R/jrc.R
 \name{closePage}
 \alias{closePage}
-\title{Stop server
-Stop the server and close currently opened page (if any)}
+\title{Stop server}
 \usage{
 closePage()
+}
+\description{
+Stop the server and close currently opened page (if any)
 }

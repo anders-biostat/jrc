@@ -1,4 +1,5 @@
 #' @import stringr
+#' @importFrom jsonlite fromJSON
 
 #global variable with current page information
 pageobj <- new.env()
@@ -75,13 +76,21 @@ handle_websocket_open <- function( ws ) {
   ws$onMessage( function( isBinary, msg ) {
     if( isBinary )
       stop( "Unexpected binary message received via WebSocket" )
-    eval(parse(text = msg))
+    msg <- fromJSON(msg)
+    if(msg[1] == "COM"){
+      eval(parse(text = msg[2]))
+    } else if(msg[1] == "DATA") {
+      assign(msg[2], fromJSON(msg[3]), envir = globalenv())
+    } else {
+      stop(str_interp("Unknown message type : ${msg[2]}"))
+    }
+  
   } );
   print("WebSocket opened")
   pageobj$websocket <- ws
 }
 
-#'  @title Create a server
+#' Create a server
 #' 
 #' \code{openPage} creates a server and establishes a websocket connection between it and the current
 #' R session. This allows commands exchange. In R use \code{\link{sendCommand}} function to send and 
@@ -169,7 +178,7 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL) {
   invisible(TRUE)  
 }
 
-#' @title Send a command to the server
+#' Send a command to the server
 #' 
 #' \code{sendCommand} sends JavaScript code to the server and executes it on the currently
 #' opened page. Use JavaScript function \code{jrc.sendCommand} to send R code from the server
@@ -182,10 +191,10 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL) {
 #' @param command A line (or several lines separated by \code{\%n}) of JavaScript code. This code
 #' will be immediately executed on the opened page. No R-side syntax check is performed.
 #' 
-#' @example 
+#' @examples  
 #' k <- 0
 #' openPage()
-#' execute(str_c("button = document.createElement('input');",
+#' sendCommand(str_c("button = document.createElement('input');",
 #'               "button.type = 'button';",
 #'               "button.addEventListener('click', function() {jrc.sendCommand('k <<- k + 1')});", 
 #'               "button.value = '+1';",
@@ -202,7 +211,8 @@ sendCommand <- function(command) {
 }
 
 
-#' @title Stop server
+#' Stop server
+#' 
 #' Stop the server and close currently opened page (if any)
 #' 
 #' @export
@@ -218,7 +228,8 @@ closePage <- function() {
   rm( list=ls(pageobj), envir=pageobj )
 }
 
-#' @title Send data to the server
+#' Send data to the server
+#' 
 #' Sends a variable to the server, where it is assigned to the variable with a specified name. A JavaScript function
 #' \code{jrc.sendData(variableName, variable)} can send data back from the server to the current R session.
 #' 
@@ -227,7 +238,7 @@ closePage <- function() {
 #' @param keepAsVector If TRUE, variables with length 1 will be saved as arrays on the server, otherwise they 
 #' will be converted to atomic types
 #' 
-#' @example 
+#' @examples 
 #' openPage()
 #' x <- 1:100
 #' sendData("x", x)

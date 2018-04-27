@@ -2,9 +2,7 @@
 % Please edit documentation in R/jrc.R
 \name{sendData}
 \alias{sendData}
-\title{Send data to the server
-Sends a variable to the server, where it is assigned to the variable with a specified name. A JavaScript function
-\code{jrc.sendData(variableName, variable)} can send data back from the server to the current R session.}
+\title{Send data to the server}
 \usage{
 sendData(variableName, variable, keepAsVector = F)
 }
@@ -15,4 +13,16 @@ sendData(variableName, variable, keepAsVector = F)
 will be converted to atomic types}
 
 \item{data}{Variable to send}
+}
+\description{
+Sends a variable to the server, where it is assigned to the variable with a specified name. A JavaScript function
+\code{jrc.sendData(variableName, variable)} can send data back from the server to the current R session.
+}
+\examples{
+openPage()
+x <- 1:100
+sendData("x", x)
+sendCommand("console.log(x);")
+sendCommand("jrc.sendData('x', x.filter(function(e) {return e \% 2 == 0}))")
+ 
 }

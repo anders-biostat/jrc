@@ -2,7 +2,7 @@
 % Please edit documentation in R/jrc.R
 \name{openPage}
 \alias{openPage}
-\title{@title Create a server}
+\title{Create a server}
 \usage{
 openPage(useViewer = T, rootDirectory = NULL, startPage = NULL)
 }

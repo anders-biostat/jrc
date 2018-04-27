@@ -2,11 +2,7 @@
 % Please edit documentation in R/jrc.R
 \name{sendCommand}
 \alias{sendCommand}
-\title{Send a command to the server
-
-\code{sendCommand} sends JavaScript code to the server and executes it on the currently
-opened page. Use JavaScript function \code{jrc.sendCommand} to send R code from the server
-and execute it in the current R sesion.}
+\title{Send a command to the server}
 \usage{
 sendCommand(command)
 }
@@ -14,9 +10,26 @@ sendCommand(command)
 \item{command}{A line (or several lines separated by \code{\%n}) of JavaScript code. This code
 will be immediately executed on the opened page. No R-side syntax check is performed.}
 }
+\description{
+\code{sendCommand} sends JavaScript code to the server and executes it on the currently
+opened page. Use JavaScript function \code{jrc.sendCommand} to send R code from the server
+and execute it in the current R sesion.
+}
 \details{
 Note, that in both cases commands are executed inside a function. Therefore use for R code use \code{<<-} instead
 of \code{<-} to change global variables and in JavaScript use \code{windows.varibleName = "SomeValue"} or
 \code{varibleName = "SomeValue"}. Variables declared like \code{var variableName = "SomeValue"} or 
 \code{variableName <- "SomeValue"} will be accessable only within the current \code{sendCommand} call.
+}
+\examples{
+ 
+k <- 0
+openPage()
+sendCommand(str_c("button = document.createElement('input');",
+              "button.type = 'button';",
+              "button.addEventListener('click', function() {jrc.sendCommand('k <<- k + 1')});", 
+              "button.value = '+1';",
+              "document.body.appendChild(button);", collapse = "\\\%n"))
+closePage()
+
 }
