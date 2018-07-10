@@ -7,7 +7,7 @@ pageobj <- new.env()
 handle_http_request <- function( req ) {
   
   reqPage <- req$PATH_INFO
-  print(reqPage)
+  #print(reqPage)
   if(reqPage == "/index.html" & !is.null(pageobj$startPagePath)) {
     reqPage <- pageobj$startPagePath
   } else {
@@ -35,7 +35,7 @@ handle_http_request <- function( req ) {
     content_type <- "text/css"
   else {
     content_type <- "text";
-    print( reqPage )
+    #print( reqPage )
     warning( "Serving file of unknown content type (neither .html nor .js nor .css)." )
   }
   
@@ -78,9 +78,9 @@ handle_websocket_open <- function( ws ) {
       stop( "Unexpected binary message received via WebSocket" )
     msg <- fromJSON(msg)
     if(msg[1] == "COM"){
-      eval(parse(text = msg[2]))
+      eval(parse(text = msg[2]), envir = pageobj$envir)
     } else if(msg[1] == "DATA") {
-      assign(msg[2], fromJSON(msg[3]), envir = globalenv())
+      assign(msg[2], fromJSON(msg[3]), envir = pageobj$envir)
     } else {
       stop(str_interp("Unknown message type : ${msg[2]}"))
     }
@@ -160,6 +160,8 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL) {
     getOption("viewer")( str_c("http://localhost:", port, "/", pageobj$startPage) )
   else
     browseURL( str_c("http://localhost:", port, "/", pageobj$startPage) )
+  
+  pageobj$envir <- globalenv()
   
   # Wait up to 5 seconds for the a websocket connection
   # incoming from the client
@@ -252,4 +254,19 @@ sendData <- function(variableName, variable, keepAsVector = F) {
     stop("There is no open page. Use 'openPage()' to create a new one.")
   
   pageobj$websocket$send( toJSON(c("DATA", variableName, toJSON(variable), keepAsVector)))
+}
+
+#' Set Environment
+#' 
+#' Defines the environment, where the commands, recieved from the server, will be evaluated. By default,
+#' \code{globalenv()} is used.
+#' 
+#' @param envir Environment where to evaluate the commands.
+#' 
+#' @examples
+#' setEnvironment(environment())
+#' 
+#' @export
+setEnvironment <- function(envir) {
+  pageobj$envir <- envir
 }
