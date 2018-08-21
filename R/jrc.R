@@ -253,7 +253,7 @@ sendData <- function(variableName, variable, keepAsVector = F) {
   if(is.null(pageobj$websocket))
     stop("There is no open page. Use 'openPage()' to create a new one.")
   
-  pageobj$websocket$send( toJSON(c("DATA", variableName, toJSON(variable), keepAsVector)))
+  pageobj$websocket$send( toJSON(c("DATA", variableName, toJSON(variable, digits = NA), keepAsVector)))
 }
 
 #' Set Environment
