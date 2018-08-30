@@ -8,10 +8,16 @@ handle_http_request <- function( req ) {
   
   reqPage <- req$PATH_INFO
   #print(reqPage)
-  if(reqPage == "/index.html" & !is.null(pageobj$startPagePath)) {
-    reqPage <- pageobj$startPagePath
+  if(grepl("^/http_root", reqPage)) {
+    pack <- substring(strsplit(reqPage, "/")[[1]][2], 11)
+    reqPage <- sub(str_c("_", pack), "", reqPage)
+    reqPage <- system.file( reqPage, package = pack )
   } else {
-    reqPage <- str_c(pageobj$rootDirectory, reqPage)
+    if(reqPage == "/index.html" & !is.null(pageobj$startPagePath)) {
+      reqPage <- pageobj$startPagePath
+    } else {
+      reqPage <- str_c(pageobj$rootDirectory, reqPage)
+    }
   }
     
   if( !file.exists(reqPage) ) {
@@ -42,8 +48,8 @@ handle_http_request <- function( req ) {
   content <- readLines(reqPage, warn = F)
   print(str_c("Reading ", reqPage))
   if(file_extension == "html") {
-    jsfile <- system.file( "http_root/JsRCom.js", package="JsRCom" )
-    jsfile <- str_c("<script src='", jsfile, "'></script>")
+    #jsfile <- system.file( "http_root/JsRCom.js", package="JsRCom" )
+    jsfile <- str_c("<script src='http_root_JsRCom/JsRCom.js'></script>")
     stop <- F
     for(i in 1:length(content))
       if(str_detect(content[i], regex("<head", ignore_case = T))) {
@@ -128,7 +134,7 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL) {
     if(!file.exists(startPage))
       stop(str_interp("There is no such file: '${startPage}'"))
     startPage <- normalizePath(startPage)
-    if(grepl(startPage, pageobj$rootDirectory)) {
+    if(grepl(startPage, pageobj$rootDirectory, fixed = T)) {
       pageobj$startPage <- str_remove(startPage, str_c(pageobj$rootDirectory, "/"))
     } else {
       pageobj$startPage <- "index.html"
