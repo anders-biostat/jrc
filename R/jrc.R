@@ -92,8 +92,13 @@ handle_websocket_open <- function( ws ) {
     }
   
   } );
-  print("WebSocket opened")
-  pageobj$websocket <- ws
+  if(is.null(pageobj$websocket)) {
+    print("WebSocket opened")
+    pageobj$websocket <- ws
+  } else {
+    stop("WebSocket for this page is already opened. If you want to open page in your 
+         browser instead of R Viewer, use 'openPage(useViewer = FALSE)'")
+  }
 }
 
 #' Create a server
