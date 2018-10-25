@@ -281,3 +281,24 @@ sendData <- function(variableName, variable, keepAsVector = F) {
 setEnvironment <- function(envir) {
   pageobj$envir <- envir
 }
+
+#' Send HTML to the server
+#' 
+#' Sends a piece of HTML code to the server and adds it at the end
+#' or the \code{body} element.
+#' 
+#' @examples 
+#' sendHTML("Test...")
+#' sendHTML("This is <b>bold</b>")
+#' sendHTML("<table><tr><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></table>")
+#' @export
+sendHTML <- function(html = "") {
+  if(!is.character(html))
+    stop("html must be a character string")
+  #html <- str_replace_all(html, "(\\W)", "\\\\\\1")
+
+  if(is.null(pageobj$websocket))
+    stop("There is no open page. Use 'openPage()' to create a new one.")
+  
+  pageobj$websocket$send( toJSON(c("HTML", html)) )
+}

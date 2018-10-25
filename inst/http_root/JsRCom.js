@@ -34,6 +34,10 @@ jrc.ws.addEventListener( "message", function(event) {
 		}
 		return;
 	}
+	if(msg[0] == "HTML") {
+		document.body.innerHTML += msg[1];
+		return;
+	}
 	console.log("Unknown message type: " + msg[0])
 	jrc.ws.send("warning('Unknown message type: " + msg[0] + "')");
 } );
