@@ -46,7 +46,7 @@ handle_http_request <- function( req ) {
   }
   
   content <- readLines(reqPage, warn = F)
-  print(str_c("Reading ", reqPage))
+  #print(str_c("Reading ", reqPage))
   if(file_extension == "html") {
     #jsfile <- system.file( "http_root/JsRCom.js", package="JsRCom" )
     jsfile <- str_c("<script src='http_root_JsRCom/JsRCom.js'></script>")
@@ -93,7 +93,7 @@ handle_websocket_open <- function( ws ) {
   
   } );
   if(is.null(pageobj$websocket)) {
-    print("WebSocket opened")
+    message("WebSocket opened")
     pageobj$websocket <- ws
   } else {
     stop("WebSocket for this page is already opened. If you want to open page in your 
