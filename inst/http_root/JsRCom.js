@@ -21,7 +21,7 @@ jrc.ws.addEventListener( "message", function(event) {
 			return;
 		}
 		window[msg[1]] = JSON.parse(msg[2]);
-		if(!msg[3] && window[msg[1]].length && window[msg[1]].length == 1)
+		if(msg[3] == "FALSE" && window[msg[1]].length && window[msg[1]].length == 1)
 			window[msg[1]] = window[msg[1]][0];
 		if(window[msg[1]].length && window[msg[1]][0]._row) {
 			var converted = {}, rowname;
