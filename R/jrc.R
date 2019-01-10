@@ -118,7 +118,7 @@ handle_websocket_open <- function( ws ) {
 #' a default web browser will be used.
 #' 
 #' @export
-#' @importFrom httpuv startServer
+#' @import httpuv
 #' @importFrom later run_now
 #' @importFrom utils browseURL
 openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL) {
@@ -153,10 +153,17 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL) {
   
   port <- 20001
   stop <- F
+  
+  oldVersion <- !(compareVersion(as.character(packageVersion("httpuv")), "1.3.5") > 0)
+
   while(!stop) {
    tryCatch({
      stop <- T
-     pageobj$httpuv_handle <- startServer( "0.0.0.0", port, pageobj$app )
+     if(oldVersion) {
+       pageobj$httpuv_handle <- startDaemonizedServer( "0.0.0.0", port, pageobj$app )
+     } else {
+       pageobj$httpuv_handle <- startServer( "0.0.0.0", port, pageobj$app )
+     }
    }, error = function(e) {
      port <<- port + 1
      stop <<- F
@@ -177,7 +184,7 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL) {
   # Wait up to 5 seconds for the a websocket connection
   # incoming from the client
   for( i in 1:(5/0.05) ) {
-    run_now()
+    service(100)
     if( !is.null(pageobj$websocket) ){
       break
     } 
@@ -229,13 +236,16 @@ sendCommand <- function(command) {
 #' Stop the server and close currently opened page (if any)
 #' 
 #' @export
-#' @importFrom httpuv stopServer
 closePage <- function() {
   if( !is.null(pageobj$httpuv_handle) ) {
     if( !is.null(pageobj$websocket) ) {
       pageobj$websocket$close()
     }
-    stopServer(pageobj$httpuv_handle )
+    if(compareVersion(as.character(packageVersion("httpuv")), "1.3.5") > 0) {
+      stopServer(pageobj$httpuv_handle )
+    } else {
+      stopDaemonizedServer(pageobj$httpuv_handle)
+    }
   }
   
   rm( list=ls(pageobj), envir=pageobj )

@@ -8,4 +8,4 @@ Maintainer: Simon Anders <sanders@fs.tum.de>
 Description: to be filled in
 License: GPL-3
 Imports: httpuv, jsonlite, utils, stringr, later, jsonlite
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1
