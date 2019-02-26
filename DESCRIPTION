@@ -1,11 +1,11 @@
-Package: JsRCom
+Package: jrc
 Type: Package
 Title: Exchange commands between R and JavaScript
 Version: 0.0.1
 Date: 2018-04-25
 Author: Simon Anders, Svetlana Ovchinnikova 
 Maintainer: Simon Anders <sanders@fs.tum.de>
-Description: to be filled in
+Description: An 'httpuv' based bridge between R and JavaScript. Provides an easy way to exchange commands and data between a web page and a currently running R session. 
 License: GPL-3
 Imports: httpuv, jsonlite, utils, stringr, later, jsonlite
 RoxygenNote: 6.1.1
