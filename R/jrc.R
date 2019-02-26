@@ -7,7 +7,6 @@ pageobj <- new.env()
 handle_http_request <- function( req ) {
   
   reqPage <- req$PATH_INFO
-  #print(reqPage)
   if(grepl("^/http_root", reqPage)) {
     pack <- substring(strsplit(reqPage, "/")[[1]][2], 11)
     reqPage <- sub(str_c("_", pack), "", reqPage)
@@ -41,12 +40,10 @@ handle_http_request <- function( req ) {
     content_type <- "text/css"
   else {
     content_type <- "text";
-    #print( reqPage )
     warning( "Serving file of unknown content type (neither .html nor .js nor .css)." )
   }
   
   content <- readLines(reqPage, warn = F)
-  #print(str_c("Reading ", reqPage))
   if(file_extension == "html") {
     #jsfile <- system.file( "http_root/JsRCom.js", package="JsRCom" )
     jsfile <- str_c("<script src='http_root_JsRCom/JsRCom.js'></script>")
@@ -121,6 +118,8 @@ handle_websocket_open <- function( ws ) {
 #' @import httpuv
 #' @importFrom later run_now
 #' @importFrom utils browseURL
+#' @importFrom utils compareVersion
+#' @importFrom utils packageVersion
 openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL) {
   closePage()
   
@@ -212,14 +211,14 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL) {
 #' will be immediately executed on the opened page. No R-side syntax check is performed.
 #' 
 #' @examples  
-#' k <- 0
+#' \donttest{k <- 0
 #' openPage()
-#' sendCommand(str_c("button = document.createElement('input');",
+#' sendCommand(paste0("button = document.createElement('input');",
 #'               "button.type = 'button';",
 #'               "button.addEventListener('click', function() {jrc.sendCommand('k <<- k + 1')});", 
 #'               "button.value = '+1';",
 #'               "document.body.appendChild(button);", collapse = "\%n"))
-#' closePage()
+#' closePage()}
 #' 
 #' @export
 #' @importFrom jsonlite toJSON
@@ -257,16 +256,16 @@ closePage <- function() {
 #' \code{jrc.sendData(variableName, variable)} can send data back from the server to the current R session.
 #' 
 #' @param variableName Name that the variable will have on the server.
-#' @param data Variable to send
+#' @param variable Variable to send
 #' @param keepAsVector If TRUE, variables with length 1 will be saved as arrays on the server, otherwise they 
 #' will be converted to atomic types
 #' 
 #' @examples 
-#' openPage()
+#' \donttest{openPage()
 #' x <- 1:100
 #' sendData("x", x)
 #' sendCommand("console.log(x);")
-#' sendCommand("jrc.sendData('x', x.filter(function(e) {return e % 2 == 0}))")
+#' sendCommand("jrc.sendData('x', x.filter(function(e) {return e % 2 == 0}))")}
 #'  
 #' @export
 #' @importFrom jsonlite toJSON
@@ -297,10 +296,12 @@ setEnvironment <- function(envir) {
 #' Sends a piece of HTML code to the server and adds it at the end
 #' or the \code{body} element.
 #' 
+#' @param html HTML code that will be added to the web page.
+#' 
 #' @examples 
-#' sendHTML("Test...")
+#' \donttest{sendHTML("Test...")
 #' sendHTML("This is <b>bold</b>")
-#' sendHTML("<table><tr><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></table>")
+#' sendHTML("<table><tr><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></table>")}
 #' @export
 sendHTML <- function(html = "") {
   if(!is.character(html))

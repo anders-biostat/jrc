@@ -9,20 +9,20 @@ sendData(variableName, variable, keepAsVector = F)
 \arguments{
 \item{variableName}{Name that the variable will have on the server.}
 
+\item{variable}{Variable to send}
+
 \item{keepAsVector}{If TRUE, variables with length 1 will be saved as arrays on the server, otherwise they 
 will be converted to atomic types}
-
-\item{data}{Variable to send}
 }
 \description{
 Sends a variable to the server, where it is assigned to the variable with a specified name. A JavaScript function
 \code{jrc.sendData(variableName, variable)} can send data back from the server to the current R session.
 }
 \examples{
-openPage()
+\donttest{openPage()
 x <- 1:100
 sendData("x", x)
 sendCommand("console.log(x);")
-sendCommand("jrc.sendData('x', x.filter(function(e) {return e \% 2 == 0}))")
+sendCommand("jrc.sendData('x', x.filter(function(e) {return e \% 2 == 0}))")}
  
 }
