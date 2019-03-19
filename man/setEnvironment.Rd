@@ -10,7 +10,7 @@ setEnvironment(envir)
 \item{envir}{Environment where to evaluate the commands.}
 }
 \description{
-Defines the environment, where the commands, recieved from the server, will be evaluated. By default,
+Defines the environment, where the commands, received from the server, will be evaluated. By default,
 \code{globalenv()} is used.
 }
 \examples{

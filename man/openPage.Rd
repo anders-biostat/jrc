@@ -22,5 +22,5 @@ empty HTML page. The file must have \emph{.html} extension.}
 \code{openPage} creates a server and establishes a websocket connection between it and the current
 R session. This allows commands exchange. In R use \code{\link{sendCommand}} function to send and 
 execute JavaScript code on the server. On the server use \code{jrc.sendCommand} function to send and
-exectute R code in the current R session.
+execute R code in the current R session.
 }

@@ -45,8 +45,7 @@ handle_http_request <- function( req ) {
   
   content <- readLines(reqPage, warn = F)
   if(file_extension == "html") {
-    #jsfile <- system.file( "http_root/JsRCom.js", package="JsRCom" )
-    jsfile <- str_c("<script src='http_root_JsRCom/JsRCom.js'></script>")
+    jsfile <- str_c("<script src='http_root_jrc/jrc.js'></script>")
     stop <- F
     for(i in 1:length(content))
       if(str_detect(content[i], regex("<head", ignore_case = T))) {
@@ -103,7 +102,7 @@ handle_websocket_open <- function( ws ) {
 #' \code{openPage} creates a server and establishes a websocket connection between it and the current
 #' R session. This allows commands exchange. In R use \code{\link{sendCommand}} function to send and 
 #' execute JavaScript code on the server. On the server use \code{jrc.sendCommand} function to send and
-#' exectute R code in the current R session. 
+#' execute R code in the current R session. 
 #' 
 #' @param startPage A path to the HTML file that should be opened, when the server is initialised.
 #' This can be an absolute path to a local file, or it can be relative to the \code{rootDirectory}
@@ -116,7 +115,6 @@ handle_websocket_open <- function( ws ) {
 #' 
 #' @export
 #' @import httpuv
-#' @importFrom later run_now
 #' @importFrom utils browseURL
 #' @importFrom utils compareVersion
 #' @importFrom utils packageVersion
@@ -124,9 +122,9 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL) {
   closePage()
   
   if(is.null(rootDirectory))
-    rootDirectory = system.file("http_root", package = "JsRCom")
+    rootDirectory = system.file("http_root", package = "jrc")
   if(is.null(startPage)) 
-    startPage <- system.file( "http_root/index.html", package="JsRCom" )
+    startPage <- system.file( "http_root/index.html", package="jrc" )
   
   if(!dir.exists(rootDirectory))
     stop(str_interp("There is no such directory: '${rootDirectory}'"))
@@ -201,24 +199,24 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL) {
 #' 
 #' \code{sendCommand} sends JavaScript code to the server and executes it on the currently
 #' opened page. Use JavaScript function \code{jrc.sendCommand} to send R code from the server
-#' and execute it in the current R sesion.
+#' and execute it in the current R session.
 #' @details Note, that in both cases commands are executed inside a function. Therefore use for R code use \code{<<-} instead
 #' of \code{<-} to change global variables and in JavaScript use \code{windows.varibleName = "SomeValue"} or
 #' \code{varibleName = "SomeValue"}. Variables declared like \code{var variableName = "SomeValue"} or 
-#' \code{variableName <- "SomeValue"} will be accessable only within the current \code{sendCommand} call.
+#' \code{variableName <- "SomeValue"} will be accessible only within the current \code{sendCommand} call.
 #' 
-#' @param command A line (or several lines separated by \code{\%n}) of JavaScript code. This code
+#' @param command A line (or several lines separated by \code{\\n}) of JavaScript code. This code
 #' will be immediately executed on the opened page. No R-side syntax check is performed.
 #' 
 #' @examples  
-#' \donttest{k <- 0
+#' k <- 0
 #' openPage()
 #' sendCommand(paste0("button = document.createElement('input');",
 #'               "button.type = 'button';",
 #'               "button.addEventListener('click', function() {jrc.sendCommand('k <<- k + 1')});", 
 #'               "button.value = '+1';",
-#'               "document.body.appendChild(button);", collapse = "\%n"))
-#' closePage()}
+#'               "document.body.appendChild(button);", collapse = "\n"))
+#' closePage()
 #' 
 #' @export
 #' @importFrom jsonlite toJSON
@@ -261,11 +259,12 @@ closePage <- function() {
 #' will be converted to atomic types
 #' 
 #' @examples 
-#' \donttest{openPage()
+#' openPage()
 #' x <- 1:100
 #' sendData("x", x)
 #' sendCommand("console.log(x);")
-#' sendCommand("jrc.sendData('x', x.filter(function(e) {return e % 2 == 0}))")}
+#' sendCommand("jrc.sendData('x', x.filter(function(e) {return e % 2 == 0}))")
+#' closePage()
 #'  
 #' @export
 #' @importFrom jsonlite toJSON
@@ -278,7 +277,7 @@ sendData <- function(variableName, variable, keepAsVector = F) {
 
 #' Set Environment
 #' 
-#' Defines the environment, where the commands, recieved from the server, will be evaluated. By default,
+#' Defines the environment, where the commands, received from the server, will be evaluated. By default,
 #' \code{globalenv()} is used.
 #' 
 #' @param envir Environment where to evaluate the commands.

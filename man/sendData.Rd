@@ -19,10 +19,11 @@ Sends a variable to the server, where it is assigned to the variable with a spec
 \code{jrc.sendData(variableName, variable)} can send data back from the server to the current R session.
 }
 \examples{
-\donttest{openPage()
+openPage()
 x <- 1:100
 sendData("x", x)
 sendCommand("console.log(x);")
-sendCommand("jrc.sendData('x', x.filter(function(e) {return e \% 2 == 0}))")}
+sendCommand("jrc.sendData('x', x.filter(function(e) {return e \% 2 == 0}))")
+closePage()
  
 }

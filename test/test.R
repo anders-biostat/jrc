@@ -1,4 +1,4 @@
-library( JsRCom )
+library( jrc )
 library( stringr )
 
 #basic button example
