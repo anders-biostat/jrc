@@ -1,4 +1,4 @@
-[![Travis Build Status](https://travis-ci.org/anders-biostat/jrc.svg?branch=master](https://travis-ci.org/anders-biostat/jrc)
+[![Travis Build Status](https://travis-ci.org/anders-biostat/jrc.svg?branch=master)](https://travis-ci.org/anders-biostat/jrc)
 
 ## jrc
 
