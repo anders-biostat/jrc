@@ -209,14 +209,14 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL) {
 #' will be immediately executed on the opened page. No R-side syntax check is performed.
 #' 
 #' @examples  
-#' k <- 0
+#' \donttest{k <- 0
 #' openPage()
 #' sendCommand(paste0("button = document.createElement('input');",
 #'               "button.type = 'button';",
 #'               "button.addEventListener('click', function() {jrc.sendCommand('k <<- k + 1')});", 
 #'               "button.value = '+1';",
 #'               "document.body.appendChild(button);", collapse = "\n"))
-#' closePage()
+#' closePage()}
 #' 
 #' @export
 #' @importFrom jsonlite toJSON
@@ -259,12 +259,12 @@ closePage <- function() {
 #' will be converted to atomic types
 #' 
 #' @examples 
-#' openPage()
+#' \donttest{openPage()
 #' x <- 1:100
 #' sendData("x", x)
 #' sendCommand("console.log(x);")
 #' sendCommand("jrc.sendData('x', x.filter(function(e) {return e % 2 == 0}))")
-#' closePage()
+#' closePage()}
 #'  
 #' @export
 #' @importFrom jsonlite toJSON

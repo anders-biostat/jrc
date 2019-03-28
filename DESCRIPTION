@@ -1,7 +1,7 @@
 Package: jrc
 Type: Package
 Title: Exchange Commands Between R and 'JavaScript'
-Version: 0.1.0
+Version: 0.1.1
 Date: 2019-02-26
 Authors@R: c(
 	person("Svetlana", "Ovchinnikova", role = c("aut", "cre"), email = "s.ovchinnikova@zmbh.uni-heidelberg.de"),

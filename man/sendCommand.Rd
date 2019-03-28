@@ -23,13 +23,13 @@ of \code{<-} to change global variables and in JavaScript use \code{windows.vari
 }
 \examples{
  
-k <- 0
+\donttest{k <- 0
 openPage()
 sendCommand(paste0("button = document.createElement('input');",
               "button.type = 'button';",
               "button.addEventListener('click', function() {jrc.sendCommand('k <<- k + 1')});", 
               "button.value = '+1';",
               "document.body.appendChild(button);", collapse = "\\n"))
-closePage()
+closePage()}
 
 }
