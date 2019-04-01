@@ -1,4 +1,5 @@
 [![Travis Build Status](https://travis-ci.org/anders-biostat/jrc.svg?branch=master)](https://travis-ci.org/anders-biostat/jrc)
+[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/jrc)](https://cran.r-project.org/package=jrc)
 
 ## jrc
 
@@ -8,7 +9,7 @@ to the currently running R session.
 ## Installation
 
 ``` r
-devtools::install_github("anders-biostat/jrc")
+install.packages("jrc")
 ``` 
 
 ## Usage
@@ -24,6 +25,8 @@ This example opens a new page and adds there a button, that increases value of `
 R session.
 
 ``` r
+library(jrc)
+
 k <- 0
 openPage()
 sendCommand(paste0("button = document.createElement('input');",
