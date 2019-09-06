@@ -30,21 +30,26 @@ handle_http_request <- function( req ) {
     }
   }
   
-  file_extension = str_extract( reqPage, "(?<=\\.)[^\\.]*$" )
+  file_extension <- str_extract( reqPage, "(?<=\\.)[^\\.]*$" )
+  file_extension_low <- tolower(file_extension) 
   
-  if( file_extension == "html" )
+  if( file_extension_low == "html" )
     content_type <- "text/html"
-  else if( file_extension == "js" )
+  else if( file_extension_low == "js" )
     content_type <- "text/javascript"
-  else if( file_extension == "css" )
+  else if( file_extension_low == "css" )
     content_type <- "text/css"
+  else if( file_extension_low == "svg")
+    content_type <- "image/svg+xml"
+  else if( file_extension_low == "png")
+    content_type <- "image/png"
   else {
     content_type <- "text";
-    warning( "Serving file of unknown content type (neither .html nor .js nor .css)." )
+    warning( "Serving file of unknown content type." )
   }
   
   content <- readLines(reqPage, warn = F)
-  if(file_extension == "html") {
+  if(file_extension_low == "html") {
     jsfile <- str_c("<script src='http_root_jrc/jrc.js'></script>")
     stop <- F
     for(i in 1:length(content))
@@ -311,4 +316,17 @@ sendHTML <- function(html = "") {
     stop("There is no open page. Use 'openPage()' to create a new one.")
   
   pageobj$websocket$send( toJSON(c("HTML", html)) )
+}
+
+#' Get opened page
+#' 
+#' Checks if there is a currently opened page. If so, returns an object with all
+#' the information about the current session.
+#' 
+#' @return page-handling object if there is a currently opend jrc page, NULL otherwise.
+#' 
+#' @export
+getPage <- function() {
+  if(!is.null(pageobj$websocket))
+    return(pageobj)
 }
