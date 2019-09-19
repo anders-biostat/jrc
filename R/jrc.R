@@ -85,11 +85,20 @@ handle_websocket_open <- function( ws ) {
       stop( "Unexpected binary message received via WebSocket" )
     msg <- fromJSON(msg)
     if(msg[1] == "COM"){
-      eval(parse(text = msg[2]), envir = pageobj$envir)
+      choice <- menu(c("Continues", "Ignore"), title = str_c("This command will be executed: ", msg[2], ". Continue?"))
+      if(choise == 1) {
+        eval(parse(text = msg[2]), envir = pageobj$envir)
+      } else {
+        message(str_c("Command '", msg[2], "' ignored."))
+      }
     } else if(msg[1] == "DATA") {
+      var <- fromJSON(msg[3])
+      choice <- menu(c("Continue", "Ignore"), title = str_c())
       assign(msg[2], fromJSON(msg[3]), envir = pageobj$envir)
+    } else if(msg[1] == "FUN") {
+      
     } else {
-      stop(str_interp("Unknown message type : ${msg[2]}"))
+      stop(str_interp("Unknown message type : ${msg[1]}"))
     }
   
   } );
@@ -117,13 +126,18 @@ handle_websocket_open <- function( ws ) {
 #' defined, the \code{http_root} in the package directory will be used as a root directory.
 #' @param useViewer If \code{TRUE}, the start page will be opened in the RStudio Viewer. If \code{FALSE}
 #' a default web browser will be used.
+#' @param port Defines which TCP port to use for websocket connection. If not defined, random available port
+#' is used.
+#' @param browser A browser in which the web page will be opened. Is used only if \code{useViewer = FALSE}.
+#' If not defined, default browser will be used. For more information check \code{\link[browseURL]{utils}}.
 #' 
 #' @export
 #' @import httpuv
 #' @importFrom utils browseURL
 #' @importFrom utils compareVersion
 #' @importFrom utils packageVersion
-openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL) {
+#' @importFrom utils menu
+openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port = NULL, browser = getOption("browser")) {
   closePage()
   
   if(is.null(rootDirectory))
@@ -153,33 +167,20 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL) {
     call = handle_http_request,
     onWSOpen = handle_websocket_open )
   
-  port <- 20001
-  stop <- F
-  
-  oldVersion <- !(compareVersion(as.character(packageVersion("httpuv")), "1.3.5") > 0)
-
-  while(!stop) {
-   tryCatch({
-     stop <- T
-     if(oldVersion) {
-       pageobj$httpuv_handle <- startDaemonizedServer( "0.0.0.0", port, pageobj$app )
-     } else {
-       pageobj$httpuv_handle <- startServer( "0.0.0.0", port, pageobj$app )
-     }
-   }, error = function(e) {
-     port <<- port + 1
-     stop <<- F
-     if(port > 20100){
-       stop <<- T
-       stop(e$message)
-     }
-   }) 
+  if(is.null(port)) port <- randomPort(n = 50)
+  if(!is.integer(port))
+    stop("Port number must be an integer number.")
+    
+  if(!(compareVersion(as.character(packageVersion("httpuv")), "1.3.5") > 0)) {
+    pageobj$httpuv_handle <- startDaemonizedServer( "0.0.0.0", port, pageobj$app )
+  } else {
+    pageobj$httpuv_handle <- startServer( "0.0.0.0", port, pageobj$app )
   }
 
   if( useViewer & !is.null( getOption("viewer") ) )
     getOption("viewer")( str_c("http://localhost:", port, "/", pageobj$startPage) )
   else
-    browseURL( str_c("http://localhost:", port, "/", pageobj$startPage) )
+    browseURL( str_c("http://localhost:", port, "/", pageobj$startPage), browser = browser )
   
   pageobj$envir <- globalenv()
   
@@ -316,6 +317,12 @@ sendHTML <- function(html = "") {
     stop("There is no open page. Use 'openPage()' to create a new one.")
   
   pageobj$websocket$send( toJSON(c("HTML", html)) )
+}
+
+#'
+#' @export
+callFunction <- function(name, ...) {
+  
 }
 
 #' Get opened page
