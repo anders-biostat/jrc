@@ -367,9 +367,11 @@ closePage <- function() {
 #' require manual authorization in the R session. 
 #' 
 #' @param variableName Name that the variable will have on the server.
-#' @param variable Variable to send
-#' @param keepAsVector If TRUE, variables with length 1 will be saved as arrays on the server, otherwise they 
-#' will be converted to atomic types
+#' @param variable Variable to send.
+#' @param keepAsVector If \code{TRUE}, variables with length 1 will be saved as arrays on the server, otherwise they 
+#' will be converted to atomic types.
+#' @param rowwise If \code{TRUE}, matrices and data.frames will be transformed into JavaScript Objects or Arrays
+#' rowwise (e.g. a matrix will become an Array of its rows). 
 #' 
 #' @examples 
 #' \donttest{openPage()
@@ -384,11 +386,20 @@ closePage <- function() {
 #'  
 #' @export
 #' @importFrom jsonlite toJSON
-sendData <- function(variableName, variable, keepAsVector = F) {
+sendData <- function(variableName, variable, keepAsVector = FALSE, rowwise = TRUE) {
   if(is.null(pageobj$websocket))
     stop("There is no open page. Use 'openPage()' to create a new one.")
   
-  pageobj$websocket$send( toJSON(c("DATA", variableName, toJSON(variable, digits = NA), keepAsVector)))
+  if(rowwise) {
+    dataframe <- "rows"
+    matrix <- "rowmajor"
+  } else  {
+    dataframe <- "columns"
+    matrix <- "colmajor"
+  }
+  pageobj$websocket$send( toJSON(c("DATA", variableName, 
+                                   toJSON(variable, digits = NA, dataframe = dataframe, matrix = matrix), 
+                                   keepAsVector)))
 }
 
 #' Set Environment
@@ -454,8 +465,8 @@ sendHTML <- function(html = "") {
 #' of the called function. If variable with this name doesn't exist, it will be added
 #' to the currently active environment.
 #' 
-#' @seealso \code{\link(authorize)}, \code{\link(allowFunctions)}, \code{\link(allowVariables)},
-#' \code{\link(setEnvironment)}.
+#' @seealso \code{\link{authorize}}, \code{\link{allowFunctions}}, \code{\link{allowVariables}},
+#' \code{\link{setEnvironment}}.
 #' 
 #' @export
 callFunction <- function(name, arguments = NULL, assignTo = NULL) {
@@ -587,7 +598,7 @@ allowVariables <- function(vars = NULL) {
 #' variables. All other messages are stored in the memory and can be later processed
 #' by calling \code{\link{authorize}} function. To prevent overuse of memory, one can 
 #' limit the size of the storage by number of messages or by their total size estimated
-#' by \cod{\link[utils]{object.size}}. If the storage grows above the set limits, older
+#' by \code{\link[utils]{object.size}}. If the storage grows above the set limits, older
 #' messages are removed. The last recieved message will not be removed even if its 
 #' takes more memory than is allowed by this function.
 #' 

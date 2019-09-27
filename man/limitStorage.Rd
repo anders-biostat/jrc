@@ -24,7 +24,7 @@ to calling only some user specified funcitons and reassigning some user specifie
 variables. All other messages are stored in the memory and can be later processed
 by calling \code{\link{authorize}} function. To prevent overuse of memory, one can 
 limit the size of the storage by number of messages or by their total size estimated
-by \cod{\link[utils]{object.size}}. If the storage grows above the set limits, older
+by \code{\link[utils]{object.size}}. If the storage grows above the set limits, older
 messages are removed. The last recieved message will not be removed even if its 
 takes more memory than is allowed by this function.
 }

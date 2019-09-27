@@ -31,6 +31,6 @@ required. For more details check \code{\link{authorize}}.
 !!! Function is under development !!!
 }
 \seealso{
-\code{\link(authorize)}, \code{\link(allowFunctions)}, \code{\link(allowVariables)},
-\code{\link(setEnvironment)}.
+\code{\link{authorize}}, \code{\link{allowFunctions}}, \code{\link{allowVariables}},
+\code{\link{setEnvironment}}.
 }

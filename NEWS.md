@@ -12,6 +12,5 @@ used with no alternatives).
 * Function `callFunction` added on both R and JavaScript sides. It allows to call a function by name, list of arguments and name
 of variable to which assign the result.
 
-* Some bugs with unexpected changes of variable types are fixed.
-
-* `keepAsVector = TRUE` now also turns to scalars vectors of length one that are parts of lists.
+* Now port for the local server is selected by `httpuv::randomPort()` function. User can also provide a port number as an 
+argument to the `openPage` function.

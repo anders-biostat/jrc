@@ -4,15 +4,18 @@
 \alias{sendData}
 \title{Send data to the server}
 \usage{
-sendData(variableName, variable, keepAsVector = F)
+sendData(variableName, variable, keepAsVector = FALSE, rowwise = TRUE)
 }
 \arguments{
 \item{variableName}{Name that the variable will have on the server.}
 
-\item{variable}{Variable to send}
+\item{variable}{Variable to send.}
 
-\item{keepAsVector}{If TRUE, variables with length 1 will be saved as arrays on the server, otherwise they 
-will be converted to atomic types}
+\item{keepAsVector}{If \code{TRUE}, variables with length 1 will be saved as arrays on the server, otherwise they 
+will be converted to atomic types.}
+
+\item{rowwise}{If \code{TRUE}, matrices and data.frames will be transformed into JavaScript Objects or Arrays
+rowwise (e.g. a matrix will become an Array of its rows).}
 }
 \description{
 Sends a variable to the server, where it is assigned to the variable with a specified name. A JavaScript function
