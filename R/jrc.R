@@ -82,8 +82,10 @@ handle_http_request <- function( req ) {
 }
 
 execute <- function(msg) {
+  #print("execute()")
+  #print(str(msg))
   if(msg[1] == "COM") {
-    eval(parse(text = msg[[2]]), envir = pageobj$envir)
+    eval(parse(text = msg[2]), envir = pageobj$envir)
   } else if(msg[1] == "DATA") {
     assign(msg[[2]], msg[[3]], envir = pageobj$envir)
   } else if(msg[1] == "FUN") {
@@ -143,17 +145,21 @@ handle_websocket_open <- function( ws ) {
     if( isBinary )
       stop( "Unexpected binary message received via WebSocket" )
     msg <- fromJSON(msg)
-    print(str(msg))
+    #print(str(msg))
     if(!(msg[1] %in% c("COM", "FUN", "DATA")))
       stop(str_interp("Unknown message type: ${msg[1]}"))
     
     if(msg[1] == "COM") {
-      store(msg)
+      store(msg) #vector of characters
     } 
     if(msg[1] == "DATA") {
       if(!is.character(msg[2]))
         stop("Invalid message structure. Variable name is not character.")
-      if(msg[2] %in% pageobj$allowedVars) {
+      
+      msg <- as.list(msg)
+      msg[[3]] <- fromJSON(msg[[3]])
+      
+      if(msg[[2]] %in% pageobj$allowedVars) {
         execute(msg)
       } else {
         store(msg)
@@ -521,11 +527,11 @@ authorize <- function(id = NULL, show = FALSE) {
     if(type == "COM") {
       text <- str_c("Command '", pageobj$storedMessages[[k]]$msg[2], "'.")
     } else if(type == "DATA") {
-      text <- str_c("Assignment of varible '", pageobj$storedMessages[[k]]$msg[2], 
-                    "'. New type is '", typeof(pageobj$storedMessages[[k]]$msg[3]), "'. ",
-                    "New size is ", object.size(pageobj$storedMessages[[k]]$msg[3]), ".")
+      text <- str_c("Assignment of varible '", pageobj$storedMessages[[k]]$msg[[2]], 
+                    "'. New type is '", typeof(pageobj$storedMessages[[k]]$msg[[3]]), "'. ",
+                    "New size is ", object.size(pageobj$storedMessages[[k]]$msg[[3]]), ".")
     } else if(type == "FUN") {
-      text <- str_c("Call of function '", pageobj$storedMessages[[k]]$msg[2], "'.")
+      text <- str_c("Call of function '", pageobj$storedMessages[[k]]$msg[[2]], "'.")
     }
     text <- str_c(text, " To cancel enter '0'.")
     

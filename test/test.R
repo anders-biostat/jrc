@@ -49,9 +49,13 @@ sendData("l2", list(data.frame(a = 1:10,                                        
 # to run from the browser
 # jrc.sendCommand("a <<- 10")
 #
-# jrc.sendData("x", 10) number -> character TO DO: Fix that
+# jrc.sendData("x", 10) number -> number
 allowVariables(c("y", "z", "k", "m"))
-# jrc.sendData("y", "abc")
+# jrc.sendData("y", "abc") string -> character
+# jrc.sendData("z", [1, 2, 3, 4, 5, 6]) Array -> vector of numerics
+# jrc.sendData("k", ["a", "b", "c"])
+
+# jrc.sendData("m", [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]) Array of numeric Arrays -> matrix (rowwise)
 
 callFunction(...) #to be implemented
 
