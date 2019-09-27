@@ -33,17 +33,21 @@ handle_http_request <- function( req ) {
   file_extension <- str_extract( reqPage, "(?<=\\.)[^\\.]*$" )
   file_extension_low <- tolower(file_extension) 
   
-  if( file_extension_low == "html" )
+  if( file_extension_low == "html" | file_extension_low == "htm" ) {
     content_type <- "text/html"
-  else if( file_extension_low == "js" )
-    content_type <- "text/javascript"
-  else if( file_extension_low == "css" )
+  } else if( file_extension_low == "js" ) {
+    content_type <- "text/javascript"    
+  } else if( file_extension_low == "css" ) {
     content_type <- "text/css"
-  else if( file_extension_low == "svg")
+  } else if( file_extension_low == "svg") {
     content_type <- "image/svg+xml"
-  else if( file_extension_low == "png")
+  } else if( file_extension_low == "png") {
     content_type <- "image/png"
-  else {
+  } else if( file_extension_low == "gif") {
+    content_type <- "image/gif"
+  } else if( file_extension_low == "jpeg" | file_extension_low == "jpg" ) {
+    content_type <- "image/jpeg"
+  } else {
     content_type <- "text";
     warning( "Serving file of unknown content type." )
   }
@@ -77,6 +81,61 @@ handle_http_request <- function( req ) {
   )
 }
 
+execute <- function(msg) {
+  if(msg[1] == "COM") {
+    eval(parse(text = msg[[2]]), envir = pageobj$envir)
+  } else if(msg[1] == "DATA") {
+    assign(msg[[2]], msg[[3]], envir = pageobj$envir)
+  } else if(msg[1] == "FUN") {
+    do.call(msg[[2]], msg[[3]], envir = pageobj$envir)
+  }
+}
+
+#' @importFrom stringi stri_rand_strings
+#' @importFrom utils object.size
+store <- function(msg) {
+  id <- stri_rand_strings(1, 6)
+  pageobj$storedMessages[[length(pageobj$storedMessages) + 1]] <- list(msg = msg, id = id, size = object.size(msg))
+
+  if(msg[1] == "COM") {
+    message(str_c("Command '", msg[2], "' is stored."))
+  } else if(msg[1] == "DATA") {
+    message(str_c("Assignment to the variable '", msg[2], "' is stored."))
+  } else if(msg[1] == "FUN") {
+    message(str_c("Call to the function '", msg[2], "' is stored."))
+  }
+  message(str_c("To authorize execution, please, type 'authorize(id = \"", id, "\")'"))
+  
+  cleanStorage()
+}
+
+cleanStorage <- function() {
+  if(length(pageobj$storedMessages) > pageobj$maxN){
+    message(str_c("Too many messages! Message with id '", pageobj$storedMessages[[1]]$id, "' removed"))
+    pageobj$storedMessages[1] <- NULL
+  }
+  
+  while(sum(sapply(pageobj$storedMessages, `[[`, "size")) > pageobj$maxSize & 
+        length(pageobj$storedMessages) > 1){
+    message(str_c("Messages size is too big! Message with id '", pageobj$storedMessages[[1]]$id, "' removed"))
+    pageobj$storedMessages[1] <- NULL
+  }
+}
+
+turnToNumeric <- function(l) {
+  for(i in 1:length(l)) {
+    if(is.list(l[[i]])) {
+      l[[i]] <- turnToNumeric(l[[i]])
+    } else {
+      el <- l[[i]]
+      if(is.factor(el)) el <- as.character(el)
+      tryCatch({el <- as.numeric(el)}, 
+               warning = function(w) {el <- l[[i]]})
+      l[[i]] <- el
+    }
+  }
+  l
+}
 
 handle_websocket_open <- function( ws ) {
   
@@ -84,21 +143,39 @@ handle_websocket_open <- function( ws ) {
     if( isBinary )
       stop( "Unexpected binary message received via WebSocket" )
     msg <- fromJSON(msg)
-    if(msg[1] == "COM"){
-      choice <- menu(c("Continues", "Ignore"), title = str_c("This command will be executed: ", msg[2], ". Continue?"))
-      if(choise == 1) {
-        eval(parse(text = msg[2]), envir = pageobj$envir)
+    print(str(msg))
+    if(!(msg[1] %in% c("COM", "FUN", "DATA")))
+      stop(str_interp("Unknown message type: ${msg[1]}"))
+    
+    if(msg[1] == "COM") {
+      store(msg)
+    } 
+    if(msg[1] == "DATA") {
+      if(!is.character(msg[2]))
+        stop("Invalid message structure. Variable name is not character.")
+      if(msg[2] %in% pageobj$allowedVars) {
+        execute(msg)
       } else {
-        message(str_c("Command '", msg[2], "' ignored."))
+        store(msg)
       }
-    } else if(msg[1] == "DATA") {
-      var <- fromJSON(msg[3])
-      choice <- menu(c("Continue", "Ignore"), title = str_c())
-      assign(msg[2], fromJSON(msg[3]), envir = pageobj$envir)
-    } else if(msg[1] == "FUN") {
-      
-    } else {
-      stop(str_interp("Unknown message type : ${msg[1]}"))
+    }
+    
+    if(msg[1] == "FUN") {
+      if(!is.character(msg[2]))
+        stop("Invalid message structure. Function name is not character.")
+      #make sure that function arguments is a list
+      if(length(msg) == 2) msg[[3]] <- list()
+      msg[[3]] <- as.list(msg[[3]])
+      if(!is.list(msg[[3]]))
+        stop("Invalid message structure. List of arguments is not a list.")
+      #go through all arguments and turn to numeric
+      msg[[3]] <- turnToNumeric(msg[[3]])
+      for(i in length())
+      if(msg[[2]] %in% pageobj$allowedFuns) {
+        execute(msg)
+      } else {
+        store(msg)
+      }
     }
   
   } );
@@ -130,14 +207,25 @@ handle_websocket_open <- function( ws ) {
 #' is used.
 #' @param browser A browser in which the web page will be opened. Is used only if \code{useViewer = FALSE}.
 #' If not defined, default browser will be used. For more information check \code{\link[browseURL]{utils}}.
+#' @param allowedFunctions List of functions that can be called from the web page without any additional actions 
+#' from the user. All other functions will require authorization in the current R session to be executed. 
+#' This should be a vector of function names. Check \code{\link{authorize}} and \code{\link{allowFunctions}}
+#' for more information. 
+#' @param allowedVariables List of variables that can be reassigned from the web page without any additional actions 
+#' from the user. All other reassignments will require authorization in the current R session to be executed. 
+#' This should be a vector of variable names. Check \code{\link{authorize}} and \code{\link{allowVariables}}
+#' for more information.
+#' 
+#' @seealso \code{\link{closePage}}, \code{\link{setEvironment}}, \code{\link{limitStorage}}, \code{\link{allowVariables}},
+#' \code{\link{allowFunctoins}}.
 #' 
 #' @export
 #' @import httpuv
 #' @importFrom utils browseURL
 #' @importFrom utils compareVersion
 #' @importFrom utils packageVersion
-#' @importFrom utils menu
-openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port = NULL, browser = getOption("browser")) {
+openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port = NULL, browser = getOption("browser"),
+                     allowedFunctions = NULL, allowedVariables = NULL) {
   closePage()
   
   if(is.null(rootDirectory))
@@ -163,6 +251,17 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port
     }
   }
   
+  pageobj$maxN <- Inf
+  pageobj$maxSize <- Inf
+  
+  if(!is.null(allowedFunctions) & !is.vector(allowedFunctions))
+    stop("'allowedFunctions' must be a vector of function names.")
+  if(!is.null(allowedVariables) & !is.vector(allowedVariables))
+    stop("'allowedVariables' must be a vector of variable names.")
+  
+  pageobj$allowedFuns <- allowedFunctions
+  pageobj$allowedVars <- allowedVariables
+  pageobj$storedMessages <- list()
   pageobj$app <- list( 
     call = handle_http_request,
     onWSOpen = handle_websocket_open )
@@ -205,7 +304,8 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port
 #' 
 #' \code{sendCommand} sends JavaScript code to the server and executes it on the currently
 #' opened page. Use JavaScript function \code{jrc.sendCommand} to send R code from the server
-#' and execute it in the current R session.
+#' and execute it in the current R session. All commands send to R from the server will be executed
+#' only after authorization in the currently running R session.
 #' @details Note, that in both cases commands are executed inside a function. Therefore use for R code use \code{<<-} instead
 #' of \code{<-} to change global variables and in JavaScript use \code{windows.varibleName = "SomeValue"} or
 #' \code{varibleName = "SomeValue"}. Variables declared like \code{var variableName = "SomeValue"} or 
@@ -224,6 +324,9 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port
 #'               "document.body.appendChild(button);", collapse = "\n"))
 #' closePage()}
 #' 
+#' @seealso \code{\link{authorize}}, \code{\link{sendData}}, \code{\link{sendHTML}}, \code{\link{callFunction}},
+#' \code{\link{openPage}}.
+#' 
 #' @export
 #' @importFrom jsonlite toJSON
 sendCommand <- function(command) {
@@ -236,7 +339,9 @@ sendCommand <- function(command) {
 
 #' Stop server
 #' 
-#' Stop the server and close currently opened page (if any)
+#' Stop the server and close currently opened page (if any).
+#' 
+#' @seealso \code{\link{openPage}}
 #' 
 #' @export
 closePage <- function() {
@@ -257,7 +362,9 @@ closePage <- function() {
 #' Send data to the server
 #' 
 #' Sends a variable to the server, where it is assigned to the variable with a specified name. A JavaScript function
-#' \code{jrc.sendData(variableName, variable)} can send data back from the server to the current R session.
+#' \code{jrc.sendData(variableName, variable)} can send data back from the server to the current R session. If variable
+#' name hasn't been previously added to the list of the allowed variables, attempt to assign it from the server will
+#' require manual authorization in the R session. 
 #' 
 #' @param variableName Name that the variable will have on the server.
 #' @param variable Variable to send
@@ -271,6 +378,9 @@ closePage <- function() {
 #' sendCommand("console.log(x);")
 #' sendCommand("jrc.sendData('x', x.filter(function(e) {return e % 2 == 0}))")
 #' closePage()}
+#' 
+#' @seealso \code{\link{authorize}}, \code{\link{allowedVariables}}, \code{\link{sendCommand}},
+#' \code{\link{callFunction}}, \code{\link{sendHTML}}, \code{\link{openPage}}.
 #'  
 #' @export
 #' @importFrom jsonlite toJSON
@@ -307,6 +417,10 @@ setEnvironment <- function(envir) {
 #' \donttest{sendHTML("Test...")
 #' sendHTML("This is <b>bold</b>")
 #' sendHTML("<table><tr><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></table>")}
+#' 
+#' @seealso \code{\link{sendData}}, \code{\link{sendCommand}}, \code{\link{callFunction}},
+#' \code{\link{openPage}}.
+#' 
 #' @export
 sendHTML <- function(html = "") {
   if(!is.character(html))
@@ -319,16 +433,196 @@ sendHTML <- function(html = "") {
   pageobj$websocket$send( toJSON(c("HTML", html)) )
 }
 
-#'
+#' Trigger a function call
+#' 
+#' Calls a fucntion on the opened web page given its name and arguments.
+#' JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo)}.
+#' For security reasons, if function or variable to which its returned value
+#' should be assigned are not in the lists of allowed functions and variables,
+#' manual authorization of the call form JavaScript in the R session will be 
+#' required. For more details check \code{\link{authorize}}.
+#' 
+#' !!! Function is under development !!!
+#' 
+#' @param name Name of the function. If the function is a method of some object
+#' its name must contain the full chain of calls (e.g. \code{myArray.sort} or 
+#' \code{Math.rand}).
+#' @param arguments List of arguments for the function. Note that in JavaScript 
+#' arguments must be given in a fixed order, naming is not necessary and will 
+#' be ignored.
+#' @param assignTo Name of a variable to which will be assigned the returned value
+#' of the called function. If variable with this name doesn't exist, it will be added
+#' to the currently active environment.
+#' 
+#' @seealso \code{\link(authorize)}, \code{\link(allowFunctions)}, \code{\link(allowVariables)},
+#' \code{\link(setEnvironment)}.
+#' 
 #' @export
-callFunction <- function(name, ...) {
+callFunction <- function(name, arguments = NULL, assignTo = NULL) {
+  if(is.null(pageobj$websocket))
+    stop("There is no open page. Use 'openPage()' to create a new one.")
   
+  
+}
+
+#' Authorize further message processing
+#' 
+#' `jrc` library allows one to get a full control over the currently running R session from 
+#' a web page. Therefore for security reasons one should manually authorize function calls,
+#' variable assignments or expression evaluations. All the recieved messages that are not
+#' processed automatically are given an ID and stored. This function executes a command
+#' from a message with a given ID
+#' 
+#' Expressions has to be always authorized before evaluation. One can specify a list of
+#' variables that can be reassigned automatically and functions that can be called without
+#' authorization.
+#' 
+#' @param id ID of the message to be processed. In `jrc` library all stored messages are
+#' give a random ID that consists of 6 letters or numbers. The ID is reported when the
+#' message is stored. To get a list of IDs of all currently stored messages, set this argument
+#' to \code{NULL}.
+#' @param show If \code{TRUE} information of the message with a given ID will be show before executing
+#' it with a choice to go on with execution, ignore the message (meaning it will be removed from memory) or
+#' do nouthing
+#' 
+#' @return A vector of IDs of all currently stored messages.
+#' 
+#' @seealso \code{\link{allowFuncitons}}, \code{\link{allowVariables}}, \code{\link{sendCommand}},
+#' \code{\link{sendData}}, \code{\link{callFunction}}, \code{\link{limitStorage}}.
+#' 
+#' @export
+authorize <- function(id = NULL, show = FALSE) {
+  if(is.null(id)) return(sapply(pageobj$storedMessages, `[[`, "id"))
+  
+  if(!is.logical(show))
+    stop("show must be a logical variable")
+
+  k <- which(sapply(pageobj$storedMessages, `[[`, "id") == id)
+  if(length(k) == 0)
+    stop(str_c("There is no message with id '", id, "'."))
+  if(length(k) > 1) #well... Just in case))
+    k <- k[1]
+  
+  if(!show) {
+    tryCatch(execute(pageobj$storedMessages[[k]]$msg), finally = {pageobj$storedMessages[k] <- NULL})
+  } else {
+    type <- pageobj$storedMessages[[k]]$msg[1]
+    if(type == "COM") {
+      text <- str_c("Command '", pageobj$storedMessages[[k]]$msg[2], "'.")
+    } else if(type == "DATA") {
+      text <- str_c("Assignment of varible '", pageobj$storedMessages[[k]]$msg[2], 
+                    "'. New type is '", typeof(pageobj$storedMessages[[k]]$msg[3]), "'. ",
+                    "New size is ", object.size(pageobj$storedMessages[[k]]$msg[3]), ".")
+    } else if(type == "FUN") {
+      text <- str_c("Call of function '", pageobj$storedMessages[[k]]$msg[2], "'.")
+    }
+    text <- str_c(text, " To cancel enter '0'.")
+    
+    choice <- menu(c("Execute", "Ignore"), 
+         title = text)
+    if(choice == 0) return()
+    if(choice == 1) tryCatch(execute(pageobj$storedMessages[[k]]$msg))
+    
+    pageobj$storedMessages[k] <- NULL
+  }
+  
+  invisible(sapply(pageobj$storedMessages, `[[`, "id"))
+}
+
+#' Allow function calls without authorization
+#' 
+#' This function adds fucntion names to the list of functions, which
+#' can be called from the web page without manual confirmation in the R
+#' session.
+#' 
+#' @param funs Vector of fucntion names to be added to the list. If is \code{NULL},
+#' returns names of all currently allowed functions.
+#' 
+#' @return Names of all currently allowed functions if \code{funs = NULL}.
+#' 
+#' @seealso \code{\link{allowVariables}}, \code{\link{authorize}}, \code{\link{openPage}} (check argument
+#' \code{allowedFunctions}), \code{\link{callFunction}}.
+#' 
+#' @export
+allowFunctions <- function(funs = NULL) {
+  if(is.null(funs)) return(pageobj$allowedFuns)
+  if(!is.vector(funs) | !is.character(funs))
+    stop("'funs' must be a vector of function names")
+   
+  pageobj$allowedFuns <- unique(c(pageobj$allowedFuns, funs))
+  invisible(pageobj$allowedFuns)
+}
+
+#' Allow variable assignment without authorization
+#' 
+#' This function adds variable names to the list of variables, which
+#' can be reassigned from the web page without manual confirmation in the R
+#' session.
+#' 
+#' @param vars Vector of variable names to be added to the list. If is \code{NULL},
+#' returns names of all currently allowed variables.
+#' 
+#' @return Names of all currently allowed variables if \code{vars = NULL}.
+#' 
+#' @seealso \code{\link{allowFunctions}}, \code{\link{authorize}}, \code{\link{openPage}} (check argument
+#' \code{allowedVariables}), \code{\link{sendData}}.
+#' 
+#' @export
+allowVariables <- function(vars = NULL) {
+  if(is.null(vars)) return(pageobj$allowedVars)
+  if(!is.vector(vars) | !is.character(vars))
+    stop("'funs' must be a vector of function names")
+  
+  pageobj$allowedVars <- unique(c(pageobj$allowedVars, vars))
+  invisible(pageobj$allowedVars)
+}
+
+#' Change size of the message storage
+#' 
+#' This function allows to change number of total size of the messages
+#' that are recieved via the websocket and are stored in the memory.
+#' 
+#' For security reasons, the control of the currently running R session is limited
+#' to calling only some user specified funcitons and reassigning some user specified
+#' variables. All other messages are stored in the memory and can be later processed
+#' by calling \code{\link{authorize}} function. To prevent overuse of memory, one can 
+#' limit the size of the storage by number of messages or by their total size estimated
+#' by \cod{\link[utils]{object.size}}. If the storage grows above the set limits, older
+#' messages are removed. The last recieved message will not be removed even if its 
+#' takes more memory than is allowed by this function.
+#' 
+#' @param n Number of messages that can be stored simultaneously.
+#' @param size Maxim total size of all stored messages in bytes.
+#' 
+#' @return Current maximum size of the storage and maximum allowed number of stored messages.
+#' 
+#' @seealso \code{\link{authorize}}, \code{\link{allowedFunctions}}, \code{\link{allowedMessages}}.
+#' 
+#' @export
+limitStorage <- function(n = NULL, size = NULL) {
+  if(!is.null(n)) {
+    if(!is.numeric(n))
+      stop("Maximum number of stored messages 'n' must be numeric")
+    if(n < 1)
+      stop("Maximum number of stored messages 'n' must be not smaller than 1")
+    pageobj$maxN <- n
+  }
+  if(!is.null(size)) {
+    if(!is.numeric(size))
+      stop("Maximum size of stored messages 'size' must be numeric")
+    if(n < 0)
+      stop("Maximum size of stored messages 'size' must be non-negative")
+    pageobj$maxSize <- size
+  }
+  c(n = pageobj$maxN, size = pageobj$maxSize)
 }
 
 #' Get opened page
 #' 
 #' Checks if there is a currently opened page. If so, returns an object with all
 #' the information about the current session.
+#' 
+#' TO DO: Do we really need this function?
 #' 
 #' @return page-handling object if there is a currently opend jrc page, NULL otherwise.
 #' 

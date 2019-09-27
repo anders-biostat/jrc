@@ -17,4 +17,9 @@ or the \code{body} element.
 \donttest{sendHTML("Test...")
 sendHTML("This is <b>bold</b>")
 sendHTML("<table><tr><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></table>")}
+
+}
+\seealso{
+\code{\link{sendData}}, \code{\link{sendCommand}}, \code{\link{callFunction}},
+\code{\link{openPage}}.
 }

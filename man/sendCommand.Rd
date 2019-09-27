@@ -13,7 +13,8 @@ will be immediately executed on the opened page. No R-side syntax check is perfo
 \description{
 \code{sendCommand} sends JavaScript code to the server and executes it on the currently
 opened page. Use JavaScript function \code{jrc.sendCommand} to send R code from the server
-and execute it in the current R session.
+and execute it in the current R session. All commands send to R from the server will be executed
+only after authorization in the currently running R session.
 }
 \details{
 Note, that in both cases commands are executed inside a function. Therefore use for R code use \code{<<-} instead
@@ -32,4 +33,8 @@ sendCommand(paste0("button = document.createElement('input');",
               "document.body.appendChild(button);", collapse = "\\n"))
 closePage()}
 
+}
+\seealso{
+\code{\link{authorize}}, \code{\link{sendData}}, \code{\link{sendHTML}}, \code{\link{callFunction}},
+\code{\link{openPage}}.
 }

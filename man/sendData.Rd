@@ -16,7 +16,9 @@ will be converted to atomic types}
 }
 \description{
 Sends a variable to the server, where it is assigned to the variable with a specified name. A JavaScript function
-\code{jrc.sendData(variableName, variable)} can send data back from the server to the current R session.
+\code{jrc.sendData(variableName, variable)} can send data back from the server to the current R session. If variable
+name hasn't been previously added to the list of the allowed variables, attempt to assign it from the server will
+require manual authorization in the R session.
 }
 \examples{
 \donttest{openPage()
@@ -25,5 +27,9 @@ sendData("x", x)
 sendCommand("console.log(x);")
 sendCommand("jrc.sendData('x', x.filter(function(e) {return e \% 2 == 0}))")
 closePage()}
- 
+
+}
+\seealso{
+\code{\link{authorize}}, \code{\link{allowedVariables}}, \code{\link{sendCommand}},
+\code{\link{callFunction}}, \code{\link{sendHTML}}, \code{\link{openPage}}.
 }
