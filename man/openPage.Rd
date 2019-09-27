@@ -24,7 +24,7 @@ empty HTML page. The file must have \emph{.html} extension.}
 is used.}
 
 \item{browser}{A browser in which the web page will be opened. Is used only if \code{useViewer = FALSE}.
-If not defined, default browser will be used. For more information check \code{\link[browseURL]{utils}}.}
+If not defined, default browser will be used. For more information check \code{\link[utils]{browseURL}}.}
 
 \item{allowedFunctions}{List of functions that can be called from the web page without any additional actions 
 from the user. All other functions will require authorization in the current R session to be executed. 
@@ -43,6 +43,6 @@ execute JavaScript code on the server. On the server use \code{jrc.sendCommand} 
 execute R code in the current R session.
 }
 \seealso{
-\code{\link{closePage}}, \code{\link{setEvironment}}, \code{\link{limitStorage}}, \code{\link{allowVariables}},
-\code{\link{allowFunctoins}}.
+\code{\link{closePage}}, \code{\link{setEnvironment}}, \code{\link{limitStorage}}, \code{\link{allowVariables}},
+\code{\link{allowFunctions}}.
 }

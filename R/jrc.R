@@ -212,7 +212,7 @@ handle_websocket_open <- function( ws ) {
 #' @param port Defines which TCP port to use for websocket connection. If not defined, random available port
 #' is used.
 #' @param browser A browser in which the web page will be opened. Is used only if \code{useViewer = FALSE}.
-#' If not defined, default browser will be used. For more information check \code{\link[browseURL]{utils}}.
+#' If not defined, default browser will be used. For more information check \code{\link[utils]{browseURL}}.
 #' @param allowedFunctions List of functions that can be called from the web page without any additional actions 
 #' from the user. All other functions will require authorization in the current R session to be executed. 
 #' This should be a vector of function names. Check \code{\link{authorize}} and \code{\link{allowFunctions}}
@@ -222,8 +222,8 @@ handle_websocket_open <- function( ws ) {
 #' This should be a vector of variable names. Check \code{\link{authorize}} and \code{\link{allowVariables}}
 #' for more information.
 #' 
-#' @seealso \code{\link{closePage}}, \code{\link{setEvironment}}, \code{\link{limitStorage}}, \code{\link{allowVariables}},
-#' \code{\link{allowFunctoins}}.
+#' @seealso \code{\link{closePage}}, \code{\link{setEnvironment}}, \code{\link{limitStorage}}, \code{\link{allowVariables}},
+#' \code{\link{allowFunctions}}.
 #' 
 #' @export
 #' @import httpuv
@@ -387,7 +387,7 @@ closePage <- function() {
 #' sendCommand("jrc.sendData('x', x.filter(function(e) {return e % 2 == 0}))")
 #' closePage()}
 #' 
-#' @seealso \code{\link{authorize}}, \code{\link{allowedVariables}}, \code{\link{sendCommand}},
+#' @seealso \code{\link{authorize}}, \code{\link{allowVariables}}, \code{\link{sendCommand}},
 #' \code{\link{callFunction}}, \code{\link{sendHTML}}, \code{\link{openPage}}.
 #'  
 #' @export
@@ -504,10 +504,11 @@ callFunction <- function(name, arguments = NULL, assignTo = NULL) {
 #' 
 #' @return A vector of IDs of all currently stored messages.
 #' 
-#' @seealso \code{\link{allowFuncitons}}, \code{\link{allowVariables}}, \code{\link{sendCommand}},
+#' @seealso \code{\link{allowFunctions}}, \code{\link{allowVariables}}, \code{\link{sendCommand}},
 #' \code{\link{sendData}}, \code{\link{callFunction}}, \code{\link{limitStorage}}.
 #' 
 #' @export
+#' @importFrom utils menu
 authorize <- function(id = NULL, show = FALSE) {
   if(is.null(id)) return(sapply(pageobj$storedMessages, `[[`, "id"))
   
@@ -613,7 +614,7 @@ allowVariables <- function(vars = NULL) {
 #' 
 #' @return Current maximum size of the storage and maximum allowed number of stored messages.
 #' 
-#' @seealso \code{\link{authorize}}, \code{\link{allowedFunctions}}, \code{\link{allowedMessages}}.
+#' @seealso \code{\link{authorize}}, \code{\link{allowFunctions}}, \code{\link{allowVariables}}.
 #' 
 #' @export
 limitStorage <- function(n = NULL, size = NULL) {

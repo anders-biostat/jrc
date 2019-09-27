@@ -33,6 +33,6 @@ closePage()}
 
 }
 \seealso{
-\code{\link{authorize}}, \code{\link{allowedVariables}}, \code{\link{sendCommand}},
+\code{\link{authorize}}, \code{\link{allowVariables}}, \code{\link{sendCommand}},
 \code{\link{callFunction}}, \code{\link{sendHTML}}, \code{\link{openPage}}.
 }

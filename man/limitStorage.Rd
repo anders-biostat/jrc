@@ -29,5 +29,5 @@ messages are removed. The last recieved message will not be removed even if its
 takes more memory than is allowed by this function.
 }
 \seealso{
-\code{\link{authorize}}, \code{\link{allowedFunctions}}, \code{\link{allowedMessages}}.
+\code{\link{authorize}}, \code{\link{allowFunctions}}, \code{\link{allowVariables}}.
 }

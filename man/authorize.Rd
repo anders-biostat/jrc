@@ -32,6 +32,6 @@ variables that can be reassigned automatically and functions that can be called 
 authorization.
 }
 \seealso{
-\code{\link{allowFuncitons}}, \code{\link{allowVariables}}, \code{\link{sendCommand}},
+\code{\link{allowFunctions}}, \code{\link{allowVariables}}, \code{\link{sendCommand}},
 \code{\link{sendData}}, \code{\link{callFunction}}, \code{\link{limitStorage}}.
 }
