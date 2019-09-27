@@ -14,3 +14,6 @@ of variable to which assign the result.
 
 * Now port for the local server is selected by `httpuv::randomPort()` function. User can also provide a port number as an 
 argument to the `openPage` function.
+
+* `sendData` now has argument `rowwise` which allows to send matrices and data.frames to JavaScript not only rowwise (default),
+but also columnwise.

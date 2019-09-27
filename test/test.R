@@ -16,6 +16,15 @@ sendData("df2", data.frame(a = 1:10,            # data.frame -> Array of Objects
                            b = paste0("a", 1:10), 
                            c = as.factor(rep(c("a", "b"), times = 5)),
                            stringsAsFactors = F))
+####columnwise#####
+sendData("m_r", matrix(1:12, nrow = 4), rowwise = F) # matrix -> Array of Arrays
+sendData("df_r", data.frame(a = 1:10, b = 11:20), rowwise = F) # data.frame -> Array of Objects
+sendData("df2_r", data.frame(a = 1:10,            # data.frame -> Array of Objects (factor -> character)
+                           b = paste0("a", 1:10), 
+                           c = as.factor(rep(c("a", "b"), times = 5)),
+                           stringsAsFactors = F), rowwise = F)
+#rownames and colnames
+
 sendData("f", as.factor(1:10)) # factor -> Array of strings
 #TO DO: make sure that keepAsVector also works on elements of a list (recursively?)
 sendData("l", list(a = 1, b = 1:10, c = c("a", "b", "c"), d = as.factor(1:10))) # list of vectors -> Object of Arrays

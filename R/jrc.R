@@ -395,7 +395,7 @@ sendData <- function(variableName, variable, keepAsVector = FALSE, rowwise = TRU
     matrix <- "rowmajor"
   } else  {
     dataframe <- "columns"
-    matrix <- "colmajor"
+    matrix <- "columnmajor"
   }
   pageobj$websocket$send( toJSON(c("DATA", variableName, 
                                    toJSON(variable, digits = NA, dataframe = dataframe, matrix = matrix), 
