@@ -10,6 +10,8 @@ sendData("x", 10) # number -> number
 sendData("y", "abc") # character -> string
 sendData("z", 1:10) # vector (with multiple elements) -> Array
 sendData("k", c("a", "b", "c")) # vector (with several characters) -> Array
+sendData("f", as.factor(1:10)) # factor -> Array of strings
+
 sendData("m", matrix(1:12, nrow = 4)) # matrix -> Array of Arrays
 sendData("df", data.frame(a = 1:10, b = 11:20)) # data.frame -> Array of Objects (rowwise)
 sendData("df2", data.frame(a = 1:10,            # data.frame -> Array of Objects (rowwise) (factor -> character)
@@ -23,9 +25,18 @@ sendData("df2_r", data.frame(a = 1:10,            # data.frame -> Array of Objec
                            b = paste0("a", 1:10), 
                            c = as.factor(rep(c("a", "b"), times = 5)),
                            stringsAsFactors = F), rowwise = F)
-#rownames and colnames
 
-sendData("f", as.factor(1:10)) # factor -> Array of strings
+#rownames and colnames
+#row and column names of matrices are ignored
+#data.frames are turned into objects if rowwise = T or get additional _row column.
+#let's leave it like that for now
+a <- matrix(1:12, nrow = 4)
+rownames(a) <- paste0("row", 1:4)
+colnames(a) <- paste0("col", 1:3)
+sendData("m_names", a)
+sendData("df_names", as.data.frame(a))
+sendData("df_names_r", as.data.frame(a), rowwise = F)
+
 #TO DO: make sure that keepAsVector also works on elements of a list (recursively?)
 sendData("l", list(a = 1, b = 1:10, c = c("a", "b", "c"), d = as.factor(1:10))) # list of vectors -> Object of Arrays
 sendData("l2", list(data.frame(a = 1:10,                                        # unnamed list -> Array of Arrays and Objects

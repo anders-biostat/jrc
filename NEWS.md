@@ -17,3 +17,6 @@ argument to the `openPage` function.
 
 * `sendData` now has argument `rowwise` which allows to send matrices and data.frames to JavaScript not only rowwise (default),
 but also columnwise.
+
+* If in `sendData` `keepAsFactor = FALSE` `jrc` now checks recursively for any arrays of length 1 to replace them with scalars 
+(important for lists).

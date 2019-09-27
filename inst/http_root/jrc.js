@@ -21,8 +21,24 @@ jrc.ws.addEventListener( "message", function(event) {
 			return;
 		}
 		window[msg[1]] = JSON.parse(msg[2]);
-		if(msg[3] == "FALSE" && window[msg[1]].length && window[msg[1]].length == 1)
-			window[msg[1]] = window[msg[1]][0];
+		// check if we also got `keepAsVector` parameter and it's false
+		turnToScalar = function(v) {
+			if((v.length === undefined && typeof v !== "object") || typeof v === "string") return v;
+			if(Array.isArray(v)) {
+				if(v.length == 1) return v[0];
+				for(var i = 0; i < v.length; i++)
+					v[i] = turnToScalar(v[i]);
+			} else {
+				var keys = Object.keys(v);
+				for(var i = 0; i < keys.length; i++)
+					v[keys[i]] = turnToScalar(v[keys[i]]);
+			}
+			return v;
+		}
+		if(msg[3] == "FALSE") {
+			window[msg[1]] = turnToScalar(window[msg[1]]);			
+		}
+
 		if(window[msg[1]].length && window[msg[1]][0]._row) {
 			var converted = {}, rowname;
 			for(var i = 0; i < window[msg[1]].length; i++) {
