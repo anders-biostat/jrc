@@ -98,6 +98,11 @@ execute <- function(msg) {
 #' @importFrom stringi stri_rand_strings
 #' @importFrom utils object.size
 store <- function(msg) {
+  if(pageobj$maxN == 0 | pageobj$maxSize == 0) {
+    message(str_c("Message can't be stored, sincse message storage is set to zero. ",
+                  "Please, use 'limitStorage' function to change the limits".))
+    return()
+  }
   id <- stri_rand_strings(1, 6)
   pageobj$storedMessages[[length(pageobj$storedMessages) + 1]] <- list(msg = msg, id = id, size = object.size(msg))
 
@@ -630,14 +635,14 @@ limitStorage <- function(n = NULL, size = NULL) {
   if(!is.null(n)) {
     if(!is.numeric(n))
       stop("Maximum number of stored messages 'n' must be numeric")
-    if(n < 1)
-      stop("Maximum number of stored messages 'n' must be not smaller than 1")
+    if(n < 0)
+      stop("Maximum number of stored messages 'n' must be non-negative")
     pageobj$maxN <- n
   }
   if(!is.null(size)) {
     if(!is.numeric(size))
       stop("Maximum size of stored messages 'size' must be numeric")
-    if(n < 0)
+    if(size < 0)
       stop("Maximum size of stored messages 'size' must be non-negative")
     pageobj$maxSize <- size
   }
