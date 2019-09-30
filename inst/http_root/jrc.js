@@ -15,6 +15,9 @@ jrc.ws.addEventListener( "message", function(event) {
 		return;
 	}
 	if(msg[0] == "DATA") {
+		//msg[1] - variable name
+		//msg[2] - variable content
+		//msg[3] - keepAsVector ('TRUE' or 'FALSE')
 		if(msg[1] == undefined || !jrc.isValidName(msg[1])) {
 			console.log("DATA message with invalid variable name has been recieved: " + msg[1])
 			ws.send("warning('Invalid variable name: " + msg[1] + "')");
@@ -54,6 +57,30 @@ jrc.ws.addEventListener( "message", function(event) {
 		document.body.innerHTML += msg[1];
 		return;
 	}
+	if(msg[0] == "FUN") {
+		//msg[1] - function name
+		//msg[2] - variable name
+		//msg[3] - thisArg
+		//___args___ - arguments 
+		
+		var fCall = msg[1].split("."),
+			obj = window;
+		for(var i = 0; i < fCall.length; i++)
+			obj = obj[fCall[i]];
+
+		self = window;
+		if(msg[3])
+			self = window[msg[3]];
+
+		var ___tmp___ = obj.apply(self, window["___args___"]);
+
+		if(msg[2]) 
+			window[msg[2]] = ___tmp___;
+
+		window["___args___"] = null;
+
+		return;
+	}
 	console.log("Unknown message type: " + msg[0])
 	jrc.ws.send("warning('Unknown message type: " + msg[0] + "')");
 } );
@@ -70,8 +97,8 @@ jrc.sendData = function(variableName, variable) {
 }
 
 //args must be object (to be converted to names list in R)
-jrc.callFunction = function(functionName, args) {
-	jrc.ws.send(JSON.stringify(["FUN", functionName, JSON.stringify(args)]));
+jrc.callFunction = function(functionName, args, assingTo) {
+	jrc.ws.send(JSON.stringify(["FUN", functionName, JSON.stringify(args), assingTo]));
 }
 
 //from https://mothereff.in/js-variables

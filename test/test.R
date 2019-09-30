@@ -61,7 +61,13 @@ allowVariables(c("y", "z", "k", "m"))
 # jrc.sendData("m", [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]) Array of numeric Arrays -> matrix (rowwise)
 # jrc.sendData("df", {a: [1, 2, 3, 4, 5, 6], b: [7, 8, 9, 10, 11, 12]}) TO DO: Make this turn df into data.frame
 
-callFunction(...) #to be implemented
+callFunction("alert", list("AAAAAAAA!"))
+callFunction("Math.random", assignTo = "x")
+
+# jrc.callFunction("print", 10)
+# jrc.callFunction("rnorm", 10, "x")
+allowFunctions("rnorm")
+allowVariables("x")
 
 #basic button example
 k <- 0

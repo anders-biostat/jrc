@@ -89,7 +89,9 @@ execute <- function(msg) {
   } else if(msg[1] == "DATA") {
     assign(msg[[2]], msg[[3]], envir = pageobj$envir)
   } else if(msg[1] == "FUN") {
-    do.call(msg[[2]], msg[[3]], envir = pageobj$envir)
+    tmp <- do.call(msg[[2]], msg[[3]], envir = pageobj$envir)
+    if(!is.na(msg[[4]]))
+      assign(msg[[4]], tmp, envir = pageobj$envir)
   }
 }
 
@@ -124,21 +126,6 @@ cleanStorage <- function() {
   }
 }
 
-turnToNumeric <- function(l) {
-  for(i in 1:length(l)) {
-    if(is.list(l[[i]])) {
-      l[[i]] <- turnToNumeric(l[[i]])
-    } else {
-      el <- l[[i]]
-      if(is.factor(el)) el <- as.character(el)
-      tryCatch({el <- as.numeric(el)}, 
-               warning = function(w) {el <- l[[i]]})
-      l[[i]] <- el
-    }
-  }
-  l
-}
-
 handle_websocket_open <- function( ws ) {
   
   ws$onMessage( function( isBinary, msg ) {
@@ -170,14 +157,16 @@ handle_websocket_open <- function( ws ) {
       if(!is.character(msg[2]))
         stop("Invalid message structure. Function name is not character.")
       #make sure that function arguments is a list
-      if(length(msg) == 2) msg[[3]] <- list()
+      
+      msg <- as.list(msg)
+      msg[[3]] <- fromJSON(msg[[3]])
+      
       msg[[3]] <- as.list(msg[[3]])
       if(!is.list(msg[[3]]))
         stop("Invalid message structure. List of arguments is not a list.")
       #go through all arguments and turn to numeric
-      msg[[3]] <- turnToNumeric(msg[[3]])
-      for(i in length())
-      if(msg[[2]] %in% pageobj$allowedFuns) {
+      
+      if(msg[[2]] %in% pageobj$allowedFuns & (is.na(msg[[4]]) | msg[[4]] %in% pageobj$allowedVars)) {
         execute(msg)
       } else {
         store(msg)
@@ -460,8 +449,6 @@ sendHTML <- function(html = "") {
 #' manual authorization of the call form JavaScript in the R session will be 
 #' required. For more details check \code{\link{authorize}}.
 #' 
-#' !!! Function is under development !!!
-#' 
 #' @param name Name of the function. If the function is a method of some object
 #' its name must contain the full chain of calls (e.g. \code{myArray.sort} or 
 #' \code{Math.rand}).
@@ -471,16 +458,34 @@ sendHTML <- function(html = "") {
 #' @param assignTo Name of a variable to which will be assigned the returned value
 #' of the called function. If variable with this name doesn't exist, it will be added
 #' to the currently active environment.
+#' @param thisArg JavaScript functions (methods) can belong to some object, which 
+#' is refered as \code{this} inside the function (e.g. in
+#' \code{someObject.myFunction()} function \code{myFunction} is a method of \code{someObject}).
+#' \code{thisArg} specified object that will be passed as \code{this} to the function. If \code{NULL}
+#' then the function will be applied to the global object.
+#' @param ... further arguments passed to \code{\link{sendData}} that is used to send
+#' \code{arguments} to the web server.
 #' 
 #' @seealso \code{\link{authorize}}, \code{\link{allowFunctions}}, \code{\link{allowVariables}},
 #' \code{\link{setEnvironment}}.
 #' 
 #' @export
-callFunction <- function(name, arguments = NULL, assignTo = NULL) {
+callFunction <- function(name, arguments = NULL, assignTo = NULL, thisArg = NULL, ...) {
   if(is.null(pageobj$websocket))
     stop("There is no open page. Use 'openPage()' to create a new one.")
+  if(!is.character(name))
+    stop("Function name must be a character")
+  if(!is.null(assignTo) & !is.character(assignTo))
+    stop("Variable name in 'assignTo' must be a character")
   
+  if(!is.null(arguments)) {
+    if(!is.list(arguments))
+      stop("Arguments must be a list")
+    names(arguments) <- NULL
+    sendData("___args___", arguments, ...)
+  }
   
+  pageobj$websocket$send(toJSON(c("FUN", name, assignTo)))
 }
 
 #' Authorize further message processing
