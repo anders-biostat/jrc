@@ -109,6 +109,7 @@ store <- function(msg) {
     message(str_c("Call to the function '", msg[2], "' is stored."))
   }
   message(str_c("To authorize execution, please, type 'authorize(id = \"", id, "\")'"))
+  callFunction("jrc.notifyStorage", list(id))
   
   cleanStorage()
 }
@@ -539,6 +540,8 @@ authorize <- function(id = NULL, show = FALSE) {
                     "New size is ", object.size(pageobj$storedMessages[[k]]$msg[[3]]), " bytes.")
     } else if(type == "FUN") {
       text <- str_c("Call of function '", pageobj$storedMessages[[k]]$msg[[2]], "'.")
+      if(!is.na(pageobj$storedMessages[[k]]$msg[[4]]))
+        text <- str_c(text, " Results will be assigned to variable '", pageobj$storedMessages[[k]]$msg[[4]], "'.")
     }
     text <- str_c(text, " To cancel enter '0'.")
     
