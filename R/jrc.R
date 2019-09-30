@@ -273,7 +273,8 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port
     onWSOpen = handle_websocket_open )
   
   if(is.null(port)) port <- randomPort(n = 50)
-  if(!is.integer(port))
+  port <- as.integer(port)
+  if(is.na(port))
     stop("Port number must be an integer number.")
     
   if(!(compareVersion(as.character(packageVersion("httpuv")), "1.3.5") > 0)) {
@@ -530,7 +531,7 @@ authorize <- function(id = NULL, show = FALSE) {
     } else if(type == "DATA") {
       text <- str_c("Assignment of varible '", pageobj$storedMessages[[k]]$msg[[2]], 
                     "'. New type is '", typeof(pageobj$storedMessages[[k]]$msg[[3]]), "'. ",
-                    "New size is ", object.size(pageobj$storedMessages[[k]]$msg[[3]]), ".")
+                    "New size is ", object.size(pageobj$storedMessages[[k]]$msg[[3]]), " bytes.")
     } else if(type == "FUN") {
       text <- str_c("Call of function '", pageobj$storedMessages[[k]]$msg[[2]], "'.")
     }

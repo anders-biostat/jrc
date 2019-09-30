@@ -1,6 +1,9 @@
 library( jrc )
 library( stringr )
 
+openPage(useViewer = F, port = 12345, browser = "firefox")
+closePage()
+
 #test basic functions
 openPage(useViewer = F)
 
@@ -56,6 +59,7 @@ allowVariables(c("y", "z", "k", "m"))
 # jrc.sendData("k", ["a", "b", "c"])
 
 # jrc.sendData("m", [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]) Array of numeric Arrays -> matrix (rowwise)
+# jrc.sendData("df", {a: [1, 2, 3, 4, 5, 6], b: [7, 8, 9, 10, 11, 12]}) TO DO: Make this turn df into data.frame
 
 callFunction(...) #to be implemented
 
