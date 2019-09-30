@@ -100,7 +100,7 @@ execute <- function(msg) {
 store <- function(msg) {
   if(pageobj$maxN == 0 | pageobj$maxSize == 0) {
     message(str_c("Message can't be stored, sincse message storage is set to zero. ",
-                  "Please, use 'limitStorage' function to change the limits".))
+                  "Please, use 'limitStorage' function to change the limits."))
     return()
   }
   id <- stri_rand_strings(1, 6)
