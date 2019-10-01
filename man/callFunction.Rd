@@ -31,7 +31,10 @@ then the function will be applied to the global object.}
 }
 \description{
 Calls a fucntion on the opened web page given its name and arguments.
-JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo)}.
+JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo, envir)}, 
+where the \code{envir} argument allow to call function that is stored in some other
+environment. The result, however, will be anyway assigned to a variable in the
+environment set by \code{\link{setEnvironment}}.
 For security reasons, if function or variable to which its returned value
 should be assigned are not in the lists of allowed functions and variables,
 manual authorization of the call form JavaScript in the R session will be 

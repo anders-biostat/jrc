@@ -89,7 +89,12 @@ execute <- function(msg) {
   } else if(msg[1] == "DATA") {
     assign(msg[[2]], msg[[3]], envir = pageobj$envir)
   } else if(msg[1] == "FUN") {
-    tmp <- do.call(msg[[2]], msg[[3]], envir = pageobj$envir)
+    if(is.na(msg[[5]])) {
+      tmp <- do.call(msg[[2]], msg[[3]], envir = pageobj$envir)  
+    } else {
+      tmp <- do.call(msg[[2]], msg[[3]], envir = get(msg[[5]]))
+    }
+    
     if(!is.na(msg[[4]]))
       assign(msg[[4]], tmp, envir = pageobj$envir)
   }
@@ -449,7 +454,10 @@ sendHTML <- function(html = "") {
 #' Trigger a function call
 #' 
 #' Calls a fucntion on the opened web page given its name and arguments.
-#' JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo)}.
+#' JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo, envir)}, 
+#' where the \code{envir} argument allow to call function that is stored in some other
+#' environment. The result, however, will be anyway assigned to a variable in the
+#' environment set by \code{\link{setEnvironment}}.
 #' For security reasons, if function or variable to which its returned value
 #' should be assigned are not in the lists of allowed functions and variables,
 #' manual authorization of the call form JavaScript in the R session will be 
