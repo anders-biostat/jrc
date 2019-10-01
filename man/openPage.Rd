@@ -4,7 +4,9 @@
 \alias{openPage}
 \title{Create a server}
 \usage{
-openPage(useViewer = T, rootDirectory = NULL, startPage = NULL)
+openPage(useViewer = T, rootDirectory = NULL, startPage = NULL,
+  port = NULL, browser = getOption("browser"),
+  allowedFunctions = NULL, allowedVariables = NULL)
 }
 \arguments{
 \item{useViewer}{If \code{TRUE}, the start page will be opened in the RStudio Viewer. If \code{FALSE}
@@ -17,10 +19,30 @@ defined, the \code{http_root} in the package directory will be used as a root di
 This can be an absolute path to a local file, or it can be relative to the \code{rootDirectory}
 or to the current R working directory. If \code{startPage} is not defined, this function opens an 
 empty HTML page. The file must have \emph{.html} extension.}
+
+\item{port}{Defines which TCP port to use for websocket connection. If not defined, random available port
+is used.}
+
+\item{browser}{A browser in which the web page will be opened. Is used only if \code{useViewer = FALSE}.
+If not defined, default browser will be used. For more information check \code{\link[utils]{browseURL}}.}
+
+\item{allowedFunctions}{List of functions that can be called from the web page without any additional actions 
+from the user. All other functions will require authorization in the current R session to be executed. 
+This should be a vector of function names. Check \code{\link{authorize}} and \code{\link{allowFunctions}}
+for more information.}
+
+\item{allowedVariables}{List of variables that can be reassigned from the web page without any additional actions 
+from the user. All other reassignments will require authorization in the current R session to be executed. 
+This should be a vector of variable names. Check \code{\link{authorize}} and \code{\link{allowVariables}}
+for more information.}
 }
 \description{
 \code{openPage} creates a server and establishes a websocket connection between it and the current
 R session. This allows commands exchange. In R use \code{\link{sendCommand}} function to send and 
 execute JavaScript code on the server. On the server use \code{jrc.sendCommand} function to send and
 execute R code in the current R session.
+}
+\seealso{
+\code{\link{closePage}}, \code{\link{setEnvironment}}, \code{\link{limitStorage}}, \code{\link{allowVariables}},
+\code{\link{allowFunctions}}.
 }

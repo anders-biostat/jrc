@@ -7,5 +7,8 @@
 closePage()
 }
 \description{
-Stop the server and close currently opened page (if any)
+Stop the server and close currently opened page (if any).
+}
+\seealso{
+\code{\link{openPage}}
 }

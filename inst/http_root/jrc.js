@@ -15,14 +15,33 @@ jrc.ws.addEventListener( "message", function(event) {
 		return;
 	}
 	if(msg[0] == "DATA") {
+		//msg[1] - variable name
+		//msg[2] - variable content
+		//msg[3] - keepAsVector ('TRUE' or 'FALSE')
 		if(msg[1] == undefined || !jrc.isValidName(msg[1])) {
 			console.log("DATA message with invalid variable name has been recieved: " + msg[1])
 			ws.send("warning('Invalid variable name: " + msg[1] + "')");
 			return;
 		}
 		window[msg[1]] = JSON.parse(msg[2]);
-		if(msg[3] == "FALSE" && window[msg[1]].length && window[msg[1]].length == 1)
-			window[msg[1]] = window[msg[1]][0];
+		// check if we also got `keepAsVector` parameter and it's false
+		turnToScalar = function(v) {
+			if((v.length === undefined && typeof v !== "object") || typeof v === "string") return v;
+			if(Array.isArray(v)) {
+				if(v.length == 1) return v[0];
+				for(var i = 0; i < v.length; i++)
+					v[i] = turnToScalar(v[i]);
+			} else {
+				var keys = Object.keys(v);
+				for(var i = 0; i < keys.length; i++)
+					v[keys[i]] = turnToScalar(v[keys[i]]);
+			}
+			return v;
+		}
+		if(msg[3] == "FALSE") {
+			window[msg[1]] = turnToScalar(window[msg[1]]);			
+		}
+
 		if(window[msg[1]].length && window[msg[1]][0]._row) {
 			var converted = {}, rowname;
 			for(var i = 0; i < window[msg[1]].length; i++) {
@@ -38,6 +57,30 @@ jrc.ws.addEventListener( "message", function(event) {
 		document.body.innerHTML += msg[1];
 		return;
 	}
+	if(msg[0] == "FUN") {
+		//msg[1] - function name
+		//msg[2] - variable name
+		//msg[3] - thisArg
+		//___args___ - arguments 
+		
+		var fCall = msg[1].split("."),
+			obj = window;
+		for(var i = 0; i < fCall.length; i++)
+			obj = obj[fCall[i]];
+
+		self = window;
+		if(msg[3])
+			self = window[msg[3]];
+
+		var ___tmp___ = obj.apply(self, window["___args___"]);
+
+		if(msg[2]) 
+			window[msg[2]] = ___tmp___;
+
+		window["___args___"] = null;
+
+		return;
+	}
 	console.log("Unknown message type: " + msg[0])
 	jrc.ws.send("warning('Unknown message type: " + msg[0] + "')");
 } );
@@ -51,6 +94,17 @@ jrc.sendCommand = function(command) {
 
 jrc.sendData = function(variableName, variable) {
 	jrc.ws.send(JSON.stringify(["DATA", variableName, JSON.stringify(variable)]));
+}
+
+//args must be object (to be converted to names list in R)
+jrc.callFunction = function(functionName, args, assingTo, envir) {
+	jrc.ws.send(JSON.stringify(["FUN", functionName, JSON.stringify(args), assingTo, envir]));
+}
+
+jrc.notifyStorage = function(id) {
+	alert("Your command has been stored. To execute it, please, type 'authorize(id = \"" + id + "\")'. " + 
+			"Use functions 'allowVariables' and 'allowFunctions' to permit automatic execution of " +
+			"your commands.")
 }
 
 //from https://mothereff.in/js-variables

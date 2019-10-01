@@ -1,5 +1,6 @@
 [![Travis Build Status](https://travis-ci.org/anders-biostat/jrc.svg?branch=master)](https://travis-ci.org/anders-biostat/jrc)
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/jrc)](https://cran.r-project.org/package=jrc)
+[![Downloads](http://cranlogs.r-pkg.org/badges/jrc?color=brightgreen)](http://www.r-pkg.org/pkg/jrc)
 
 ## jrc
 

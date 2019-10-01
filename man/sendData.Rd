@@ -4,19 +4,24 @@
 \alias{sendData}
 \title{Send data to the server}
 \usage{
-sendData(variableName, variable, keepAsVector = F)
+sendData(variableName, variable, keepAsVector = FALSE, rowwise = TRUE)
 }
 \arguments{
 \item{variableName}{Name that the variable will have on the server.}
 
-\item{variable}{Variable to send}
+\item{variable}{Variable to send.}
 
-\item{keepAsVector}{If TRUE, variables with length 1 will be saved as arrays on the server, otherwise they 
-will be converted to atomic types}
+\item{keepAsVector}{If \code{TRUE}, variables with length 1 will be saved as arrays on the server, otherwise they 
+will be converted to atomic types.}
+
+\item{rowwise}{If \code{TRUE}, matrices and data.frames will be transformed into JavaScript Objects or Arrays
+rowwise (e.g. a matrix will become an Array of its rows).}
 }
 \description{
 Sends a variable to the server, where it is assigned to the variable with a specified name. A JavaScript function
-\code{jrc.sendData(variableName, variable)} can send data back from the server to the current R session.
+\code{jrc.sendData(variableName, variable)} can send data back from the server to the current R session. If variable
+name hasn't been previously added to the list of the allowed variables, attempt to assign it from the server will
+require manual authorization in the R session.
 }
 \examples{
 \donttest{openPage()
@@ -25,5 +30,9 @@ sendData("x", x)
 sendCommand("console.log(x);")
 sendCommand("jrc.sendData('x', x.filter(function(e) {return e \% 2 == 0}))")
 closePage()}
- 
+
+}
+\seealso{
+\code{\link{authorize}}, \code{\link{allowVariables}}, \code{\link{sendCommand}},
+\code{\link{callFunction}}, \code{\link{sendHTML}}, \code{\link{openPage}}.
 }
