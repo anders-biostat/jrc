@@ -97,8 +97,8 @@ jrc.sendData = function(variableName, variable) {
 }
 
 //args must be object (to be converted to names list in R)
-jrc.callFunction = function(functionName, args, assingTo, envir) {
-	jrc.ws.send(JSON.stringify(["FUN", functionName, JSON.stringify(args), assingTo, envir]));
+jrc.callFunction = function(functionName, args, assingTo, package) {
+	jrc.ws.send(JSON.stringify(["FUN", functionName, JSON.stringify(args), assingTo, package]));
 }
 
 jrc.notifyStorage = function(id) {
