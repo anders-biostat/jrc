@@ -5,6 +5,8 @@ user can get over the currently running R session from the web page. As a part o
 function added to be used instead of `sendCommand` whenever possible and some bugs in variable types, when
 they are exchanged between R and JavaScript fixed. For more details, please, check NEWS.md.
 
+This resubmition will be followed by the resubmition of this package's reverse dependency `sleepwalk`. 
+
 ## Test environments
 * local ubuntu 18.04 LST, R 3.6.1
 * win-builder: R-devel
