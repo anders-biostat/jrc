@@ -21,7 +21,7 @@ of the called function. If variable with this name doesn't exist, it will be add
 to the currently active environment.}
 
 \item{thisArg}{JavaScript functions (methods) can belong to some object, which 
-is refered as \code{this} inside the function (e.g. in
+is referred as \code{this} inside the function (e.g. in
 \code{someObject.myFunction()} function \code{myFunction} is a method of \code{someObject}).
 \code{thisArg} specified object that will be passed as \code{this} to the function. If \code{NULL}
 then the function will be applied to the global object.}
@@ -30,7 +30,7 @@ then the function will be applied to the global object.}
 \code{arguments} to the web server.}
 }
 \description{
-Calls a fucntion on the opened web page given its name and arguments.
+Calls a function on the opened web page given its name and arguments.
 JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo, package)}, 
 where the \code{package} argument allow to call function from some other
 package. The result, however, will be anyway assigned to a variable in the
@@ -39,6 +39,14 @@ For security reasons, if function or variable to which its returned value
 should be assigned are not in the lists of allowed functions and variables,
 manual authorization of the call form JavaScript in the R session will be 
 required. For more details check \code{\link{authorize}}.
+}
+\examples{
+\donttest{
+openPage()
+callFunction("alert", "Some alertText")
+callFunction("Math.random", assignTo = "randomNumber")
+}
+
 }
 \seealso{
 \code{\link{authorize}}, \code{\link{allowFunctions}}, \code{\link{allowVariables}},

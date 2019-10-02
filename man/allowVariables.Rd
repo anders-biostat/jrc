@@ -18,6 +18,11 @@ This function adds variable names to the list of variables, which
 can be reassigned from the web page without manual confirmation in the R
 session.
 }
+\examples{
+allowVariables(c("myVariable", "anotherOne"))
+vars <- allowVariables()
+
+}
 \seealso{
 \code{\link{allowFunctions}}, \code{\link{authorize}}, \code{\link{openPage}} (check argument
 \code{allowedVariables}), \code{\link{sendData}}.

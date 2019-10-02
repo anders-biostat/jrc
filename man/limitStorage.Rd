@@ -16,17 +16,23 @@ Current maximum size of the storage and maximum allowed number of stored message
 }
 \description{
 This function allows to change number of total size of the messages
-that are recieved via the websocket and are stored in the memory.
+that are received via the websocket and are stored in the memory.
 }
 \details{
 For security reasons, the control of the currently running R session is limited
-to calling only some user specified funcitons and reassigning some user specified
+to calling only some user specified functions and reassigning some user specified
 variables. All other messages are stored in the memory and can be later processed
 by calling \code{\link{authorize}} function. To prevent overuse of memory, one can 
 limit the size of the storage by number of messages or by their total size estimated
 by \code{\link[utils]{object.size}}. If the storage grows above the set limits, older
-messages are removed. The last recieved message will not be removed even if its 
+messages are removed. The last received message will not be removed even if its 
 takes more memory than is allowed by this function.
+}
+\examples{
+limitStorage(n = 10)
+limitStorage(size = 10 * 1024^2)
+lim <- limitStorage()
+
 }
 \seealso{
 \code{\link{authorize}}, \code{\link{allowFunctions}}, \code{\link{allowVariables}}.

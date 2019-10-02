@@ -7,7 +7,7 @@
 getPage()
 }
 \value{
-page-handling object if there is a currently opend jrc page, NULL otherwise.
+page-handling object if there is a currently opened jrc page, \code{NULL} otherwise.
 }
 \description{
 Checks if there is a currently opened page. If so, returns an object with all

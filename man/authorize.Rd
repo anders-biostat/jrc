@@ -14,7 +14,7 @@ to \code{NULL}.}
 
 \item{show}{If \code{TRUE} information of the message with a given ID will be show before executing
 it with a choice to go on with execution, ignore the message (meaning it will be removed from memory) or
-do nouthing}
+do nothing.}
 }
 \value{
 A vector of IDs of all currently stored messages.
@@ -22,7 +22,7 @@ A vector of IDs of all currently stored messages.
 \description{
 `jrc` library allows one to get a full control over the currently running R session from 
 a web page. Therefore for security reasons one should manually authorize function calls,
-variable assignments or expression evaluations. All the recieved messages that are not
+variable assignments or expression evaluations. All the received messages that are not
 processed automatically are given an ID and stored. This function executes a command
 from a message with a given ID
 }

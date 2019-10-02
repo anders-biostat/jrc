@@ -152,7 +152,7 @@ handle_websocket_open <- function( ws ) {
     if( isBinary )
       stop( "Unexpected binary message received via WebSocket" )
     msg <- fromJSON(msg)
-    #print(str(msg))
+    print(str(msg))
     if(!(msg[1] %in% c("COM", "FUN", "DATA")))
       stop(str_interp("Unknown message type: ${msg[1]}"))
     
@@ -462,7 +462,7 @@ sendHTML <- function(html = "") {
 
 #' Trigger a function call
 #' 
-#' Calls a fucntion on the opened web page given its name and arguments.
+#' Calls a function on the opened web page given its name and arguments.
 #' JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo, package)}, 
 #' where the \code{package} argument allow to call function from some other
 #' package. The result, however, will be anyway assigned to a variable in the
@@ -482,12 +482,19 @@ sendHTML <- function(html = "") {
 #' of the called function. If variable with this name doesn't exist, it will be added
 #' to the currently active environment.
 #' @param thisArg JavaScript functions (methods) can belong to some object, which 
-#' is refered as \code{this} inside the function (e.g. in
+#' is referred as \code{this} inside the function (e.g. in
 #' \code{someObject.myFunction()} function \code{myFunction} is a method of \code{someObject}).
 #' \code{thisArg} specified object that will be passed as \code{this} to the function. If \code{NULL}
 #' then the function will be applied to the global object.
 #' @param ... further arguments passed to \code{\link{sendData}} that is used to send
 #' \code{arguments} to the web server.
+#' 
+#' @examples 
+#' \donttest{
+#' openPage()
+#' callFunction("alert", "Some alertText")
+#' callFunction("Math.random", assignTo = "randomNumber")
+#' }
 #' 
 #' @seealso \code{\link{authorize}}, \code{\link{allowFunctions}}, \code{\link{allowVariables}},
 #' \code{\link{setEnvironment}}.
@@ -515,7 +522,7 @@ callFunction <- function(name, arguments = NULL, assignTo = NULL, thisArg = NULL
 #' 
 #' `jrc` library allows one to get a full control over the currently running R session from 
 #' a web page. Therefore for security reasons one should manually authorize function calls,
-#' variable assignments or expression evaluations. All the recieved messages that are not
+#' variable assignments or expression evaluations. All the received messages that are not
 #' processed automatically are given an ID and stored. This function executes a command
 #' from a message with a given ID
 #' 
@@ -529,7 +536,7 @@ callFunction <- function(name, arguments = NULL, assignTo = NULL, thisArg = NULL
 #' to \code{NULL}.
 #' @param show If \code{TRUE} information of the message with a given ID will be show before executing
 #' it with a choice to go on with execution, ignore the message (meaning it will be removed from memory) or
-#' do nouthing
+#' do nothing.
 #' 
 #' @return A vector of IDs of all currently stored messages.
 #' 
@@ -580,14 +587,18 @@ authorize <- function(id = NULL, show = FALSE) {
 
 #' Allow function calls without authorization
 #' 
-#' This function adds fucntion names to the list of functions, which
+#' This function adds function names to the list of functions, which
 #' can be called from the web page without manual confirmation in the R
 #' session.
 #' 
-#' @param funs Vector of fucntion names to be added to the list. If is \code{NULL},
+#' @param funs Vector of function names to be added to the list. If is \code{NULL},
 #' returns names of all currently allowed functions.
 #' 
 #' @return Names of all currently allowed functions if \code{funs = NULL}.
+#' 
+#' @examples
+#' allowFunctions(c("myFunction1", "print", "someObject$method"))
+#' funs <- allowFunctions()
 #' 
 #' @seealso \code{\link{allowVariables}}, \code{\link{authorize}}, \code{\link{openPage}} (check argument
 #' \code{allowedFunctions}), \code{\link{callFunction}}.
@@ -611,6 +622,10 @@ allowFunctions <- function(funs = NULL) {
 #' @param vars Vector of variable names to be added to the list. If is \code{NULL},
 #' returns names of all currently allowed variables.
 #' 
+#' @examples
+#' allowVariables(c("myVariable", "anotherOne"))
+#' vars <- allowVariables()
+#' 
 #' @return Names of all currently allowed variables if \code{vars = NULL}.
 #' 
 #' @seealso \code{\link{allowFunctions}}, \code{\link{authorize}}, \code{\link{openPage}} (check argument
@@ -629,21 +644,26 @@ allowVariables <- function(vars = NULL) {
 #' Change size of the message storage
 #' 
 #' This function allows to change number of total size of the messages
-#' that are recieved via the websocket and are stored in the memory.
+#' that are received via the websocket and are stored in the memory.
 #' 
 #' For security reasons, the control of the currently running R session is limited
-#' to calling only some user specified funcitons and reassigning some user specified
+#' to calling only some user specified functions and reassigning some user specified
 #' variables. All other messages are stored in the memory and can be later processed
 #' by calling \code{\link{authorize}} function. To prevent overuse of memory, one can 
 #' limit the size of the storage by number of messages or by their total size estimated
 #' by \code{\link[utils]{object.size}}. If the storage grows above the set limits, older
-#' messages are removed. The last recieved message will not be removed even if its 
+#' messages are removed. The last received message will not be removed even if its 
 #' takes more memory than is allowed by this function.
 #' 
 #' @param n Number of messages that can be stored simultaneously.
 #' @param size Maxim total size of all stored messages in bytes.
 #' 
 #' @return Current maximum size of the storage and maximum allowed number of stored messages.
+#' 
+#' @examples 
+#' limitStorage(n = 10)
+#' limitStorage(size = 10 * 1024^2)
+#' lim <- limitStorage()
 #' 
 #' @seealso \code{\link{authorize}}, \code{\link{allowFunctions}}, \code{\link{allowVariables}}.
 #' 
@@ -673,7 +693,7 @@ limitStorage <- function(n = NULL, size = NULL) {
 #' 
 #' TO DO: Do we really need this function?
 #' 
-#' @return page-handling object if there is a currently opend jrc page, NULL otherwise.
+#' @return page-handling object if there is a currently opened jrc page, \code{NULL} otherwise.
 #' 
 #' @export
 getPage <- function() {
