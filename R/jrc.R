@@ -152,7 +152,6 @@ handle_websocket_open <- function( ws ) {
     if( isBinary )
       stop( "Unexpected binary message received via WebSocket" )
     msg <- fromJSON(msg)
-    print(str(msg))
     if(!(msg[1] %in% c("COM", "FUN", "DATA")))
       stop(str_interp("Unknown message type: ${msg[1]}"))
     
