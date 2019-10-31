@@ -1,3 +1,7 @@
+# jrc 0.2.1
+
+* `sendData` no longer crashes when `keepAsVector = FALSE` and some NAs are present.
+
 # jrc 0.2.0
 
 * Now most of the request from the server must be manually authorized in the R session to prevent misuse of publicly available

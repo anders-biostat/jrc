@@ -4,7 +4,10 @@ var url = window.location.href.split("/")[2];
 jrc = {};
 
 // establish WebSocket link and handlers 
-jrc.ws = new WebSocket( "ws://" + url + "/" ); //, "RLC-0" );
+if(window.location.href[4] == "s")
+	jrc.ws = new WebSocket( "wss://" + url + "/" )
+else
+	jrc.ws = new WebSocket( "ws://" + url + "/" ); //, "RLC-0" );
 jrc.ws.addEventListener( "open", function(event) { 
    // ...
 } ); 
