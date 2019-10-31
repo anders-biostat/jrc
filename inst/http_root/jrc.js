@@ -26,7 +26,7 @@ jrc.ws.addEventListener( "message", function(event) {
 		window[msg[1]] = JSON.parse(msg[2]);
 		// check if we also got `keepAsVector` parameter and it's false
 		turnToScalar = function(v) {
-			if((v.length === undefined && typeof v !== "object") || typeof v === "string") return v;
+			if(!v || (v.length === undefined && typeof v !== "object") || typeof v === "string") return v;
 			if(Array.isArray(v)) {
 				if(v.length == 1) return v[0];
 				for(var i = 0; i < v.length; i++)
