@@ -1,7 +1,7 @@
 //get current url
 var urlSpl = window.location.href.split("/"),
 	urlWs = "";
-if(urlSpl[0] == "https")
+if(urlSpl[0] == "https:")
 	urlWs += "wss://"
 else
 	urlWs += "ws://";
