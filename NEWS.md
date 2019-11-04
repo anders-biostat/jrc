@@ -1,8 +1,13 @@
 # jrc 0.2.1
 
+* `jrc` now works properly on RStudio Server
+
 * `sendData` no longer crashes when `keepAsVector = FALSE` and some NAs are present.
 
-* jrc now works with httpuv < 1.5.2 (it does not depend on `httpuv::randomPort()`).
+* `jrc` now works with `httpuv < 1.5.2` (it no longer depends on `httpuv::randomPort()`).
+
+* `jrc` now imports `mime` for defining content type when serving a page.
+
 
 # jrc 0.2.0
 

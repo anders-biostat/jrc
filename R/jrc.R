@@ -1,4 +1,5 @@
 #' @import stringr
+#' @import mime
 #' @importFrom jsonlite fromJSON
 
 #global variable with current page information
@@ -30,30 +31,10 @@ handle_http_request <- function( req ) {
     }
   }
   
-  file_extension <- str_extract( reqPage, "(?<=\\.)[^\\.]*$" )
-  file_extension_low <- tolower(file_extension) 
-  
-  if( file_extension_low == "html" | file_extension_low == "htm" ) {
-    content_type <- "text/html"
-  } else if( file_extension_low == "js" ) {
-    content_type <- "text/javascript"    
-  } else if( file_extension_low == "css" ) {
-    content_type <- "text/css"
-  } else if( file_extension_low == "svg") {
-    content_type <- "image/svg+xml"
-  } else if( file_extension_low == "png") {
-    content_type <- "image/png"
-  } else if( file_extension_low == "gif") {
-    content_type <- "image/gif"
-  } else if( file_extension_low == "jpeg" | file_extension_low == "jpg" ) {
-    content_type <- "image/jpeg"
-  } else {
-    content_type <- "text";
-    warning( "Serving file of unknown content type." )
-  }
-  
+  content_type <- mime::guess_type(reqPage)
   content <- readLines(reqPage, warn = F)
-  if(file_extension_low == "html") {
+  
+  if(content_type == "text/html") {
     jsfile <- str_c("<script src='http_root_jrc/jrc.js'></script>")
     stop <- F
     for(i in 1:length(content))
