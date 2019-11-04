@@ -147,7 +147,6 @@ cleanStorage <- function() {
 }
 
 handle_websocket_open <- function( ws ) {
-  
   ws$onMessage( function( isBinary, msg ) {
     if( isBinary )
       stop( "Unexpected binary message received via WebSocket" )
@@ -280,7 +279,28 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port
     call = handle_http_request,
     onWSOpen = handle_websocket_open )
   
-  if(is.null(port)) port <- randomPort(n = 50)
+  if(is.null(port)) {
+    if(compareVersion(as.character(packageVersion("httpuv")), "1.5.2") >= 0){
+      port <- randomPort(n = 50)
+    } else {
+      #if there is no randomPort function in the httpuv package
+      #in later versions of jrc this will be removed and httpuv >= 1.5.2 will be required
+      #code adopted from httpuv::randomPort
+      for (port in sample(seq(1024L, 49151L), 50)) {
+        s <- NULL
+        
+        # Check if port is open
+        tryCatch(
+          s <- startServer(host, port, list(), quiet = TRUE),
+          error = function(e) { }
+        )
+        if (!is.null(s)) {
+          s$stop()
+          break
+        }
+      }
+    }
+  }
   port <- as.integer(port)
   if(is.na(port))
     stop("Port number must be an integer number.")

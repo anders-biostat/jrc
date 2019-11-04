@@ -2,6 +2,8 @@
 
 * `sendData` no longer crashes when `keepAsVector = FALSE` and some NAs are present.
 
+* jrc now works with httpuv < 1.5.2 (it does not depend on `httpuv::randomPort()`).
+
 # jrc 0.2.0
 
 * Now most of the request from the server must be manually authorized in the R session to prevent misuse of publicly available
