@@ -1,16 +1,23 @@
 //get current url
-var url = window.location.href.split("/")[2];
+var urlSpl = window.location.href.split("/"),
+	urlWs = "";
+if(urlSpl[0] == "https")
+	urlWs += "wss://"
+else
+	urlWs += "ws://";
+urlWs += urlSpl[2] + "/";
+if(urlSpl[3] == "p")
+	urlWs += "p/" + urlSpl[4] + "/";
 
 jrc = {};
 
 // establish WebSocket link and handlers 
-if(window.location.href[4] == "s")
-	jrc.ws = new WebSocket( "wss://" + url + "/" )
-else
-	jrc.ws = new WebSocket( "ws://" + url + "/" ); //, "RLC-0" );
+jrc.ws = new WebSocket( urlWs )
+
 jrc.ws.addEventListener( "open", function(event) { 
    // ...
 } ); 
+
 jrc.ws.addEventListener( "message", function(event) {
 	msg = JSON.parse( event.data );
 	if(msg[0] == "COM") {
