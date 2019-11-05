@@ -261,7 +261,7 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port
     onWSOpen = handle_websocket_open )
   
   if(is.null(port)) {
-    if(compareVersion(as.character(packageVersion("httpuv")), "1.5.2") >= 0){
+    if(compareVersion(as.character(packageVersion("httpuv")), "1.5.4") >= 0){
       port <- randomPort(n = 50)
     } else {
       #if there is no randomPort function in the httpuv package
@@ -272,7 +272,7 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port
         
         # Check if port is open
         tryCatch(
-          s <- startServer(host, port, list(), quiet = TRUE),
+          s <- startServer("0.0.0.0", port, list(), quiet = TRUE),
           error = function(e) { }
         )
         if (!is.null(s)) {
