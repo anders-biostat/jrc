@@ -14,7 +14,10 @@ Sends a piece of HTML code to the server and adds it at the end
 or the \code{body} element.
 }
 \examples{
-\donttest{sendHTML("Test...")
+\donttest{
+openPage(FALSE)
+
+sendHTML("Test...")
 sendHTML("This is <b>bold</b>")
 sendHTML("<table><tr><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></table>")}
 

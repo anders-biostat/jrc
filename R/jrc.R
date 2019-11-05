@@ -441,7 +441,10 @@ setEnvironment <- function(envir) {
 #' @param html HTML code that will be added to the web page.
 #' 
 #' @examples 
-#' \donttest{sendHTML("Test...")
+#' \donttest{
+#' openPage(FALSE)
+#' 
+#' sendHTML("Test...")
 #' sendHTML("This is <b>bold</b>")
 #' sendHTML("<table><tr><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></table>")}
 #' 
@@ -492,7 +495,7 @@ sendHTML <- function(html = "") {
 #' @examples 
 #' \donttest{
 #' openPage()
-#' callFunction("alert", "Some alertText")
+#' callFunction("alert", list("Some alertText"))
 #' callFunction("Math.random", assignTo = "randomNumber")
 #' }
 #' 

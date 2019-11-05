@@ -43,7 +43,7 @@ required. For more details check \code{\link{authorize}}.
 \examples{
 \donttest{
 openPage()
-callFunction("alert", "Some alertText")
+callFunction("alert", list("Some alertText"))
 callFunction("Math.random", assignTo = "randomNumber")
 }
 
