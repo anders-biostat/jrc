@@ -5,6 +5,7 @@
 #' @importFrom utils object.size
 
 #Should it be exported????
+#' @export
 #' @importFrom stringi stri_rand_strings
 Session <- R6Class("Session", public = list(
   id = "",
@@ -204,7 +205,12 @@ Session <- R6Class("Session", public = list(
   },
   
   setSessionVariables = function(vars) {
-    list2env(vars, private$envir)
+    if(!is.null(vars)) {
+      if(!is.list(vars) || is.null(names(vars)))
+        stop("Session variables must be a named list")
+      
+      list2env(vars, private$envir)
+    }
   },
   
   close = function(message = NULL) {
@@ -240,7 +246,7 @@ Session <- R6Class("Session", public = list(
     
     private$ws <- ws
     
-    self$setSessionVariables(list(.id = id), id)      
+    self$setSessionVariables(list(.id = id))      
   }
   
 ), private = list(
@@ -262,13 +268,15 @@ Session <- R6Class("Session", public = list(
   }
 ))
 
+#' @export
 App <- R6Class("App", public = list(
   rootDirectory = "",
   startPage = "",
+  startPagePath = NULL,
   
   addSession = function(session) {
-    stopifnot(class(session) == "Session")
-    if(length(private$sessions) >= self$maxCon) {
+    stopifnot("Session" %in% class(session))
+    if(length(private$sessions) >= private$maxCon) {
       session$close("Maximum number of active connections has been reached.")
       stop("Maximum number of connections has been reached. Please, close some of 
            the existing sessions, before adding a new one.")
@@ -291,7 +299,7 @@ App <- R6Class("App", public = list(
   closeSession = function(session) {
     if(is.character(session))
       session <- self$getSession(session)
-    stopifnot(class(session) == "Session")
+    stopifnot("Session" %in% class(session))
     session$close()
     private$sessions[[session$id]] <- NULL
     
@@ -316,7 +324,8 @@ App <- R6Class("App", public = list(
     }
   },
   
-  startSever = function(port = NULL) {
+  startServer = function(port = NULL) {
+
     if(is.null(port)) {
       if(compareVersion(as.character(packageVersion("httpuv")), "1.5.4") >= 0){
         port <- randomPort(n = 50)
@@ -342,21 +351,24 @@ App <- R6Class("App", public = list(
     port <- as.integer(port)
     if(is.na(port))
       stop("Port number must be an integer number.")
+    private$port <- port
     
     if(!(compareVersion(as.character(packageVersion("httpuv")), "1.3.5") > 0)) {
-      private$serverHandle <- startDaemonizedServer( "0.0.0.0", port, private$getApp() )
+      private$serverHandle <- startDaemonizedServer( "0.0.0.0", private$port, private$getApp() )
     } else {
-      private$serverHandle <- startServer( "0.0.0.0", port, private$getApp() )
+      private$serverHandle <- startServer( "0.0.0.0", private$port, private$getApp() )
     }
+    
+    private$serverHandle
   },
   
   openPage = function(useViewer = TRUE, browser = getOption("browser")) {
     if(is.null(private$serverHandle))
       stop("No server is running. Please, start a server before opening a page.")
     if( useViewer & !is.null( getOption("viewer") ) )
-      getOption("viewer")( str_c("http://localhost:", port, "/", self$startPage) )
+      getOption("viewer")( str_c("http://localhost:", private$port, "/", self$startPage) )
     else
-      browseURL( str_c("http://localhost:", port, "/", self$startPage), browser = browser )
+      browseURL( str_c("http://localhost:", private$port, "/", self$startPage), browser = browser )
     
     
     # Wait up to 5 seconds for the a websocket connection
@@ -421,11 +433,6 @@ App <- R6Class("App", public = list(
     if(is.null(sessionId))
       sessionId = names(private$sessions)
     
-    if(!is.list(vars))
-      stop("Variables must be set as a list")
-    if(length(vars) > 0 & is.null(names(vars)))
-      stop("List of variables must be named")
-    
     for(id in sessionId)
       self$getSession(id)$setSessionVariables(vars)
   },
@@ -454,7 +461,7 @@ App <- R6Class("App", public = list(
         self$startPage <- str_remove(page, str_c(self$rootDirectory, "/"))
       } else {
         self$startPage <- "index.html"
-        self$startPagePath <- startPage
+        self$startPagePath <- page
       }
     }
     
@@ -462,18 +469,18 @@ App <- R6Class("App", public = list(
   
   limitConnectionNumbers = function(maxCon = NULL) {
     if(is.null(maxCon))
-      return(self$maxCon)
+      return(private$maxCon)
     
     stopifnot(is.numeric(maxCon))
     
-    self$maxCon <- maxCon
+    private$maxCon <- maxCon
     
     invisible(self)
   },
   
   initialize = function(rootDirectory = NULL, startPage = NULL, onStart = NULL, 
                         connectionNumber = Inf, allowedFunctions = c(), 
-                        allowedVariables = c(), sessionVars = list()) {
+                        allowedVariables = c(), sessionVars = NULL) {
     if(is.null(rootDirectory)) 
       rootDirectory <- system.file("http_root", package = "jrc")
     self$setRootDirectory(rootDirectory)
@@ -484,15 +491,15 @@ App <- R6Class("App", public = list(
     
     private$envir <- globalenv()
     
-    if(!is.null(startPage)) {
+    if(!is.null(onStart)) {
       stopifnot(is.function(onStart))
       private$onStart <- onStart
     }
     
     self$allowFunctions(allowedFunctions)
-    self$allowVarables(allowedVariables)
-    self$setSessionVarables(sessionVars)
-    sefl$limitConnectionNumbers(connectionNumber)
+    self$allowVariables(allowedVariables)
+    self$setSessionVariables(sessionVars)
+    self$limitConnectionNumbers(connectionNumber)
     
     invisible(self)
   }
@@ -504,8 +511,7 @@ App <- R6Class("App", public = list(
   allowedFuns = c(),
   allowedVars = c(),
   maxCon = Inf,
-  maxSize = Inf,
-  maxN = Inf,
+  port = NULL,
   
   getApp = function() {
     handle_http_request <- function( req ) {
@@ -622,7 +628,7 @@ App <- R6Class("App", public = list(
       session$setSessionVariables(private$sessionVars)
       self$addSession(session)
     
-      self$onStart(session)
+      private$onStart(session)
     }
     
     list(call = handle_http_request,
@@ -632,7 +638,7 @@ App <- R6Class("App", public = list(
   onStart = function(session) {}
 ))
 
-pcg.env <- new.env()
+pkg.env <- new.env()
 
 
 #' Create a server
@@ -675,13 +681,15 @@ pcg.env <- new.env()
 openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port = NULL, browser = getOption("browser"),
                      allowedFunctions = NULL, allowedVariables = NULL, connectionNumber = Inf, sessionVars = list(),
                      onStart = NULL) {
-  closePage()
+  if(!is.null(pkg.env$app))
+    closePage()
   
   app <- App$new(rootDirectory, startPage, onStart, connectionNumber, allowedFunctions, allowedVariables, sessionVars)
   app$startServer(port)
   app$openPage(useViewer, browser)
+  pkg.env$app <- app
   
-  app
+  invisible(app)
 }
 
 sendMessage <- function(type, id, ...) {
@@ -753,8 +761,9 @@ sendCommand <- function(command, id = NULL) {
 #' 
 #' @export
 closePage <- function() {
-  if(!is.null(app)) {
+  if(!is.null(pkg.env$app)) {
     app$stopServer()
+    pkg.env$app <- NULL
   } else {
     message("There is no opened page.")
   }

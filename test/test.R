@@ -1,6 +1,8 @@
 library( jrc )
 library( stringr )
 
+app <- App$new()
+
 openPage(useViewer = F, port = 12345, browser = "firefox")
 closePage()
 
