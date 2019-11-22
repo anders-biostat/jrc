@@ -7,8 +7,7 @@
 openPage(useViewer = T, rootDirectory = NULL, startPage = NULL,
   port = NULL, browser = getOption("browser"),
   allowedFunctions = NULL, allowedVariables = NULL,
-  connectionNumber = Inf, sessionVars = list(), onStart = function()
-  { })
+  connectionNumber = Inf, sessionVars = list(), onStart = NULL)
 }
 \arguments{
 \item{useViewer}{If \code{TRUE}, the start page will be opened in the RStudio Viewer. If \code{FALSE}

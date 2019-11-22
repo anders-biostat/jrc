@@ -13,6 +13,3 @@ page-handling object if there is a currently opened jrc page, \code{NULL} otherw
 Checks if there is a currently opened page. If so, returns an object with all
 the information about the current session.
 }
-\details{
-TO DO: Do we really need this function?
-}

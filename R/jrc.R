@@ -183,8 +183,8 @@ Session <- R6Class("Session", public = list(
         text <- str_c("Command '", msg[2], "'.")
       } else if(type == "DATA") {
         text <- str_c("Assignment of varible '", msg[[2]], 
-                      "'. New type is '", msg[[3]]), "'. ",
-                      "New size is ", msg[[3]]), " bytes.")
+                      "'. New type is '", msg[[3]], "'. ",
+                      "New size is ", msg[[3]], " bytes.")
       } else if(type == "FUN") {
         text <- str_c("Call of function '", msg[[2]], "'.")
         if(!is.na(msg[[4]]))
@@ -469,7 +469,7 @@ App <- R6Class("App", public = list(
     self$maxCon <- maxCon
     
     invisible(self)
-  }
+  },
   
   initialize = function(rootDirectory = NULL, startPage = NULL, onStart = NULL, 
                         connectionNumber = Inf, allowedFunctions = c(), 
@@ -700,7 +700,7 @@ sendMessage <- function(type, id, ...) {
                  if(e$message == "Websocket is already closed.") {
                    app$closeSession(session)
                    stop(str_c("Websocket is already closed.", 
-                              "Session ", session$id, " has been terminated.")
+                              "Session ", session$id, " has been terminated."))
                  } else {
                    stop(e)
                  }

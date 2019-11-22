@@ -4,17 +4,17 @@
 \alias{authorize}
 \title{Authorize further message processing}
 \usage{
-authorize(id = NULL, show = FALSE)
+authorize(sessionId, messageId = NULL, show = FALSE)
 }
 \arguments{
+\item{show}{If \code{TRUE} information of the message with a given ID will be show before executing
+it with a choice to go on with execution, ignore the message (meaning it will be removed from memory) or
+do nothing.}
+
 \item{id}{ID of the message to be processed. In `jrc` library all stored messages are
 give a random ID that consists of 6 letters or numbers. The ID is reported when the
 message is stored. To get a list of IDs of all currently stored messages, set this argument
 to \code{NULL}.}
-
-\item{show}{If \code{TRUE} information of the message with a given ID will be show before executing
-it with a choice to go on with execution, ignore the message (meaning it will be removed from memory) or
-do nothing.}
 }
 \value{
 A vector of IDs of all currently stored messages.
