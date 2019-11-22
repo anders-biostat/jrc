@@ -6,7 +6,9 @@
 \usage{
 openPage(useViewer = T, rootDirectory = NULL, startPage = NULL,
   port = NULL, browser = getOption("browser"),
-  allowedFunctions = NULL, allowedVariables = NULL)
+  allowedFunctions = NULL, allowedVariables = NULL,
+  connectionNumber = Inf, sessionVars = list(), onStart = function()
+  { })
 }
 \arguments{
 \item{useViewer}{If \code{TRUE}, the start page will be opened in the RStudio Viewer. If \code{FALSE}
@@ -35,6 +37,8 @@ for more information.}
 from the user. All other reassignments will require authorization in the current R session to be executed. 
 This should be a vector of variable names. Check \code{\link{authorize}} and \code{\link{allowVariables}}
 for more information.}
+
+\item{connectionNumber}{Maximum number of connections that is allowed simultaneously.}
 }
 \description{
 \code{openPage} creates a server and establishes a websocket connection between it and the current

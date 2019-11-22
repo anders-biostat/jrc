@@ -4,7 +4,8 @@
 \alias{sendData}
 \title{Send data to the server}
 \usage{
-sendData(variableName, variable, keepAsVector = FALSE, rowwise = TRUE)
+sendData(variableName, variable, id = NULL, keepAsVector = FALSE,
+  rowwise = TRUE)
 }
 \arguments{
 \item{variableName}{Name that the variable will have on the server.}

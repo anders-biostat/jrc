@@ -82,7 +82,7 @@ closePage()
 
 
 #load linked charts from a local file
-openPage(rootDirectory = "~/Work/Git/linked-charts/")
+openPage(rootDirectory = "~/Work/Git/linked-charts/", useViewer = F)
 x <- seq(0, 5, length.out = 100)
 y <- sin(x) + rnorm(n = 100, sd = 0.2)
 
@@ -113,3 +113,52 @@ sendCommand(str_c("sc = lc.scatter()",
               ".place()", collapse = "\n"))
 
 closePage()
+
+k <- 0
+a <- 0
+#try multiple sessions
+openPage(useViewer = F, onStart = function(id) {
+  sendHTML(str_c("<p>Session ID: <b>", id, "</b></p>"), id = id)
+  sendHTML("<p><b>a = </b><span id = 'a'></span>; <b>k = </b><span id = 'k'></span></p>", id = id)
+  
+  sendCommand(str_c("buttonK = document.createElement('input');",
+                    "buttonK.type = 'button';",
+                    "buttonK.addEventListener('click', function() {jrc.sendCommand('k <- k + 1'); jrc.callFunction('updateText')});", 
+                    "buttonK.value = 'k + 1';",
+                    "document.body.appendChild(buttonK);", collapse = "\n"), id = id)
+  
+  sendCommand(str_c("buttonA = document.createElement('input');",
+                    "buttonA.type = 'button';",
+                    "buttonA.addEventListener('click', function() {jrc.sendCommand('a <<- a + 1'); jrc.callFunction('updateText')});", 
+                    "buttonA.value = 'a + 1';",
+                    "document.body.appendChild(buttonA);", collapse = "\n"), id = id)  
+  
+  }, allowedFunctions = "updateText")
+
+
+updateText <- function() {
+  sendCommand(str_c("document.getElementById('a').innerHTML = ", a, ";",
+                    "document.getElementById('k').innerHTML = ", k, ";"), id = .id)
+}
+
+
+
+
+
+
+
+setSessionVariables(list(k = 10), sessionId = "Ch5vIS")
+sendCommand('alert("AAAAA!")', id = "KCZobp")
+
+
+`%<-%` <- function(a, b) {
+  p <- parent.frame()
+  if(exists(deparse(substitute(a)), inherits = FALSE, envir = p)) {
+    print("exists")
+    assign(deparse(substitute(a)), b, envir = p)
+  } else {
+    print("can't find")
+    `<<-`(a, b)
+  }
+}
+a %<-% (a + 1)

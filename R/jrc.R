@@ -1,9 +1,370 @@
 #' @import stringr
 #' @import mime
+#' @import R6
 #' @importFrom jsonlite fromJSON
+#' @importFrom utils object.size
 
-#global variable with current page information
-pageobj <- new.env()
+
+#Should it be exported????
+#' @importFrom stringi stri_rand_strings
+Session <- R6Class("Session", public = list(
+  id = "",
+  lastActive = NULL,
+  maxN = Inf,
+  maxSize = Inf,
+  startDate = NULL,
+  
+  storeMessage = function(msg) {
+    
+    if(self$maxN == 0 | self$maxSize == 0) {
+      message(str_c("Message can't be stored, sincse message storage is set to zero. ",
+                    "Please, use 'limitStorage' function to change the limits."))
+      return()
+    }
+    if(!is.vector(msg))
+      stop("Unknown message format")
+
+    if(msg[1] == "COM") {
+      message(str_c("Command '", msg[2], "' is stored."))
+    } else if(msg[1] == "DATA") {
+      message(str_c("Assignment to the variable '", msg[2], "' is stored."))
+    } else if(msg[1] == "FUN") {
+      message(str_c("Call to the function '", msg[2], "' is stored."))
+    } else {
+      stop("Unknown message type. Must be one of 'COM', 'DATA' or 'FUN'")
+    }
+    
+    messageId <- stri_rand_strings(1, 6)
+    private$storage[[id]] <- list(msg = msg, size = object.size(msg), id = messageId)
+    
+    message(str_c("To authorize execution, please, type 'authorize(id = \"", messageId, "\")'"))
+    self$callFunction("jrc.notifyStorage", list(messageId))
+    self$lastActive <- Sys.time()
+    
+    private$cleanStorage()
+  },
+  execute = function(messageId) {
+    msg <- self$getMessage(messageId)
+    if(is.null(msg))
+      stop(str_c("There is no message with ID ", messageID))
+    
+    tryCatch({
+      if(msg[1] == "COM") {
+        eval(parse(text = msg[2]), envir = private$envir)
+      } else if(msg[1] == "DATA") {
+        assign(msg[[2]], msg[[3]], envir = private$envir)
+      } else if(msg[1] == "FUN") {
+        # 1 = "FUN"
+        # 2 - function name
+        # 3 - list of arguments
+        # 4 - assignTo
+        # 5 - package
+        chain <- strsplit(msg[[2]], "[$]")[[1]]
+        if(is.na(msg[[5]])) {
+          f <- get(chain[1], envir = private$envir)
+          chain <- chain[-1]
+        } else {
+          f <- getNamespace(msg[[5]])
+        }
+        for(el in chain) f <- f[[el]]
+        
+        environment(f) <- private$envir
+        tmp <- do.call(f, msg[[3]], envir = private$envir)  
+        
+        if(!is.na(msg[[4]]))
+          assign(msg[[4]], tmp, envir = private$envir)
+      }
+    }, finally = {self$removeMessage(messageId); self$lastActive <- Sys.time()})
+  },
+  
+  getMessage = function(messageId) {
+    if(!is.character(messageId))
+      stop("Message ID must be a string")
+    if(length(messageId) > 1) {
+      warning("An attepmt to supply several message IDs. Only the first one will be used")
+      messageId <- messageId[1]
+    }
+    
+    private$storage[[messageId]]
+  },
+  removeMessage = function(messageId) {
+    if(!is.character(messageId))
+      stop("Message ID must be a string")
+    if(length(messageId) > 1) {
+      warning("An attepmt to supply several message IDs. Only the first one will be used")
+      messageId <- messageId[1]
+    }
+  
+    private$storage[[messageId]] <- NULL
+    
+    invisible(self)
+  },
+  
+  sendCommand = function(command) {
+    if(is.null(private$ws))
+      stop("Websocket is already closed.")
+    
+    stopifnot(is.character(command))
+      
+    private$ws$send( toJSON(c("COM", command)) )      
+  },
+  
+  callFunction = function(name, arguments = NULL, assignTo = NULL, thisArg = NULL,  ...) {
+    if(!is.null(private$ws))
+      stop("Websocket is already closed.")
+    
+    if(!is.character(name))
+      stop("Function name must be a character")
+    if(!is.null(assignTo) & !is.character(assignTo))
+      stop("Variable name in 'assignTo' must be a character")
+    
+    if(!is.null(arguments)) {
+      if(!is.list(arguments))
+        stop("Arguments must be a list")
+      names(arguments) <- NULL
+      self$sendData("___args___", arguments, ...)
+    }
+    
+    private$ws$send(toJSON(c("FUN", name, assignTo)))
+    
+  },
+  
+  sendData = function(variableName, variable, keepAsVector = FALSE, rowwise = TRUE) {
+    if(!is.null(private$ws))
+      stop("Websocket is already closed.")
+    
+    stopifnot(is.character(variableName))
+    if(length(variableName) > 1) {
+      warning("An attempt to supply multiple variable names. Only the first one will be used.")
+      variableName <- variableName[1]
+    }
+    
+    if(rowwise) {
+      dataframe <- "rows"
+      matrix <- "rowmajor"
+    } else  {
+      dataframe <- "columns"
+      matrix <- "columnmajor"
+    }
+    private$ws$send( toJSON(c("DATA", variableName, 
+                                      toJSON(variable, digits = NA, dataframe = dataframe, matrix = matrix), 
+                                      keepAsVector)))
+  },
+  
+  sendHTML = function(html) {
+    if(!is.null(private$ws))
+      stop("Websocket is already closed.")
+    
+    stopifnot(is.character(html))
+
+    private$ws$send( toJSON(c("HTML", html)) )    
+  },
+  
+  authorize = function(messageId = NULL, show = FALSE) {
+    
+    if(is.null(messageId)) return(sapply(private$storage, `[[`, "id"))
+    
+    if(!is.logical(show))
+      stop("show must be a logical variable")
+    
+    k <- which(sapply(pageobj$storedMessages, `[[`, "id") == id)
+    if(length(k) == 0)
+      stop(str_c("There is no message with id '", id, "'."))
+    if(length(k) > 1) #well... Just in case))
+      k <- k[1]
+  
+    if(!show) {
+      self$execute(messageId)
+    } else {
+      msg <- self$getMessage(messageId)
+      if(is.null(msg))
+        stop(str_c("There is no message with ID ", messageId))
+  
+      if(msg[1] == "COM") {
+        text <- str_c("Command '", msg[2], "'.")
+      } else if(type == "DATA") {
+        text <- str_c("Assignment of varible '", msg[[2]], 
+                      "'. New type is '", msg[[3]]), "'. ",
+                      "New size is ", msg[[3]]), " bytes.")
+      } else if(type == "FUN") {
+        text <- str_c("Call of function '", msg[[2]], "'.")
+        if(!is.na(msg[[4]]))
+          text <- str_c(text, " Results will be assigned to variable '", msg[[4]], "'.")
+      }
+      text <- str_c(text, " To cancel enter '0'.")
+      
+      choice <- menu(c("Execute", "Ignore"), 
+                     title = text)
+      if(choice == 0) return()
+      if(choice == 1) self$execute(messageId)
+      
+      self$removeMessage(messageId)
+    }
+    
+    invisible(self)
+  }
+  
+  close = function(message = NULL) {
+    if(!is.null(message)) {
+      if(!is.character(message))
+        stop("Closing message must be a string.")
+  
+      self$sendCommand(str_c("alert('", mesage, "');"))
+    }
+    if(!is.null(private$ws))
+      private$ws$close()
+  },
+  
+  initialize = function(ws, id = NULL, envir = NULL) {
+    if(is.null(id))
+      id <- stri_rand_strings(1, 6)
+    if(!is.character(id))
+      stop("Session ID must be a string")
+    if(length(id) > 1) {
+      warning("An attempt to supply multiple IDs for a new session. Only one will be used.")
+      id <- id[1]
+    }
+    
+    self$id <- id
+    private$ws <- ws
+    if(is.null(envir))
+      envir <- new.env()
+    stopifnot(is.environment(envir))
+    
+    private$envir <- envir
+    
+    self$lastActive <- Sys.time()
+    self$startDate <- Sys.time()
+  }
+  
+), private = list(
+  ws = NULL,
+  envir = NULL,
+  storage = list(),
+  
+  cleanStorage = function() {
+    if(length(self$storage) > self$maxN){
+      message(str_c("Too many messages! Message with id '", self$storage[[1]]$id, "' removed"))
+      self$storage[1] <- NULL
+    }
+    
+    while(sum(sapply(self$storage, `[[`, "size")) > self$maxSize & 
+          length(self$storage) > 1){
+      message(str_c("Messages size is too big! Message with id '", self$storage[[1]]$id, "' removed"))
+      self$storage[1] <- NULL
+    }
+  }
+))
+
+App <- R6Class("App", public = list(
+
+  addSession = function(session) {
+    stopifnot(class(session) == "Session")
+    if(length(private$sessions) >= self$maxCon) {
+      session$close("Maximum number of active connections has been reached.")
+      stop("Maximum number of connections has been reached. Please, close some of 
+           the existing sessions, before adding a new one.")
+    }
+    oldSession <- self$getSession(session$id)
+    if(!is.null(oldSession)) {
+      warning(str_c("Session with id ", session$id, " already exists. Existing session will be closed."))
+      self$closeSession(oldSession)
+    }
+    private$sessions[[session$id]] <- session
+  },
+  
+  getSession = function(sessionId) {
+    if(!is.character(sessionId))
+      stop("Session ID must be a string")
+    
+    private$sessions[[sessionId]]
+  },
+  
+  closeSession = function(session) {
+    if(is.character(session))
+      session <- self$getSession(session)
+    stopifnot(class(session) == "Session")
+    session$close()
+    private$sessions[[session$id]] <- NULL
+    
+    invisible(self)
+  },
+  
+  getSessionIds = function() {
+    data.frame(id = names(private$sessions), startDate = sapply(private$sessions, `[[`, startDate), 
+               lastActive = sapply(private$sessions, `[[`, lastActive))
+  },
+  
+  stopServer = function() {
+    lapply(private$sessions, self$closeSession)
+    
+    if(!is.null(private$serverHandle)) {
+      if(compareVersion(as.character(packageVersion("httpuv")), "1.3.5") > 0) {
+        stopServer(private$serverHandle)
+      } else {
+        stopDaemonizedServer(private$serverHandle)
+      }
+      message("Server has been stopped.")      
+    }
+  },
+  
+  setEnvironment = function(envir) {
+    stopifnot(is.environment(evir))
+    private$envir <- envir
+  },
+  
+  allowFunctions = function(funs = NULL) {
+    if(is.null(funs)) return(private$allowedFuns)
+    if(!is.vector(funs) | !is.character(funs))
+      stop("'funs' must be a vector of function names")
+    
+    private$allowedFuns <- unique(c(private$allowedFuns, funs))
+    invisible(private$allowedFuns)
+  },
+  
+  allowVariables = function(vars = NULL) {
+    if(is.null(vars)) return(private$allowedVars)
+    if(!is.vector(vars) | !is.character(vars))
+      stop("'funs' must be a vector of function names")
+    
+    private$allowedVars <- unique(c(private$allowedVars, vars))
+    invisible(private$allowedVars)
+    
+  },
+  
+  limitStorage = function(n = NULL, size = NULL) {
+    if(!is.null(n)) {
+      if(!is.numeric(n))
+        stop("Maximum number of stored messages 'n' must be numeric")
+      if(n < 0)
+        stop("Maximum number of stored messages 'n' must be non-negative")
+      private$maxCon <- n
+    }
+    if(!is.null(size)) {
+      if(!is.numeric(size))
+        stop("Maximum size of stored messages 'size' must be numeric")
+      if(size < 0)
+        stop("Maximum size of stored messages 'size' must be non-negative")
+      private$maxSize <- size
+    }
+    
+    c(n = private$maxN, size = private$maxSize)
+  },
+  
+  initialize = function(){
+    
+  }
+  
+), private = list(
+  sessions = list(),
+  serverHandle = NULL,
+  envir = NULL,
+  allowedFuns = c(),
+  allowedVars = c(),
+  maxCon = Inf,
+  maxSize = Inf
+  
+))
 
 handle_http_request <- function( req ) {
   
@@ -62,72 +423,15 @@ handle_http_request <- function( req ) {
   )
 }
 
-execute <- function(msg) {
-
-  if(msg[1] == "COM") {
-    eval(parse(text = msg[2]), envir = pageobj$envir)
-  } else if(msg[1] == "DATA") {
-    assign(msg[[2]], msg[[3]], envir = pageobj$envir)
-  } else if(msg[1] == "FUN") {
-    # 1 = "FUN"
-    # 2 - function name
-    # 3 - list of arguments
-    # 4 - assignTo
-    # 5 - package
-    chain <- strsplit(msg[[2]], "[$]")[[1]]
-    if(is.na(msg[[5]])) {
-      f <- get(chain[1], envir = pageobj$envir)
-      chain <- chain[-1]
-    } else {
-      f <- getNamespace(msg[[5]])
-    }
-    for(el in chain) f <- f[[el]]
-    
-    tmp <- do.call(f, msg[[3]], envir = pageobj$envir)  
-
-    if(!is.na(msg[[4]]))
-      assign(msg[[4]], tmp, envir = pageobj$envir)
-  }
-}
-
-#' @importFrom stringi stri_rand_strings
-#' @importFrom utils object.size
-store <- function(msg) {
-  if(pageobj$maxN == 0 | pageobj$maxSize == 0) {
-    message(str_c("Message can't be stored, sincse message storage is set to zero. ",
-                  "Please, use 'limitStorage' function to change the limits."))
+handle_websocket_open <- function( ws ) {
+  id <- stri_rand_strings(1, 6)
+  if(length(pageobj$ws) == pageobj$maxCon) {
+    ws.send(c("COM", "alert('Too many simultaneous connections!')"))
+    message('Too many simultaneous connections!')
     return()
   }
-  id <- stri_rand_strings(1, 6)
-  pageobj$storedMessages[[length(pageobj$storedMessages) + 1]] <- list(msg = msg, id = id, size = object.size(msg))
-
-  if(msg[1] == "COM") {
-    message(str_c("Command '", msg[2], "' is stored."))
-  } else if(msg[1] == "DATA") {
-    message(str_c("Assignment to the variable '", msg[2], "' is stored."))
-  } else if(msg[1] == "FUN") {
-    message(str_c("Call to the function '", msg[2], "' is stored."))
-  }
-  message(str_c("To authorize execution, please, type 'authorize(id = \"", id, "\")'"))
-  callFunction("jrc.notifyStorage", list(id))
+  envir <- new.env(parent = pageobj$envir)
   
-  cleanStorage()
-}
-
-cleanStorage <- function() {
-  if(length(pageobj$storedMessages) > pageobj$maxN){
-    message(str_c("Too many messages! Message with id '", pageobj$storedMessages[[1]]$id, "' removed"))
-    pageobj$storedMessages[1] <- NULL
-  }
-  
-  while(sum(sapply(pageobj$storedMessages, `[[`, "size")) > pageobj$maxSize & 
-        length(pageobj$storedMessages) > 1){
-    message(str_c("Messages size is too big! Message with id '", pageobj$storedMessages[[1]]$id, "' removed"))
-    pageobj$storedMessages[1] <- NULL
-  }
-}
-
-handle_websocket_open <- function( ws ) {
   ws$onMessage( function( isBinary, msg ) {
     if( isBinary )
       stop( "Unexpected binary message received via WebSocket" )
@@ -136,7 +440,7 @@ handle_websocket_open <- function( ws ) {
       stop(str_interp("Unknown message type: ${msg[1]}"))
     
     if(msg[1] == "COM") {
-      store(msg) #vector of characters
+      store(msg, id) #vector of characters
     } 
     if(msg[1] == "DATA") {
       if(!is.character(msg[2]))
@@ -146,9 +450,9 @@ handle_websocket_open <- function( ws ) {
       msg[[3]] <- fromJSON(msg[[3]])
       
       if(msg[[2]] %in% pageobj$allowedVars) {
-        execute(msg)
+        execute(msg, id)
       } else {
-        store(msg)
+        store(msg, id)
       }
     }
     
@@ -158,7 +462,10 @@ handle_websocket_open <- function( ws ) {
       #make sure that function arguments is a list
       
       msg <- as.list(msg)
-      msg[[3]] <- fromJSON(msg[[3]])
+      if(!is.na(msg[[3]]))
+        msg[[3]] <- fromJSON(msg[[3]])
+      if(is.na(msg[[3]]))
+        msg[[3]] <- list()
       
       msg[[3]] <- as.list(msg[[3]])
       if(!is.list(msg[[3]]))
@@ -166,20 +473,22 @@ handle_websocket_open <- function( ws ) {
       #go through all arguments and turn to numeric
       
       if(msg[[2]] %in% pageobj$allowedFuns & (is.na(msg[[4]]) | msg[[4]] %in% pageobj$allowedVars)) {
-        execute(msg)
+        execute(msg, id)
       } else {
-        store(msg)
+        store(msg, id)
       }
     }
   
   } );
-  if(is.null(pageobj$websocket)) {
-    message("WebSocket opened")
-    pageobj$websocket <- ws
-  } else {
-    stop("WebSocket for this page is already opened. If you want to open page in your 
-         browser instead of R Viewer, use 'openPage(useViewer = FALSE)'")
-  }
+  
+  ws$onClose(function() {
+    pageobj$ws[[id]] <- NULL
+  })
+  
+  pageobj$ws[[id]] <- list(socket = ws, id = id, envir = envir)
+  setSessionVariables(pageobj$sessionVars, id)
+  setSessionVariables(list(.id = id), id)
+  pageobj$onStart(id)
 }
 
 #' Create a server
@@ -209,6 +518,7 @@ handle_websocket_open <- function( ws ) {
 #' from the user. All other reassignments will require authorization in the current R session to be executed. 
 #' This should be a vector of variable names. Check \code{\link{authorize}} and \code{\link{allowVariables}}
 #' for more information.
+#' @param connectionNumber Maximum number of connections that is allowed simultaneously.
 #' 
 #' @seealso \code{\link{closePage}}, \code{\link{setEnvironment}}, \code{\link{limitStorage}}, \code{\link{allowVariables}},
 #' \code{\link{allowFunctions}}.
@@ -219,7 +529,8 @@ handle_websocket_open <- function( ws ) {
 #' @importFrom utils compareVersion
 #' @importFrom utils packageVersion
 openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port = NULL, browser = getOption("browser"),
-                     allowedFunctions = NULL, allowedVariables = NULL) {
+                     allowedFunctions = NULL, allowedVariables = NULL, connectionNumber = Inf, sessionVars = list(),
+                     onStart = function() {}) {
   closePage()
   
   if(is.null(rootDirectory))
@@ -245,8 +556,16 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port
     }
   }
   
+  if(!is.numeric(connectionNumber))
+    stop("Maximum number of connections must be a number")
+  if(length(connectionNumber) > 1) {
+    warning("Several numbers of maximum connections were supplied. Only one will be used")
+    connectionNumber <- connectionNumber[1]
+  }
+  
   pageobj$maxN <- Inf
   pageobj$maxSize <- Inf
+  pageobj$maxCon <- connectionNumber
   
   if(!is.null(allowedFunctions) & !is.vector(allowedFunctions))
     stop("'allowedFunctions' must be a vector of function names.")
@@ -256,6 +575,9 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port
   pageobj$allowedFuns <- allowedFunctions
   pageobj$allowedVars <- allowedVariables
   pageobj$storedMessages <- list()
+  pageobj$sessionVars <- sessionVars
+  pageobj$ws <- list()
+  pageobj$onStart <- onStart
   pageobj$app <- list( 
     call = handle_http_request,
     onWSOpen = handle_websocket_open )
@@ -303,17 +625,43 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port
   # incoming from the client
   for( i in 1:(5/0.05) ) {
     service(100)
-    if( !is.null(pageobj$websocket) ){
+    if( length(pageobj$ws) > 0 ){
       break
     } 
     Sys.sleep( .05 )
   }
-  if( is.null(pageobj$websocket) ) {
+  if( length(pageobj$ws) == 0 ) {
     closePage()
     stop( "Timeout waiting for websocket." )
   }
 
   invisible(TRUE)  
+}
+
+sendMessage <- function(type, id, ...) {
+  if(is.null(app))
+    stop("There is no opened page. Please, use 'openPage()' function to create one.")
+  
+  if(!is.null(id))
+    id <- app$getSessionIds()$id
+  for(i in id){
+    session <- app$getSession(i)
+    if(is.null(session)) {
+      warning(str_c("There is no session with ID ", i))
+    } else {
+      tryCatch(session[[type]](...), 
+               error = function(e) {
+                 if(e$message == "Websocket is already closed.") {
+                   app$closeSession(session)
+                   stop(str_c("Websocket is already closed.", 
+                              "Session ", session$id, " has been terminated.")
+                 } else {
+                   stop(e)
+                 }
+               })
+    }
+  }
+  
 }
 
 #' Send a command to the server
@@ -329,6 +677,7 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port
 #' 
 #' @param command A line (or several lines separated by \code{\\n}) of JavaScript code. This code
 #' will be immediately executed on the opened page. No R-side syntax check is performed.
+#' @param id Session id (randomly generated for each established web socket connection)
 #' 
 #' @examples  
 #' \donttest{k <- 0
@@ -345,11 +694,8 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port
 #' 
 #' @export
 #' @importFrom jsonlite toJSON
-sendCommand <- function(command) {
-  if(is.null(pageobj$websocket))
-    stop("There is no open page. Use 'openPage()' to create a new one.")
-  
-  pageobj$websocket$send( toJSON(c("COM", command)) )  
+sendCommand <- function(command, id = NULL) {
+  sendMessage("sendCommand", id, command = command)
 }
 
 
@@ -361,18 +707,12 @@ sendCommand <- function(command) {
 #' 
 #' @export
 closePage <- function() {
-  if( !is.null(pageobj$httpuv_handle) ) {
-    if( !is.null(pageobj$websocket) ) {
-      pageobj$websocket$close()
-    }
-    if(compareVersion(as.character(packageVersion("httpuv")), "1.3.5") > 0) {
-      stopServer(pageobj$httpuv_handle )
-    } else {
-      stopDaemonizedServer(pageobj$httpuv_handle)
-    }
+  if(!is.null(app)) {
+    app$stopServer()
+    app <- NULL
+  } else {
+    message("There is no opened page.")
   }
-  
-  rm( list=ls(pageobj), envir=pageobj )
 }
 
 #' Send data to the server
@@ -402,20 +742,9 @@ closePage <- function() {
 #'  
 #' @export
 #' @importFrom jsonlite toJSON
-sendData <- function(variableName, variable, keepAsVector = FALSE, rowwise = TRUE) {
-  if(is.null(pageobj$websocket))
-    stop("There is no open page. Use 'openPage()' to create a new one.")
-  
-  if(rowwise) {
-    dataframe <- "rows"
-    matrix <- "rowmajor"
-  } else  {
-    dataframe <- "columns"
-    matrix <- "columnmajor"
-  }
-  pageobj$websocket$send( toJSON(c("DATA", variableName, 
-                                   toJSON(variable, digits = NA, dataframe = dataframe, matrix = matrix), 
-                                   keepAsVector)))
+sendData <- function(variableName, variable, id = NULL, keepAsVector = FALSE, rowwise = TRUE) {
+  sendMessage("sendData", id, variableName = variableName, variable = variable, keepAsVector = keepAsVector,
+              rowwise = rowwise)
 }
 
 #' Set Environment
@@ -430,7 +759,7 @@ sendData <- function(variableName, variable, keepAsVector = FALSE, rowwise = TRU
 #' 
 #' @export
 setEnvironment <- function(envir) {
-  pageobj$envir <- envir
+  app$setEnvironment(envir)
 }
 
 #' Send HTML to the server
@@ -452,15 +781,8 @@ setEnvironment <- function(envir) {
 #' \code{\link{openPage}}.
 #' 
 #' @export
-sendHTML <- function(html = "") {
-  if(!is.character(html))
-    stop("html must be a character string")
-  #html <- str_replace_all(html, "(\\W)", "\\\\\\1")
-
-  if(is.null(pageobj$websocket))
-    stop("There is no open page. Use 'openPage()' to create a new one.")
-  
-  pageobj$websocket$send( toJSON(c("HTML", html)) )
+sendHTML <- function(html = "", id = NULL) {
+  sendMessage("sendHTML", id, html = html)
 }
 
 #' Trigger a function call
@@ -503,22 +825,9 @@ sendHTML <- function(html = "") {
 #' \code{\link{setEnvironment}}.
 #' 
 #' @export
-callFunction <- function(name, arguments = NULL, assignTo = NULL, thisArg = NULL, ...) {
-  if(is.null(pageobj$websocket))
-    stop("There is no open page. Use 'openPage()' to create a new one.")
-  if(!is.character(name))
-    stop("Function name must be a character")
-  if(!is.null(assignTo) & !is.character(assignTo))
-    stop("Variable name in 'assignTo' must be a character")
-  
-  if(!is.null(arguments)) {
-    if(!is.list(arguments))
-      stop("Arguments must be a list")
-    names(arguments) <- NULL
-    sendData("___args___", arguments, ...)
-  }
-  
-  pageobj$websocket$send(toJSON(c("FUN", name, assignTo)))
+callFunction <- function(name, arguments = NULL, assignTo = NULL, thisArg = NULL, id = NULL, ...) {
+  sendMessage("callFunction", id, name = name, arguments = arguments, assignTo = assignTo, thisArg = thisArg,
+                ...)
 }
 
 #' Authorize further message processing
@@ -548,44 +857,12 @@ callFunction <- function(name, arguments = NULL, assignTo = NULL, thisArg = NULL
 #' 
 #' @export
 #' @importFrom utils menu
-authorize <- function(id = NULL, show = FALSE) {
-  if(is.null(id)) return(sapply(pageobj$storedMessages, `[[`, "id"))
+authorize <- function(sessionId, messageId = NULL, show = FALSE) {
+  session <- app$getSession(sessionId)
+  if(is.null(session))
+    stop(str_c("There is no session with ID ", sessionId))
   
-  if(!is.logical(show))
-    stop("show must be a logical variable")
-
-  k <- which(sapply(pageobj$storedMessages, `[[`, "id") == id)
-  if(length(k) == 0)
-    stop(str_c("There is no message with id '", id, "'."))
-  if(length(k) > 1) #well... Just in case))
-    k <- k[1]
-  
-  if(!show) {
-    tryCatch(execute(pageobj$storedMessages[[k]]$msg), finally = {pageobj$storedMessages[k] <- NULL})
-  } else {
-    type <- pageobj$storedMessages[[k]]$msg[1]
-    if(type == "COM") {
-      text <- str_c("Command '", pageobj$storedMessages[[k]]$msg[2], "'.")
-    } else if(type == "DATA") {
-      text <- str_c("Assignment of varible '", pageobj$storedMessages[[k]]$msg[[2]], 
-                    "'. New type is '", typeof(pageobj$storedMessages[[k]]$msg[[3]]), "'. ",
-                    "New size is ", object.size(pageobj$storedMessages[[k]]$msg[[3]]), " bytes.")
-    } else if(type == "FUN") {
-      text <- str_c("Call of function '", pageobj$storedMessages[[k]]$msg[[2]], "'.")
-      if(!is.na(pageobj$storedMessages[[k]]$msg[[4]]))
-        text <- str_c(text, " Results will be assigned to variable '", pageobj$storedMessages[[k]]$msg[[4]], "'.")
-    }
-    text <- str_c(text, " To cancel enter '0'.")
-    
-    choice <- menu(c("Execute", "Ignore"), 
-         title = text)
-    if(choice == 0) return()
-    if(choice == 1) tryCatch(execute(pageobj$storedMessages[[k]]$msg))
-    
-    pageobj$storedMessages[k] <- NULL
-  }
-  
-  invisible(sapply(pageobj$storedMessages, `[[`, "id"))
+  session$authorize(messageId, show)
 }
 
 #' Allow function calls without authorization
@@ -608,12 +885,7 @@ authorize <- function(id = NULL, show = FALSE) {
 #' 
 #' @export
 allowFunctions <- function(funs = NULL) {
-  if(is.null(funs)) return(pageobj$allowedFuns)
-  if(!is.vector(funs) | !is.character(funs))
-    stop("'funs' must be a vector of function names")
-   
-  pageobj$allowedFuns <- unique(c(pageobj$allowedFuns, funs))
-  invisible(pageobj$allowedFuns)
+  app$allowFunctions(funs)
 }
 
 #' Allow variable assignment without authorization
@@ -636,12 +908,7 @@ allowFunctions <- function(funs = NULL) {
 #' 
 #' @export
 allowVariables <- function(vars = NULL) {
-  if(is.null(vars)) return(pageobj$allowedVars)
-  if(!is.vector(vars) | !is.character(vars))
-    stop("'funs' must be a vector of function names")
-  
-  pageobj$allowedVars <- unique(c(pageobj$allowedVars, vars))
-  invisible(pageobj$allowedVars)
+  app$allowVariables(vars)
 }
 
 #' Change size of the message storage
@@ -672,21 +939,7 @@ allowVariables <- function(vars = NULL) {
 #' 
 #' @export
 limitStorage <- function(n = NULL, size = NULL) {
-  if(!is.null(n)) {
-    if(!is.numeric(n))
-      stop("Maximum number of stored messages 'n' must be numeric")
-    if(n < 0)
-      stop("Maximum number of stored messages 'n' must be non-negative")
-    pageobj$maxN <- n
-  }
-  if(!is.null(size)) {
-    if(!is.numeric(size))
-      stop("Maximum size of stored messages 'size' must be numeric")
-    if(size < 0)
-      stop("Maximum size of stored messages 'size' must be non-negative")
-    pageobj$maxSize <- size
-  }
-  c(n = pageobj$maxN, size = pageobj$maxSize)
+  app$limitStorage(n, size)
 }
 
 #' Get opened page
@@ -694,12 +947,63 @@ limitStorage <- function(n = NULL, size = NULL) {
 #' Checks if there is a currently opened page. If so, returns an object with all
 #' the information about the current session.
 #' 
-#' TO DO: Do we really need this function?
-#' 
 #' @return page-handling object if there is a currently opened jrc page, \code{NULL} otherwise.
 #' 
 #' @export
 getPage <- function() {
-  if(!is.null(pageobj$websocket))
+  if(length(pageobj$ws) > 0)
     return(pageobj)
+}
+
+#' Set session-specific variables
+#' 
+#' Specifies variables that will be available (can be read or rewritten) only within a given session.
+#' This is useful to safe state of the app for each client or for other personal settings. You can
+#' also use it to limit user's access to data loaded in the current R session.
+#' 
+#' @export
+setSessionVariables <- function(vars, sessionId = NULL) {
+  if(is.null(sessionId))
+    sessionId = names(pageobj$ws)
+  
+  if(!is.list(vars))
+    stop("Variables must be set as a list")
+  if(length(vars) > 0 & is.null(names(vars)))
+    stop("List of variables must be named")
+  
+  for(id in sessionId) 
+    list2env(vars, pageobj$ws[[id]]$envir)
+  
+}
+
+#' Get IDs of all active sessions
+#' 
+#' Returns IDs of all currently active sessions with date and time of their initialization
+#' and the last received message.
+#' 
+#' @return a \code{data.frame} with three columns: \code{id} - session ID, \code{startDate} - time and date
+#' of the initialization of this session, \code{lastActive} - time and date of the last received message
+#' from this web socket.
+#' 
+#' @export
+getSessionIds <- function() {
+  app$getSessionIds()
+}
+
+#' Close session
+#' 
+#' Closes session with a given ID.
+#' 
+#' @param sessionId ID of a session to be closed. Can be a vector of IDs to close multiple session at once.
+#' If \code{NULL}, all active sessions will be closed. (Without stopping the server, to stop server, please, use \link{closePage}.)
+#' 
+#' @export
+closeSession <- function(sessionId = NULL) {
+  if(is.null(sessionId))
+    sessionId <- names(pageobj$ws)
+  
+  for(id in sessionId) {
+    pageobj$ws[[id]]$socket$close()
+    pageobj$ws[[id]] <- NULL
+  }
 }

@@ -4,11 +4,13 @@
 \alias{sendCommand}
 \title{Send a command to the server}
 \usage{
-sendCommand(command)
+sendCommand(command, id = NULL)
 }
 \arguments{
 \item{command}{A line (or several lines separated by \code{\\n}) of JavaScript code. This code
 will be immediately executed on the opened page. No R-side syntax check is performed.}
+
+\item{id}{Session id (randomly generated for each established web socket connection)}
 }
 \description{
 \code{sendCommand} sends JavaScript code to the server and executes it on the currently

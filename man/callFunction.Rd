@@ -5,7 +5,7 @@
 \title{Trigger a function call}
 \usage{
 callFunction(name, arguments = NULL, assignTo = NULL, thisArg = NULL,
-  ...)
+  id = NULL, ...)
 }
 \arguments{
 \item{name}{Name of the function. If the function is a method of some object
