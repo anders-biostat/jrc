@@ -4,7 +4,6 @@
 #' @importFrom jsonlite fromJSON
 #' @importFrom utils object.size
 
-
 #Should it be exported????
 #' @importFrom stringi stri_rand_strings
 Session <- R6Class("Session", public = list(
@@ -202,7 +201,11 @@ Session <- R6Class("Session", public = list(
     }
     
     invisible(self)
-  }
+  },
+  
+  setSessionVariables = function(vars) {
+    list2env(vars, private$envir)
+  },
   
   close = function(message = NULL) {
     if(!is.null(message)) {
@@ -226,7 +229,6 @@ Session <- R6Class("Session", public = list(
     }
     
     self$id <- id
-    private$ws <- ws
     if(is.null(envir))
       envir <- new.env()
     stopifnot(is.environment(envir))
@@ -235,6 +237,10 @@ Session <- R6Class("Session", public = list(
     
     self$lastActive <- Sys.time()
     self$startDate <- Sys.time()
+    
+    private$ws <- ws
+    
+    self$setSessionVariables(list(.id = id), id)      
   }
   
 ), private = list(
@@ -257,7 +263,9 @@ Session <- R6Class("Session", public = list(
 ))
 
 App <- R6Class("App", public = list(
-
+  rootDirectory = "",
+  startPage = "",
+  
   addSession = function(session) {
     stopifnot(class(session) == "Session")
     if(length(private$sessions) >= self$maxCon) {
@@ -308,6 +316,64 @@ App <- R6Class("App", public = list(
     }
   },
   
+  startSever = function(port = NULL) {
+    if(is.null(port)) {
+      if(compareVersion(as.character(packageVersion("httpuv")), "1.5.4") >= 0){
+        port <- randomPort(n = 50)
+      } else {
+        #if there is no randomPort function in the httpuv package
+        #in later versions of jrc this will be removed and httpuv >= 1.5.2 will be required
+        #code adopted from httpuv::randomPort
+        for (port in sample(seq(1024L, 49151L), 50)) {
+          s <- NULL
+          
+          # Check if port is open
+          tryCatch(
+            s <- startServer("0.0.0.0", port, list(), quiet = TRUE),
+            error = function(e) { }
+          )
+          if (!is.null(s)) {
+            s$stop()
+            break
+          }
+        }
+      }
+    }
+    port <- as.integer(port)
+    if(is.na(port))
+      stop("Port number must be an integer number.")
+    
+    if(!(compareVersion(as.character(packageVersion("httpuv")), "1.3.5") > 0)) {
+      private$serverHandle <- startDaemonizedServer( "0.0.0.0", port, private$getApp() )
+    } else {
+      private$serverHandle <- startServer( "0.0.0.0", port, private$getApp() )
+    }
+  },
+  
+  openPage = function(useViewer = TRUE, browser = getOption("browser")) {
+    if(is.null(private$serverHandle))
+      stop("No server is running. Please, start a server before opening a page.")
+    if( useViewer & !is.null( getOption("viewer") ) )
+      getOption("viewer")( str_c("http://localhost:", port, "/", self$startPage) )
+    else
+      browseURL( str_c("http://localhost:", port, "/", self$startPage), browser = browser )
+    
+    
+    # Wait up to 5 seconds for the a websocket connection
+    # incoming from the client
+    for( i in 1:(5/0.05) ) {
+      service(100)
+      if( length(private$sessions) > 0 ){
+        break
+      } 
+      Sys.sleep( .05 )
+    }
+    if( length(private$sessions) == 0 ) {
+      self$stopServer()
+      stop( "Timeout waiting for websocket." )
+    }    
+  },
+  
   setEnvironment = function(envir) {
     stopifnot(is.environment(evir))
     private$envir <- envir
@@ -351,8 +417,84 @@ App <- R6Class("App", public = list(
     c(n = private$maxN, size = private$maxSize)
   },
   
-  initialize = function(){
+  setSessionVariables = function(vars, sessionId = NULL) {
+    if(is.null(sessionId))
+      sessionId = names(private$sessions)
     
+    if(!is.list(vars))
+      stop("Variables must be set as a list")
+    if(length(vars) > 0 & is.null(names(vars)))
+      stop("List of variables must be named")
+    
+    for(id in sessionId)
+      self$getSession(id)$setSessionVariables(vars)
+  },
+  
+  setRootDirectory = function(dir) {
+    stopifnot(is.character(dir))
+    
+    if(!dir.exists(dir))
+      stop(str_interp("There is no such directory: '${dir}'"))
+    
+    self$rootDirectory <- normalizePath(dir)
+    
+    invisible(self)
+  },
+  
+  setStartPage = function(page) {
+    stopifnot(is.character(page))
+    
+    if(file.exists(file.path(self$rootDirectory, page))){
+      self$startPage <- page
+    } else {
+      if(!file.exists(page))
+        stop(str_interp("There is no such file: '${page}'"))
+      page <- normalizePath(page)
+      if(grepl(page, self$rootDirectory, fixed = T)) {
+        self$startPage <- str_remove(page, str_c(self$rootDirectory, "/"))
+      } else {
+        self$startPage <- "index.html"
+        self$startPagePath <- startPage
+      }
+    }
+    
+  },
+  
+  limitConnectionNumbers = function(maxCon = NULL) {
+    if(is.null(maxCon))
+      return(self$maxCon)
+    
+    stopifnot(is.numeric(maxCon))
+    
+    self$maxCon <- maxCon
+    
+    invisible(self)
+  }
+  
+  initialize = function(rootDirectory = NULL, startPage = NULL, onStart = NULL, 
+                        connectionNumber = Inf, allowedFunctions = c(), 
+                        allowedVariables = c(), sessionVars = list()) {
+    if(is.null(rootDirectory)) 
+      rootDirectory <- system.file("http_root", package = "jrc")
+    self$setRootDirectory(rootDirectory)
+    
+    if(is.null(startPage))
+      startPage <- system.file("http_root/index.html", package = "jrc")
+    self$setStartPage(startPage)
+    
+    private$envir <- globalenv()
+    
+    if(!is.null(startPage)) {
+      stopifnot(is.function(onStart))
+      private$onStart <- onStart
+    }
+    
+    self$allowFunctions(allowedFunctions)
+    self$allowVarables(allowedVariables)
+    self$setSessionVarables(sessionVars)
+    sefl$limitConnectionNumbers(connectionNumber)
+    
+    invisible(self)
   }
   
 ), private = list(
@@ -362,134 +504,136 @@ App <- R6Class("App", public = list(
   allowedFuns = c(),
   allowedVars = c(),
   maxCon = Inf,
-  maxSize = Inf
+  maxSize = Inf,
+  maxN = Inf,
   
+  getApp = function() {
+    handle_http_request <- function( req ) {
+      
+      reqPage <- req$PATH_INFO
+      if(grepl("^/http_root", reqPage)) {
+        pack <- substring(strsplit(reqPage, "/")[[1]][2], 11)
+        reqPage <- sub(str_c("_", pack), "", reqPage)
+        reqPage <- system.file( reqPage, package = pack )
+      } else {
+        if(reqPage == "/index.html" & !is.null(self$startPagePath)) {
+          reqPage <- self$startPagePath
+        } else {
+          reqPage <- str_c(self$rootDirectory, reqPage)
+        }
+      }
+      
+      if( !file.exists(reqPage) ) {
+        reqPage <- str_remove(reqPage, self$rootDirectory)
+        if(!file.exists(reqPage)) {
+          warning(str_interp("File '${reqPage}' is not found"))
+          return( list( 
+            status = 404L,
+            headers = list( "Content-Type" = "text/html" ),
+            body = "404: Resource not found" ) )
+        }
+      }
+      
+      content_type <- mime::guess_type(reqPage)
+      content <- readLines(reqPage, warn = F)
+      
+      if(content_type == "text/html") {
+        jsfile <- str_c("<script src='http_root_jrc/jrc.js'></script>")
+        stop <- F
+        for(i in 1:length(content))
+          if(str_detect(content[i], regex("<head", ignore_case = T))) {
+            stop <- T
+            content[i] <- str_replace(content[i], regex("(<head[^>]*>)", ignore_case = T), str_c("\\1", jsfile))
+          }
+        #the document has no <head> tag
+        if(!stop) {
+          jsfile <- str_c("<head>", jsfile, "</head>")
+          for(i in 1:length(content))
+            if(str_detect(content[i], regex("<html", ignore_case = T))) {
+              stop <- T
+              content[i] <- str_replace(content[i], regex("(<html[^>]*>)", ignore_case = T), str_c("\\1", jsfile))
+            }
+        }
+        if(!stop)
+          content <- c(jsfile, content)
+      }
+      
+      list(
+        status = 200L,
+        headers = list( 'Content-Type' = content_type ),
+        body = str_c( content, collapse="\n" )
+      )
+    }
+    handle_websocket_open <- function( ws ) {
+      session <- Session$new(ws, envir = new.env(parent = private$envir))  
+      
+      ws$onMessage( function( isBinary, msg ) {
+        if( isBinary )
+          stop( "Unexpected binary message received via WebSocket" )
+        msg <- fromJSON(msg)
+        if(!(msg[1] %in% c("COM", "FUN", "DATA")))
+          stop(str_interp("Unknown message type: ${msg[1]}"))
+        
+        if(msg[1] == "COM") {
+          session$storeMessage(msg) #vector of characters
+        } 
+        if(msg[1] == "DATA") {
+          if(!is.character(msg[2]))
+            stop("Invalid message structure. Variable name is not character.")
+          
+          msg <- as.list(msg)
+          msg[[3]] <- fromJSON(msg[[3]])
+          
+          if(msg[[2]] %in% private$allowedVars) {
+            session$execute(msg)
+          } else {
+            session$storeMessage(msg)
+          }
+        }
+        
+        if(msg[1] == "FUN") {
+          if(!is.character(msg[2]))
+            stop("Invalid message structure. Function name is not character.")
+          #make sure that function arguments is a list
+          
+          msg <- as.list(msg)
+          if(!is.na(msg[[3]]))
+            msg[[3]] <- fromJSON(msg[[3]])
+          if(is.na(msg[[3]]))
+            msg[[3]] <- list()
+          
+          msg[[3]] <- as.list(msg[[3]])
+          if(!is.list(msg[[3]]))
+            stop("Invalid message structure. List of arguments is not a list.")
+          #go through all arguments and turn to numeric
+          
+          if(msg[[2]] %in% private$allowedFuns & (is.na(msg[[4]]) | msg[[4]] %in% private$allowedVars)) {
+            session$execute(msg)
+          } else {
+            session$store(msg)
+          }
+        }
+      } );
+      
+      ws$onClose(function() {
+        self$closeSession(session$id)
+      })      
+      
+      session$setSessionVariables(private$sessionVars)
+      self$addSession(session)
+    
+      self$onStart(session)
+    }
+    
+    list(call = handle_http_request,
+         onWSOpen = handle_websocket_open)
+  }, 
+  
+  onStart = function(session) {}
 ))
 
-handle_http_request <- function( req ) {
-  
-  reqPage <- req$PATH_INFO
-  if(grepl("^/http_root", reqPage)) {
-    pack <- substring(strsplit(reqPage, "/")[[1]][2], 11)
-    reqPage <- sub(str_c("_", pack), "", reqPage)
-    reqPage <- system.file( reqPage, package = pack )
-  } else {
-    if(reqPage == "/index.html" & !is.null(pageobj$startPagePath)) {
-      reqPage <- pageobj$startPagePath
-    } else {
-      reqPage <- str_c(pageobj$rootDirectory, reqPage)
-    }
-  }
-    
-  if( !file.exists(reqPage) ) {
-    reqPage <- str_remove(reqPage, pageobj$rootDirectory)
-    if(!file.exists(reqPage)) {
-      warning(str_interp("File '${reqPage}' is not found"))
-      return( list( 
-        status = 404L,
-        headers = list( "Content-Type" = "text/html" ),
-        body = "404: Resource not found" ) )
-    }
-  }
-  
-  content_type <- mime::guess_type(reqPage)
-  content <- readLines(reqPage, warn = F)
-  
-  if(content_type == "text/html") {
-    jsfile <- str_c("<script src='http_root_jrc/jrc.js'></script>")
-    stop <- F
-    for(i in 1:length(content))
-      if(str_detect(content[i], regex("<head", ignore_case = T))) {
-        stop <- T
-        content[i] <- str_replace(content[i], regex("(<head[^>]*>)", ignore_case = T), str_c("\\1", jsfile))
-      }
-    #the document has no <head> tag
-    if(!stop) {
-      jsfile <- str_c("<head>", jsfile, "</head>")
-      for(i in 1:length(content))
-        if(str_detect(content[i], regex("<html", ignore_case = T))) {
-          stop <- T
-          content[i] <- str_replace(content[i], regex("(<html[^>]*>)", ignore_case = T), str_c("\\1", jsfile))
-        }
-    }
-    if(!stop)
-      content <- c(jsfile, content)
-  }
-  
-  list(
-    status = 200L,
-    headers = list( 'Content-Type' = content_type ),
-    body = str_c( content, collapse="\n" )
-  )
-}
+pcg.env <- new.env()
 
-handle_websocket_open <- function( ws ) {
-  id <- stri_rand_strings(1, 6)
-  if(length(pageobj$ws) == pageobj$maxCon) {
-    ws.send(c("COM", "alert('Too many simultaneous connections!')"))
-    message('Too many simultaneous connections!')
-    return()
-  }
-  envir <- new.env(parent = pageobj$envir)
-  
-  ws$onMessage( function( isBinary, msg ) {
-    if( isBinary )
-      stop( "Unexpected binary message received via WebSocket" )
-    msg <- fromJSON(msg)
-    if(!(msg[1] %in% c("COM", "FUN", "DATA")))
-      stop(str_interp("Unknown message type: ${msg[1]}"))
-    
-    if(msg[1] == "COM") {
-      store(msg, id) #vector of characters
-    } 
-    if(msg[1] == "DATA") {
-      if(!is.character(msg[2]))
-        stop("Invalid message structure. Variable name is not character.")
-      
-      msg <- as.list(msg)
-      msg[[3]] <- fromJSON(msg[[3]])
-      
-      if(msg[[2]] %in% pageobj$allowedVars) {
-        execute(msg, id)
-      } else {
-        store(msg, id)
-      }
-    }
-    
-    if(msg[1] == "FUN") {
-      if(!is.character(msg[2]))
-        stop("Invalid message structure. Function name is not character.")
-      #make sure that function arguments is a list
-      
-      msg <- as.list(msg)
-      if(!is.na(msg[[3]]))
-        msg[[3]] <- fromJSON(msg[[3]])
-      if(is.na(msg[[3]]))
-        msg[[3]] <- list()
-      
-      msg[[3]] <- as.list(msg[[3]])
-      if(!is.list(msg[[3]]))
-        stop("Invalid message structure. List of arguments is not a list.")
-      #go through all arguments and turn to numeric
-      
-      if(msg[[2]] %in% pageobj$allowedFuns & (is.na(msg[[4]]) | msg[[4]] %in% pageobj$allowedVars)) {
-        execute(msg, id)
-      } else {
-        store(msg, id)
-      }
-    }
-  
-  } );
-  
-  ws$onClose(function() {
-    pageobj$ws[[id]] <- NULL
-  })
-  
-  pageobj$ws[[id]] <- list(socket = ws, id = id, envir = envir)
-  setSessionVariables(pageobj$sessionVars, id)
-  setSessionVariables(list(.id = id), id)
-  pageobj$onStart(id)
-}
 
 #' Create a server
 #' 
@@ -530,112 +674,14 @@ handle_websocket_open <- function( ws ) {
 #' @importFrom utils packageVersion
 openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port = NULL, browser = getOption("browser"),
                      allowedFunctions = NULL, allowedVariables = NULL, connectionNumber = Inf, sessionVars = list(),
-                     onStart = function() {}) {
+                     onStart = NULL) {
   closePage()
   
-  if(is.null(rootDirectory))
-    rootDirectory = system.file("http_root", package = "jrc")
-  if(is.null(startPage)) 
-    startPage <- system.file( "http_root/index.html", package="jrc" )
+  app <- App$new(rootDirectory, startPage, onStart, connectionNumber, allowedFunctions, allowedVariables, sessionVars)
+  app$startServer(port)
+  app$openPage(useViewer, browser)
   
-  if(!dir.exists(rootDirectory))
-    stop(str_interp("There is no such directory: '${rootDirectory}'"))
-  pageobj$rootDirectory <- normalizePath(rootDirectory)
-  
-  if(file.exists(file.path(pageobj$rootDirectory, startPage))){
-    pageobj$startPage <- startPage
-  } else {
-    if(!file.exists(startPage))
-      stop(str_interp("There is no such file: '${startPage}'"))
-    startPage <- normalizePath(startPage)
-    if(grepl(startPage, pageobj$rootDirectory, fixed = T)) {
-      pageobj$startPage <- str_remove(startPage, str_c(pageobj$rootDirectory, "/"))
-    } else {
-      pageobj$startPage <- "index.html"
-      pageobj$startPagePath <- startPage
-    }
-  }
-  
-  if(!is.numeric(connectionNumber))
-    stop("Maximum number of connections must be a number")
-  if(length(connectionNumber) > 1) {
-    warning("Several numbers of maximum connections were supplied. Only one will be used")
-    connectionNumber <- connectionNumber[1]
-  }
-  
-  pageobj$maxN <- Inf
-  pageobj$maxSize <- Inf
-  pageobj$maxCon <- connectionNumber
-  
-  if(!is.null(allowedFunctions) & !is.vector(allowedFunctions))
-    stop("'allowedFunctions' must be a vector of function names.")
-  if(!is.null(allowedVariables) & !is.vector(allowedVariables))
-    stop("'allowedVariables' must be a vector of variable names.")
-  
-  pageobj$allowedFuns <- allowedFunctions
-  pageobj$allowedVars <- allowedVariables
-  pageobj$storedMessages <- list()
-  pageobj$sessionVars <- sessionVars
-  pageobj$ws <- list()
-  pageobj$onStart <- onStart
-  pageobj$app <- list( 
-    call = handle_http_request,
-    onWSOpen = handle_websocket_open )
-  
-  if(is.null(port)) {
-    if(compareVersion(as.character(packageVersion("httpuv")), "1.5.4") >= 0){
-      port <- randomPort(n = 50)
-    } else {
-      #if there is no randomPort function in the httpuv package
-      #in later versions of jrc this will be removed and httpuv >= 1.5.2 will be required
-      #code adopted from httpuv::randomPort
-      for (port in sample(seq(1024L, 49151L), 50)) {
-        s <- NULL
-        
-        # Check if port is open
-        tryCatch(
-          s <- startServer("0.0.0.0", port, list(), quiet = TRUE),
-          error = function(e) { }
-        )
-        if (!is.null(s)) {
-          s$stop()
-          break
-        }
-      }
-    }
-  }
-  port <- as.integer(port)
-  if(is.na(port))
-    stop("Port number must be an integer number.")
-    
-  if(!(compareVersion(as.character(packageVersion("httpuv")), "1.3.5") > 0)) {
-    pageobj$httpuv_handle <- startDaemonizedServer( "0.0.0.0", port, pageobj$app )
-  } else {
-    pageobj$httpuv_handle <- startServer( "0.0.0.0", port, pageobj$app )
-  }
-
-  if( useViewer & !is.null( getOption("viewer") ) )
-    getOption("viewer")( str_c("http://localhost:", port, "/", pageobj$startPage) )
-  else
-    browseURL( str_c("http://localhost:", port, "/", pageobj$startPage), browser = browser )
-  
-  pageobj$envir <- globalenv()
-  
-  # Wait up to 5 seconds for the a websocket connection
-  # incoming from the client
-  for( i in 1:(5/0.05) ) {
-    service(100)
-    if( length(pageobj$ws) > 0 ){
-      break
-    } 
-    Sys.sleep( .05 )
-  }
-  if( length(pageobj$ws) == 0 ) {
-    closePage()
-    stop( "Timeout waiting for websocket." )
-  }
-
-  invisible(TRUE)  
+  app
 }
 
 sendMessage <- function(type, id, ...) {
@@ -709,7 +755,6 @@ sendCommand <- function(command, id = NULL) {
 closePage <- function() {
   if(!is.null(app)) {
     app$stopServer()
-    app <- NULL
   } else {
     message("There is no opened page.")
   }
@@ -951,8 +996,7 @@ limitStorage <- function(n = NULL, size = NULL) {
 #' 
 #' @export
 getPage <- function() {
-  if(length(pageobj$ws) > 0)
-    return(pageobj)
+  app
 }
 
 #' Set session-specific variables
@@ -963,17 +1007,7 @@ getPage <- function() {
 #' 
 #' @export
 setSessionVariables <- function(vars, sessionId = NULL) {
-  if(is.null(sessionId))
-    sessionId = names(pageobj$ws)
-  
-  if(!is.list(vars))
-    stop("Variables must be set as a list")
-  if(length(vars) > 0 & is.null(names(vars)))
-    stop("List of variables must be named")
-  
-  for(id in sessionId) 
-    list2env(vars, pageobj$ws[[id]]$envir)
-  
+  app$setSessionVariables(vars, sessionId)
 }
 
 #' Get IDs of all active sessions
@@ -988,22 +1022,4 @@ setSessionVariables <- function(vars, sessionId = NULL) {
 #' @export
 getSessionIds <- function() {
   app$getSessionIds()
-}
-
-#' Close session
-#' 
-#' Closes session with a given ID.
-#' 
-#' @param sessionId ID of a session to be closed. Can be a vector of IDs to close multiple session at once.
-#' If \code{NULL}, all active sessions will be closed. (Without stopping the server, to stop server, please, use \link{closePage}.)
-#' 
-#' @export
-closeSession <- function(sessionId = NULL) {
-  if(is.null(sessionId))
-    sessionId <- names(pageobj$ws)
-  
-  for(id in sessionId) {
-    pageobj$ws[[id]]$socket$close()
-    pageobj$ws[[id]] <- NULL
-  }
 }
