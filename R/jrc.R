@@ -299,6 +299,9 @@ App <- R6Class("App", public = list(
   closeSession = function(session) {
     if(is.character(session))
       session <- self$getSession(session)
+    if(is.null(session))
+      stop("There is no session with this ID")
+      
     stopifnot("Session" %in% class(session))
     session$close()
     private$sessions[[session$id]] <- NULL
@@ -307,8 +310,8 @@ App <- R6Class("App", public = list(
   },
   
   getSessionIds = function() {
-    data.frame(id = names(private$sessions), startDate = sapply(private$sessions, `[[`, startDate), 
-               lastActive = sapply(private$sessions, `[[`, lastActive))
+    data.frame(id = names(private$sessions), startDate = sapply(private$sessions, `[[`, "startDate"), 
+               lastActive = sapply(private$sessions, `[[`, "lastActive"), stringsAsFactors = FALSE)
   },
   
   stopServer = function() {
@@ -358,8 +361,6 @@ App <- R6Class("App", public = list(
     } else {
       private$serverHandle <- startServer( "0.0.0.0", private$port, private$getApp() )
     }
-    
-    private$serverHandle
   },
   
   openPage = function(useViewer = TRUE, browser = getOption("browser")) {
@@ -373,14 +374,15 @@ App <- R6Class("App", public = list(
     
     # Wait up to 5 seconds for the a websocket connection
     # incoming from the client
+    private$waitingForResponse <- TRUE
     for( i in 1:(5/0.05) ) {
       service(100)
-      if( length(private$sessions) > 0 ){
+      if( !private$waitingForResponse ){
         break
       } 
       Sys.sleep( .05 )
     }
-    if( length(private$sessions) == 0 ) {
+    if( private$waitingForResponse ) {
       self$stopServer()
       stop( "Timeout waiting for websocket." )
     }    
@@ -512,6 +514,7 @@ App <- R6Class("App", public = list(
   allowedVars = c(),
   maxCon = Inf,
   port = NULL,
+  waitingForResponse = FALSE,
   
   getApp = function() {
     handle_http_request <- function( req ) {
@@ -622,13 +625,15 @@ App <- R6Class("App", public = list(
       } );
       
       ws$onClose(function() {
-        self$closeSession(session$id)
+        if(!is.null(self$getSession(session$id)))
+          self$closeSession(session$id)
       })      
       
       session$setSessionVariables(private$sessionVars)
       self$addSession(session)
     
       private$onStart(session)
+      private$waitingForResponse <- FALSE
     }
     
     list(call = handle_http_request,
@@ -693,20 +698,20 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port
 }
 
 sendMessage <- function(type, id, ...) {
-  if(is.null(app))
+  if(is.null(pkg.env$app))
     stop("There is no opened page. Please, use 'openPage()' function to create one.")
   
   if(!is.null(id))
-    id <- app$getSessionIds()$id
+    id <- pkg.env$app$getSessionIds()$id
   for(i in id){
-    session <- app$getSession(i)
+    session <- pkg.env$app$getSession(i)
     if(is.null(session)) {
       warning(str_c("There is no session with ID ", i))
     } else {
       tryCatch(session[[type]](...), 
                error = function(e) {
                  if(e$message == "Websocket is already closed.") {
-                   app$closeSession(session)
+                   pkg.env$app$closeSession(session)
                    stop(str_c("Websocket is already closed.", 
                               "Session ", session$id, " has been terminated."))
                  } else {
@@ -762,7 +767,7 @@ sendCommand <- function(command, id = NULL) {
 #' @export
 closePage <- function() {
   if(!is.null(pkg.env$app)) {
-    app$stopServer()
+    pkg.env$app$stopServer()
     pkg.env$app <- NULL
   } else {
     message("There is no opened page.")
@@ -813,7 +818,10 @@ sendData <- function(variableName, variable, id = NULL, keepAsVector = FALSE, ro
 #' 
 #' @export
 setEnvironment <- function(envir) {
-  app$setEnvironment(envir)
+  if(is.null(pkg.env$app))
+    stop("There is no opened page. Please, use 'openPage()' function to create one.")
+  
+  pkg.env$app$setEnvironment(envir)
 }
 
 #' Send HTML to the server
@@ -912,7 +920,10 @@ callFunction <- function(name, arguments = NULL, assignTo = NULL, thisArg = NULL
 #' @export
 #' @importFrom utils menu
 authorize <- function(sessionId, messageId = NULL, show = FALSE) {
-  session <- app$getSession(sessionId)
+  if(is.null(pkg.env$app))
+    stop("There is no opened page. Please, use 'openPage()' function to create one.")  
+  
+  session <- pkg.env$app$getSession(sessionId)
   if(is.null(session))
     stop(str_c("There is no session with ID ", sessionId))
   
@@ -939,7 +950,10 @@ authorize <- function(sessionId, messageId = NULL, show = FALSE) {
 #' 
 #' @export
 allowFunctions <- function(funs = NULL) {
-  app$allowFunctions(funs)
+  if(is.null(pkg.env$app))
+    stop("There is no opened page. Please, use 'openPage()' function to create one.")
+  
+  pkg.env$app$allowFunctions(funs)
 }
 
 #' Allow variable assignment without authorization
@@ -962,7 +976,10 @@ allowFunctions <- function(funs = NULL) {
 #' 
 #' @export
 allowVariables <- function(vars = NULL) {
-  app$allowVariables(vars)
+  if(is.null(pkg.env$app))
+    stop("There is no opened page. Please, use 'openPage()' function to create one.")  
+  
+  pkg.env$app$allowVariables(vars)
 }
 
 #' Change size of the message storage
@@ -993,7 +1010,10 @@ allowVariables <- function(vars = NULL) {
 #' 
 #' @export
 limitStorage <- function(n = NULL, size = NULL) {
-  app$limitStorage(n, size)
+  if(is.null(pkg.env$app))
+    stop("There is no opened page. Please, use 'openPage()' function to create one.")  
+  
+  pkg.env$app$limitStorage(n, size)
 }
 
 #' Get opened page
@@ -1005,7 +1025,7 @@ limitStorage <- function(n = NULL, size = NULL) {
 #' 
 #' @export
 getPage <- function() {
-  app
+  pkg.env$app
 }
 
 #' Set session-specific variables
@@ -1016,7 +1036,10 @@ getPage <- function() {
 #' 
 #' @export
 setSessionVariables <- function(vars, sessionId = NULL) {
-  app$setSessionVariables(vars, sessionId)
+  if(is.null(pkg.env$app))
+    stop("There is no opened page. Please, use 'openPage()' function to create one.")  
+  
+  pkg.env$app$setSessionVariables(vars, sessionId)
 }
 
 #' Get IDs of all active sessions
@@ -1030,5 +1053,8 @@ setSessionVariables <- function(vars, sessionId = NULL) {
 #' 
 #' @export
 getSessionIds <- function() {
-  app$getSessionIds()
+  if(is.null(pkg.env$app))
+    stop("There is no opened page. Please, use 'openPage()' function to create one.")  
+  
+  pkg.env$app$getSessionIds()
 }

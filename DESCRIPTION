@@ -13,3 +13,5 @@ Imports: httpuv, jsonlite, utils, stringr, stringi, mime
 RoxygenNote: 6.1.1
 URL: https://github.com/anders-biostat/jrc
 BugReports: https://github.com/anders-biostat/jrc/issues
+Suggests: 
+    testthat

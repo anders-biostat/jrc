@@ -2,6 +2,19 @@ library( jrc )
 library( stringr )
 
 app <- App$new()
+app$startServer()
+app$openPage()
+app$getSessionIds()
+app$openPage(useViewer = F, browser = "google-chrome")
+app$getSessionIds()
+session <- app$getSession("A4Iqa2")
+app$closeSession("Ld0mWS")
+app$closeSession(session)
+app$stopServer()
+
+port <- httpuv::randomPort()
+openPage(port = port)
+
 
 openPage(useViewer = F, port = 12345, browser = "firefox")
 closePage()
