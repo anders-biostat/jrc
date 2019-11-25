@@ -15,7 +15,6 @@ Session <- R6Class("Session", public = list(
   startDate = NULL,
   
   storeMessage = function(msg) {
-    
     if(self$maxN == 0 | self$maxSize == 0) {
       message(str_c("Message can't be stored, sincse message storage is set to zero. ",
                     "Please, use 'limitStorage' function to change the limits."))
@@ -35,18 +34,25 @@ Session <- R6Class("Session", public = list(
     }
     
     messageId <- stri_rand_strings(1, 6)
-    private$storage[[id]] <- list(msg = msg, size = object.size(msg), id = messageId)
+    private$storage[[messageId]] <- list(msg = msg, size = object.size(msg), id = messageId)
     
     message(str_c("To authorize execution, please, type 'authorize(id = \"", messageId, "\")'"))
-    self$callFunction("jrc.notifyStorage", list(messageId))
+    if(!private$waiting) {
+      self$callFunction("jrc.notifyStorage", list(messageId))
+    } else {
+      private$waiting <- FALSE
+    }
     self$lastActive <- Sys.time()
     
     private$cleanStorage()
   },
   execute = function(messageId) {
+    
+    private$waiting <- FALSE
     msg <- self$getMessage(messageId)
     if(is.null(msg))
-      stop(str_c("There is no message with ID ", messageID))
+      stop(str_c("There is no message with ID ", messageId))
+    msg <- msg$msg
     
     tryCatch({
       if(msg[1] == "COM") {
@@ -100,17 +106,24 @@ Session <- R6Class("Session", public = list(
     invisible(self)
   },
   
-  sendCommand = function(command) {
+  getMessageIds = function() {
+    sapply(private$storage, `[[`, "id")
+  },
+  
+  sendCommand = function(command, wait = 0) {
     if(is.null(private$ws))
       stop("Websocket is already closed.")
     
     stopifnot(is.character(command))
       
-    private$ws$send( toJSON(c("COM", command)) )      
+    private$ws$send( toJSON(c("COM", command)) )
+    
+    if(wait > 0)
+      private$wait(wait)
   },
   
-  callFunction = function(name, arguments = NULL, assignTo = NULL, thisArg = NULL,  ...) {
-    if(!is.null(private$ws))
+  callFunction = function(name, arguments = NULL, assignTo = NULL, wait = 0, thisArg = NULL,  ...) {
+    if(is.null(private$ws))
       stop("Websocket is already closed.")
     
     if(!is.character(name))
@@ -126,11 +139,13 @@ Session <- R6Class("Session", public = list(
     }
     
     private$ws$send(toJSON(c("FUN", name, assignTo)))
-    
+
+    if(wait > 0)
+      private$wait(wait)
   },
   
-  sendData = function(variableName, variable, keepAsVector = FALSE, rowwise = TRUE) {
-    if(!is.null(private$ws))
+  sendData = function(variableName, variable, wait = 0, keepAsVector = FALSE, rowwise = TRUE) {
+    if(is.null(private$ws))
       stop("Websocket is already closed.")
     
     stopifnot(is.character(variableName))
@@ -149,15 +164,20 @@ Session <- R6Class("Session", public = list(
     private$ws$send( toJSON(c("DATA", variableName, 
                                       toJSON(variable, digits = NA, dataframe = dataframe, matrix = matrix), 
                                       keepAsVector)))
+    if(wait > 0)
+      private$wait(wait)
   },
   
-  sendHTML = function(html) {
-    if(!is.null(private$ws))
+  sendHTML = function(html, wait = 0) {
+    if(is.null(private$ws))
       stop("Websocket is already closed.")
     
     stopifnot(is.character(html))
 
-    private$ws$send( toJSON(c("HTML", html)) )    
+    private$ws$send( toJSON(c("HTML", html)) )
+
+    if(wait > 0)
+      private$wait(wait)
   },
   
   authorize = function(messageId = NULL, show = FALSE) {
@@ -166,27 +186,21 @@ Session <- R6Class("Session", public = list(
     
     if(!is.logical(show))
       stop("show must be a logical variable")
-    
-    k <- which(sapply(pageobj$storedMessages, `[[`, "id") == id)
-    if(length(k) == 0)
-      stop(str_c("There is no message with id '", id, "'."))
-    if(length(k) > 1) #well... Just in case))
-      k <- k[1]
   
     if(!show) {
       self$execute(messageId)
     } else {
-      msg <- self$getMessage(messageId)
+      msg <- self$getMessage(messageId)$msg
       if(is.null(msg))
         stop(str_c("There is no message with ID ", messageId))
   
       if(msg[1] == "COM") {
         text <- str_c("Command '", msg[2], "'.")
-      } else if(type == "DATA") {
+      } else if(msg[[1]] == "DATA") {
         text <- str_c("Assignment of varible '", msg[[2]], 
                       "'. New type is '", msg[[3]], "'. ",
                       "New size is ", msg[[3]], " bytes.")
-      } else if(type == "FUN") {
+      } else if(msg[[1]] == "FUN") {
         text <- str_c("Call of function '", msg[[2]], "'.")
         if(!is.na(msg[[4]]))
           text <- str_c(text, " Results will be assigned to variable '", msg[[4]], "'.")
@@ -253,18 +267,36 @@ Session <- R6Class("Session", public = list(
   ws = NULL,
   envir = NULL,
   storage = list(),
+  waiting = FALSE,
   
   cleanStorage = function() {
-    if(length(self$storage) > self$maxN){
-      message(str_c("Too many messages! Message with id '", self$storage[[1]]$id, "' removed"))
-      self$storage[1] <- NULL
+    if(length(private$storage) > self$maxN){
+      message(str_c("Too many messages! Message with id '", private$storage[[1]]$id, "' removed"))
+      private$storage[1] <- NULL
     }
     
-    while(sum(sapply(self$storage, `[[`, "size")) > self$maxSize & 
-          length(self$storage) > 1){
-      message(str_c("Messages size is too big! Message with id '", self$storage[[1]]$id, "' removed"))
-      self$storage[1] <- NULL
+    while(sum(sapply(private$storage, `[[`, "size")) > self$maxSize & 
+          length(private$storage) > 1){
+      message(str_c("Messages size is too big! Message with id '", private$storage[[1]]$id, "' removed"))
+      private$storage[1] <- NULL
     }
+  },
+  
+  wait = function(time) {
+    private$waiting <- TRUE
+  
+    for( i in 1:(time/0.05) ) {
+      service(100)
+      if( !private$waiting ){
+        break
+      } 
+      Sys.sleep( .05 )
+    }
+    
+    if(private$waiting) 
+      warning(str_c("Failed to receive response from the websocket. Session ID: ", self$id))
+    
+    private$waiting <- FALSE
   }
 ))
 
@@ -361,6 +393,8 @@ App <- R6Class("App", public = list(
     } else {
       private$serverHandle <- startServer( "0.0.0.0", private$port, private$getApp() )
     }
+    
+    invisible(self)
   },
   
   openPage = function(useViewer = TRUE, browser = getOption("browser")) {
@@ -374,22 +408,24 @@ App <- R6Class("App", public = list(
     
     # Wait up to 5 seconds for the a websocket connection
     # incoming from the client
-    private$waitingForResponse <- TRUE
+    private$waiting <- TRUE
     for( i in 1:(5/0.05) ) {
       service(100)
-      if( !private$waitingForResponse ){
-        break
+      if( !private$waiting ){
+       break
       } 
       Sys.sleep( .05 )
     }
-    if( private$waitingForResponse ) {
+    if( private$waiting ) {
       self$stopServer()
       stop( "Timeout waiting for websocket." )
-    }    
+    }
+    
+    invisible(self)
   },
   
   setEnvironment = function(envir) {
-    stopifnot(is.environment(evir))
+    stopifnot(is.environment(envir))
     private$envir <- envir
   },
   
@@ -425,10 +461,10 @@ App <- R6Class("App", public = list(
         stop("Maximum size of stored messages 'size' must be numeric")
       if(size < 0)
         stop("Maximum size of stored messages 'size' must be non-negative")
-      private$maxSize <- size
+      self$maxSize <- size
     }
     
-    c(n = private$maxN, size = private$maxSize)
+    c(n = private$maxN, size = self$maxSize)
   },
   
   setSessionVariables = function(vars, sessionId = NULL) {
@@ -514,7 +550,7 @@ App <- R6Class("App", public = list(
   allowedVars = c(),
   maxCon = Inf,
   port = NULL,
-  waitingForResponse = FALSE,
+  waiting = FALSE,
   
   getApp = function() {
     handle_http_request <- function( req ) {
@@ -633,7 +669,7 @@ App <- R6Class("App", public = list(
       self$addSession(session)
     
       private$onStart(session)
-      private$waitingForResponse <- FALSE
+      private$waiting <- FALSE
     }
     
     list(call = handle_http_request,
@@ -697,7 +733,7 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port
   invisible(app)
 }
 
-sendMessage <- function(type, id, ...) {
+sendMessage <- function(type, id, wait, ...) {
   if(is.null(pkg.env$app))
     stop("There is no opened page. Please, use 'openPage()' function to create one.")
   
@@ -753,8 +789,8 @@ sendMessage <- function(type, id, ...) {
 #' 
 #' @export
 #' @importFrom jsonlite toJSON
-sendCommand <- function(command, id = NULL) {
-  sendMessage("sendCommand", id, command = command)
+sendCommand <- function(command, id = NULL, wait = 0) {
+  sendMessage("sendCommand", id, wait, command = command)
 }
 
 
@@ -801,8 +837,8 @@ closePage <- function() {
 #'  
 #' @export
 #' @importFrom jsonlite toJSON
-sendData <- function(variableName, variable, id = NULL, keepAsVector = FALSE, rowwise = TRUE) {
-  sendMessage("sendData", id, variableName = variableName, variable = variable, keepAsVector = keepAsVector,
+sendData <- function(variableName, variable, id = NULL, wait = 0, keepAsVector = FALSE, rowwise = TRUE) {
+  sendMessage("sendData", id, wait, variableName = variableName, variable = variable, keepAsVector = keepAsVector,
               rowwise = rowwise)
 }
 
@@ -843,8 +879,8 @@ setEnvironment <- function(envir) {
 #' \code{\link{openPage}}.
 #' 
 #' @export
-sendHTML <- function(html = "", id = NULL) {
-  sendMessage("sendHTML", id, html = html)
+sendHTML <- function(html = "", id = NULL, wait = 0) {
+  sendMessage("sendHTML", id, wait, html = html)
 }
 
 #' Trigger a function call
@@ -887,8 +923,8 @@ sendHTML <- function(html = "", id = NULL) {
 #' \code{\link{setEnvironment}}.
 #' 
 #' @export
-callFunction <- function(name, arguments = NULL, assignTo = NULL, thisArg = NULL, id = NULL, ...) {
-  sendMessage("callFunction", id, name = name, arguments = arguments, assignTo = assignTo, thisArg = thisArg,
+callFunction <- function(name, arguments = NULL, assignTo = NULL, wait = 0, thisArg = NULL, id = NULL, ...) {
+  sendMessage("callFunction", id, wait, name = name, arguments = arguments, assignTo = assignTo, thisArg = thisArg,
                 ...)
 }
 

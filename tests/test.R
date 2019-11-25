@@ -15,6 +15,16 @@ app$stopServer()
 port <- httpuv::randomPort()
 openPage(port = port)
 
+appTest <- App$new()
+appTest$startServer()
+appTest$openPage()
+id <- appTest$getSessionIds()$id
+sessionTest <- appTest$getSession(id)
+sessionTest$sendCommand("jrc.sendCommand('k_test <<- 15')", wait = 3)
+mesId <- sessionTest$getMessageIds()
+msg <- sessionTest$getMessage(mesId)
+sessionTest$authorize(mesId, show = T)
+appTest$stopServer()
 
 openPage(useViewer = F, port = 12345, browser = "firefox")
 closePage()
