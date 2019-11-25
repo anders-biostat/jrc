@@ -726,6 +726,7 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port
     closePage()
   
   app <- App$new(rootDirectory, startPage, onStart, connectionNumber, allowedFunctions, allowedVariables, sessionVars)
+  app$setEnvironment(parent.frame())
   app$startServer(port)
   app$openPage(useViewer, browser)
   pkg.env$app <- app
@@ -733,11 +734,11 @@ openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port
   invisible(app)
 }
 
-sendMessage <- function(type, id, wait, ...) {
+sendMessage <- function(type, id, ...) {
   if(is.null(pkg.env$app))
     stop("There is no opened page. Please, use 'openPage()' function to create one.")
   
-  if(!is.null(id))
+  if(is.null(id))
     id <- pkg.env$app$getSessionIds()$id
   for(i in id){
     session <- pkg.env$app$getSession(i)
@@ -790,7 +791,7 @@ sendMessage <- function(type, id, wait, ...) {
 #' @export
 #' @importFrom jsonlite toJSON
 sendCommand <- function(command, id = NULL, wait = 0) {
-  sendMessage("sendCommand", id, wait, command = command)
+  sendMessage("sendCommand", id, wait = wait, command = command)
 }
 
 
@@ -838,7 +839,7 @@ closePage <- function() {
 #' @export
 #' @importFrom jsonlite toJSON
 sendData <- function(variableName, variable, id = NULL, wait = 0, keepAsVector = FALSE, rowwise = TRUE) {
-  sendMessage("sendData", id, wait, variableName = variableName, variable = variable, keepAsVector = keepAsVector,
+  sendMessage("sendData", id, wait = wait, variableName = variableName, variable = variable, keepAsVector = keepAsVector,
               rowwise = rowwise)
 }
 
@@ -880,7 +881,7 @@ setEnvironment <- function(envir) {
 #' 
 #' @export
 sendHTML <- function(html = "", id = NULL, wait = 0) {
-  sendMessage("sendHTML", id, wait, html = html)
+  sendMessage("sendHTML", id, wait = wait, html = html)
 }
 
 #' Trigger a function call
@@ -924,7 +925,7 @@ sendHTML <- function(html = "", id = NULL, wait = 0) {
 #' 
 #' @export
 callFunction <- function(name, arguments = NULL, assignTo = NULL, wait = 0, thisArg = NULL, id = NULL, ...) {
-  sendMessage("callFunction", id, wait, name = name, arguments = arguments, assignTo = assignTo, thisArg = thisArg,
+  sendMessage("callFunction", id, wait = wait, name = name, arguments = arguments, assignTo = assignTo, thisArg = thisArg,
                 ...)
 }
 

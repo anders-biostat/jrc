@@ -21,17 +21,6 @@ test_that("Commands can be send, received and stored", {
   session$removeMessage(messageIds[2])
   expect_equal(length(session$getMessageIds()), 0)
   
-  expect_message(app$stopServer(), "Server has been stopped.")
-})
-
-test_that("Default environment is the right one", {
-  app <- App$new()
-  app$startServer()
-  
-  app$openPage()
-  
-  session <- app$getSession(app$getSessionIds()$id)
-  
   k_send <- sample(1000, 1)
   k_received <- -1
   
@@ -39,12 +28,12 @@ test_that("Default environment is the right one", {
   messageId <- session$getMessageIds()
   session$authorize(messageId)   
   
-  expect_equal(k_received, k_send)
+  expect_equal(k_received, k_send)  
   
-  expect_message(app$stopServer(), "Server has been stopped.")      
+  expect_message(app$stopServer(), "Server has been stopped.")
 })
 
-test_that("Assignment operator works in a given environment", {
+test_that("Commands can be evaluated in the given environment", {
   app <- App$new()
   app$startServer()
   
@@ -67,3 +56,20 @@ test_that("Assignment operator works in a given environment", {
   expect_message(app$stopServer(), "Server has been stopped.")  
 })
 
+test_that("Wrapper function is working", {
+  openPage()
+  
+  k_send <- sample(1000, 1)
+  k_received <- -1
+  
+  sendCommand(paste0("jrc.sendCommand('k_received <<- ", k_send, "')"), wait = 3)
+  app <- getPage()
+  session <- app$getSession(app$getSessionIds()$id)
+  messageId <- session$getMessageIds()
+
+  authorize(session$id, messageId)
+  
+  expect_equal(k_received, k_send)  
+
+  expect_message(closePage(), "Server has been stopped.")
+})
