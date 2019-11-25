@@ -527,7 +527,7 @@ App <- R6Class("App", public = list(
       startPage <- system.file("http_root/index.html", package = "jrc")
     self$setStartPage(startPage)
     
-    private$envir <- globalenv()
+    private$envir <- parent.frame(n = 2)
     
     if(!is.null(onStart)) {
       stopifnot(is.function(onStart))

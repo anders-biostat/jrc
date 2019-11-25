@@ -16,15 +16,33 @@ port <- httpuv::randomPort()
 openPage(port = port)
 
 appTest <- App$new()
+env <- new.env()
+env$someVariable <- 1
+appTest$setEnvironment(env)
 appTest$startServer()
 appTest$openPage()
 id <- appTest$getSessionIds()$id
 sessionTest <- appTest$getSession(id)
-sessionTest$sendCommand("jrc.sendCommand('k_test <<- 15')", wait = 3)
-mesId <- sessionTest$getMessageIds()
-msg <- sessionTest$getMessage(mesId)
-sessionTest$authorize(mesId, show = T)
+#sessionTest$sendCommand("jrc.sendCommand('k_test <<- 15')", wait = 3)
+#mesId <- sessionTest$getMessageIds()
+#msg <- sessionTest$getMessage(mesId)
+#sessionTest$authorize(mesId, show = T)
+sessionTest$sendCommand("jrc.sendCommand('env1 <<- environment()')", wait = 1)
+mesIds <- sessionTest$getMessageIds()
+sessionTest$authorize(mesIds[1])
 appTest$stopServer()
+
+appTest <- App$new()
+appTest$startServer()
+appTest$openPage()
+id <- appTest$getSessionIds()$id
+sessionTest <- appTest$getSession(id)
+sessionTest$sendCommand("jrc.sendCommand('env1 <<- environment()')", wait = 1)
+mesIds <- sessionTest$getMessageIds()
+sessionTest$authorize(mesIds[1])
+appTest$stopServer()
+
+
 
 openPage(useViewer = F, port = 12345, browser = "firefox")
 closePage()
