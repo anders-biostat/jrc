@@ -249,6 +249,20 @@ Session <- R6Class("Session", public = list(
     }
   },
   
+  getSessionVariable = function(var) {
+    stopifnot(is.character(var))
+    
+    get(var, envir = private$envir)
+  },
+  
+  setEnvironment = function(envir) {
+    stopifnot(is.environment(envir))
+    
+    parent.env(private$envir) <- envir
+    
+    invisible(self)
+  },
+  
   close = function(message = NULL) {
     if(!is.null(message)) {
       if(!is.character(message))
@@ -446,9 +460,19 @@ App <- R6Class("App", public = list(
     invisible(self)
   },
   
-  setEnvironment = function(envir) {
+  setEnvironment = function(envir, sessionId = NULL) {
     stopifnot(is.environment(envir))
     private$envir <- envir
+    
+    if(is.null(sessionId))
+      sessionId <- names(private$sessions)
+    
+    if(!is.null(sessionId)) {
+      stopifnot(is.vector(sessionId))
+      for(id in sessionId) 
+        self$getSession(id)$setEnvironment(envir)
+    }
+    invisible(self)
   },
   
   allowFunctions = function(funs = NULL) {
@@ -876,11 +900,11 @@ sendData <- function(variableName, variable, id = NULL, wait = 0, keepAsVector =
 #' setEnvironment(environment())
 #' 
 #' @export
-setEnvironment <- function(envir) {
+setEnvironment <- function(envir, sessionId = NULL) {
   if(is.null(pkg.env$app))
     stop("There is no opened page. Please, use 'openPage()' function to create one.")
   
-  pkg.env$app$setEnvironment(envir)
+  pkg.env$app$setEnvironment(envir, sessionId)
 }
 
 #' Send HTML to the server

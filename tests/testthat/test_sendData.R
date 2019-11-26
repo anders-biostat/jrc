@@ -114,3 +114,44 @@ test_that("Data types are converted appropriately on the R side", {
   
   expect_message(closePage(), "Server has been stopped.")
 })
+
+test_that("Data messages can be stored for later execution", {
+  openPage()
+  
+  sendCommand('jrc.sendData("x", 15, false)', wait = 3)
+  
+  app <- getPage()
+  session <- app$getSession(app$getSessionIds()$id)
+  
+  expect_length(session$getMessageIds(), 1)
+  
+  messageId <- session$getMessageIds()
+  session$authorize(messageId)
+  
+  expect_equal(x, 15)
+  
+  expect_length(session$getMessageIds(), 0)
+  expect_message(closePage(), "Server has been stopped.")
+})
+
+test_that("Variables are assigned in a correct environment", {
+  
+  openPage(allowedVariables = c(".x_ut", ".y_ut"))
+  e <- new.env()
+  setEnvironment(e)
+  
+  sendCommand('jrc.sendData(".x_ut", 18, false)', wait = 3)
+  expect_false(exists(".x_ut"))
+  expect_equal(e$.x_ut, 18)
+  
+  sendCommand('jrc.sendData(".y_ut", 22)', wait = 3)
+  expect_false(exists(".y_ut"))
+  expect_false(exists(".y_ut", envir = e))
+  
+  id <- getPage()$getSessionIds()$id
+  session <- getPage()$getSession(id)
+  y <- session$getSessionVariable(".y_ut")
+  expect_equal(y, 22)
+  
+  expect_message(closePage(), "Server has been stopped.")
+})
