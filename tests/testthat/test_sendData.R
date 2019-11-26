@@ -86,3 +86,31 @@ test_that("Data types are converted appropriately on the server side", {
   
   expect_message(closePage(), "Server has been stopped.")
 })
+
+test_that("Data types are converted appropriately on the R side", {
+  openPage(allowedVariables = c("x", "y", "z", "k", "m", "l"))
+  
+  sendCommand('jrc.sendData("x", 10, false)', wait = 3)  # number -> number
+  expect_true(is.numeric(x))
+  
+  sendCommand('jrc.sendData("y", "abc", false)', wait = 3) # string -> character
+  expect_type(y, "character")
+  
+  sendCommand('jrc.sendData("z", [1, 2, 3, 4, 5, 6], false)', wait = 3) # Array -> vector of numerics
+  expect_true(is.vector(z))
+  expect_true(is.numeric(z))
+  
+  sendCommand('jrc.sendData("k", ["a", "b", "c"], false)', wait = 3)
+  expect_true(is.character(k))
+  expect_length(k, 3)
+  
+  sendCommand('jrc.sendData("m", [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]], false)', wait = 3) # Array of numeric Arrays -> matrix (rowwise)
+  expect_equal(dim(m), c(4, 3))
+  
+  sendCommand('jrc.sendData("l", {a: [1, 2, 3, 4, 5, 6], b: [7, 8, 9, 10, 11, 12]}, false)', wait = 3)
+  expect_type(l, "list")
+  expect_length(l$a, 6)
+  expect_true(is.numeric(l$b))
+  
+  expect_message(closePage(), "Server has been stopped.")
+})
