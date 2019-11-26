@@ -36,7 +36,8 @@ Session <- R6Class("Session", public = list(
     messageId <- stri_rand_strings(1, 6)
     private$storage[[messageId]] <- list(msg = msg, size = object.size(msg), id = messageId)
     
-    message(str_c("To authorize execution, please, type 'authorize(id = \"", messageId, "\")'"))
+    message(str_c("To authorize execution, please, type 'authorize(sessionId = \"", self$id, 
+                  "\", messageId = \"", messageId, "\")'"))
     if(!private$waiting) {
       self$callFunction("jrc.notifyStorage", list(messageId))
     } else {
@@ -46,19 +47,31 @@ Session <- R6Class("Session", public = list(
     
     private$cleanStorage()
   },
-  execute = function(messageId) {
-    
+  execute = function(messageId = NULL, msg = NULL) {
+    if(is.null(msg))
+      if(is.null(messageId)) {
+        stop("Either message of message ID must be provided.")
+      } else {
+        msg <- self$getMessage(messageId)
+      }
     private$waiting <- FALSE
-    msg <- self$getMessage(messageId)
+
     if(is.null(msg))
       stop(str_c("There is no message with ID ", messageId))
-    msg <- msg$msg
-    
+
     tryCatch({
       if(msg[1] == "COM") {
         eval(parse(text = msg[2]), envir = private$envir)
       } else if(msg[1] == "DATA") {
-        assign(msg[[2]], msg[[3]], envir = private$envir)
+        # 1 = "DATA"
+        # 2 - variable name
+        # 3 - variable
+        # 4 - boolean (session-wise or outside)
+        if(msg[[4]]) {
+          assign(msg[[2]], msg[[3]], envir = private$envir)
+        } else {
+          assign(msg[[2]], msg[[3]], envir = parent.env(private$envir))
+        }
       } else if(msg[1] == "FUN") {
         # 1 = "FUN"
         # 2 - function name
@@ -80,7 +93,12 @@ Session <- R6Class("Session", public = list(
         if(!is.na(msg[[4]]))
           assign(msg[[4]], tmp, envir = private$envir)
       }
-    }, finally = {self$removeMessage(messageId); self$lastActive <- Sys.time()})
+    }, finally = {
+      if(!is.null(messageId))
+        self$removeMessage(messageId)
+      self$lastActive <- Sys.time()
+      }
+    )
   },
   
   getMessage = function(messageId) {
@@ -91,7 +109,11 @@ Session <- R6Class("Session", public = list(
       messageId <- messageId[1]
     }
     
-    private$storage[[messageId]]
+    msgObj <- private$storage[[messageId]]
+    if(!is.null(msgObj))
+      msgObj <- msgObj$msg
+    
+    msgObj
   },
   removeMessage = function(messageId) {
     if(!is.character(messageId))
@@ -190,7 +212,7 @@ Session <- R6Class("Session", public = list(
     if(!show) {
       self$execute(messageId)
     } else {
-      msg <- self$getMessage(messageId)$msg
+      msg <- self$getMessage(messageId)
       if(is.null(msg))
         stop(str_c("There is no message with ID ", messageId))
   
@@ -630,7 +652,7 @@ App <- R6Class("App", public = list(
           msg[[3]] <- fromJSON(msg[[3]])
           
           if(msg[[2]] %in% private$allowedVars) {
-            session$execute(msg)
+            session$execute(msg = msg)
           } else {
             session$storeMessage(msg)
           }
@@ -653,7 +675,7 @@ App <- R6Class("App", public = list(
           #go through all arguments and turn to numeric
           
           if(msg[[2]] %in% private$allowedFuns & (is.na(msg[[4]]) | msg[[4]] %in% private$allowedVars)) {
-            session$execute(msg)
+            session$execute(msg = msg)
           } else {
             session$store(msg)
           }

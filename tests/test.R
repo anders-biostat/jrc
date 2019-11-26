@@ -49,6 +49,11 @@ closePage()
 
 #test basic functions
 openPage(useViewer = F)
+allowVariables("type")
+
+appTest <- getPage()
+sessionTest <- appTest$getSession(appTest$getSessionIds()$id)
+sessionTest$getMessage("1ivSCK")
 
 sendCommand("alert('Bla-bla-bla')")
 

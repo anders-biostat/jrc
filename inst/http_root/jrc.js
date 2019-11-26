@@ -102,8 +102,10 @@ jrc.sendCommand = function(command) {
 	jrc.ws.send(JSON.stringify(["COM", command]));
 }
 
-jrc.sendData = function(variableName, variable) {
-	jrc.ws.send(JSON.stringify(["DATA", variableName, JSON.stringify(variable)]));
+jrc.sendData = function(variableName, variable, sessionwise) {
+	if(sessionwise === undefined)
+		sessionwise = true;
+	jrc.ws.send(JSON.stringify(["DATA", variableName, JSON.stringify(variable), sessionwise]));
 }
 
 //args must be object (to be converted to names list in R)
@@ -112,7 +114,7 @@ jrc.callFunction = function(functionName, args, assingTo, package) {
 }
 
 jrc.notifyStorage = function(id) {
-	alert("Your command has been stored. To execute it, please, type 'authorize(id = \"" + id + "\")'. " + 
+	alert("Your command has been stored. To execute it, please, run the 'authorize' function as it is shown in your R sesion. " + 
 			"Use functions 'allowVariables' and 'allowFunctions' to permit automatic execution of " +
 			"your commands.")
 }
