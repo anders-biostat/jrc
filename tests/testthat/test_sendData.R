@@ -72,7 +72,12 @@ test_that("Data types are converted appropriately on the server side", {
   expect_equal(type, "number")
   expect_equal(names, c("a", "b", "c", "d"))
   expect_equal(size, 3)
-  
+
+  #keepAsVector = TRUE
+  sendData("l", list(a = 1, b = 1:10), keepAsVector = TRUE) # list of vectors -> Object of Arrays
+  sendCommand("jrc.sendData('size', l.a.length, false)", wait = 3)
+  expect_equal(size, 1)
+
   sendData("l2", list(data.frame(a = 1:10,                                        # unnamed list -> Array of Arrays and Objects
                                  b = paste0("a", 1:10), 
                                  c = as.factor(rep(c("a", "b"), times = 5)),

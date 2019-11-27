@@ -87,7 +87,8 @@ Session <- R6Class("Session", public = list(
         }
         for(el in chain) f <- f[[el]]
         
-        environment(f) <- private$envir
+        if(is.na(msg[[5]]))
+          environment(f) <- private$envir
         tmp <- do.call(f, msg[[3]], envir = private$envir)  
         
         if(!is.na(msg[[4]]))
@@ -688,9 +689,11 @@ App <- R6Class("App", public = list(
           #make sure that function arguments is a list
           
           msg <- as.list(msg)
-          if(!is.na(msg[[3]]))
+          if(!is.na(msg[[3]])) 
             msg[[3]] <- fromJSON(msg[[3]])
-          if(is.na(msg[[3]]))
+          if(is.vector(msg[[3]]))
+            msg[[3]] <- as.list(msg[[3]])
+          if(length(msg[[3]]) == 1 && is.na(msg[[3]]))
             msg[[3]] <- list()
           
           msg[[3]] <- as.list(msg[[3]])
@@ -701,7 +704,7 @@ App <- R6Class("App", public = list(
           if(msg[[2]] %in% private$allowedFuns & (is.na(msg[[4]]) | msg[[4]] %in% private$allowedVars)) {
             session$execute(msg = msg)
           } else {
-            session$store(msg)
+            session$storeMessage(msg)
           }
         }
       } );
