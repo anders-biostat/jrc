@@ -1,4 +1,4 @@
-context("Work with multiple sessions")
+context("Handle multiple sessions")
 
 test_that("Messages from different sessions are properly stored and can be executed via the wrapper function", {
   app <- openPage()
