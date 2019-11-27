@@ -358,7 +358,13 @@ App <- R6Class("App", public = list(
     private$sessions[[session$id]] <- session
   },
   
-  getSession = function(sessionId) {
+  getSession = function(sessionId = NULL) {
+    if(is.null(sessionId))
+      if(length(private$sessions) <= 1) {
+        return(private$sessions[[1]])
+      } else {
+        stop("There are more than one active session. Please, specify session ID.")
+      }
     if(!is.character(sessionId))
       stop("Session ID must be a string")
     
@@ -458,7 +464,7 @@ App <- R6Class("App", public = list(
       stop( "Timeout waiting for websocket." )
     }
     
-    invisible(self)
+    invisible(private$sessions[[length(private$sessions)]])
   },
   
   setEnvironment = function(envir, sessionId = NULL) {
@@ -576,10 +582,12 @@ App <- R6Class("App", public = list(
     
     private$envir <- parent.frame(n = 2)
     
-    if(!is.null(onStart)) {
-      stopifnot(is.function(onStart))
-      private$onStart <- onStart
+    if(is.null(onStart)) {
+      onStart <- function(session) {}
     }
+    stopifnot(is.function(onStart))
+    private$onStart <- onStart
+    
     
     self$allowFunctions(allowedFunctions)
     self$allowVariables(allowedVariables)
@@ -598,6 +606,7 @@ App <- R6Class("App", public = list(
   maxCon = Inf,
   port = NULL,
   waiting = FALSE,
+  onStart = NULL,
   
   getApp = function() {
     handle_http_request <- function( req ) {
@@ -723,9 +732,7 @@ App <- R6Class("App", public = list(
     
     list(call = handle_http_request,
          onWSOpen = handle_websocket_open)
-  }, 
-  
-  onStart = function(session) {}
+  }
 ))
 
 pkg.env <- new.env()
