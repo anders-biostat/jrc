@@ -4,7 +4,7 @@
 #' @importFrom jsonlite fromJSON
 #' @importFrom utils object.size
 
-#Should it be exported????
+#' 
 #' @export
 #' @importFrom stringi stri_rand_strings
 Session <- R6Class("Session", public = list(
@@ -66,7 +66,9 @@ Session <- R6Class("Session", public = list(
         # 1 = "DATA"
         # 2 - variable name
         # 3 - variable
-        # 4 - boolean (session-wise or outside)
+        # 4 - boolean (sessionwise or outer envir)
+        if(is.na(msg[[4]]))
+          msg[[4]] <- exists(msg[[2]], inherits = FALSE, envir = private$envir)
         if(msg[[4]]) {
           assign(msg[[2]], msg[[3]], envir = private$envir)
         } else {
@@ -78,6 +80,7 @@ Session <- R6Class("Session", public = list(
         # 3 - list of arguments
         # 4 - assignTo
         # 5 - package
+        # 6 - boolean (sessionwise or outer envir)
         chain <- strsplit(msg[[2]], "[$]")[[1]]
         if(is.na(msg[[5]])) {
           f <- get(chain[1], envir = private$envir)
@@ -91,8 +94,15 @@ Session <- R6Class("Session", public = list(
           environment(f) <- private$envir
         tmp <- do.call(f, msg[[3]], envir = private$envir)  
         
-        if(!is.na(msg[[4]]))
-          assign(msg[[4]], tmp, envir = private$envir)
+        if(!is.na(msg[[4]])){
+          if(is.na(msg[[6]]))
+            msg[[6]] <- exists(msg[[4]], inherits = FALSE, envir = private$envir)
+          if(msg[[6]]) {
+            assign(msg[[4]], tmp, envir = private$envir)
+          } else {
+            assign(msg[[4]], tmp, envir = parent.env(private$envir))
+          }
+        }
       }
     }, finally = {
       if(!is.null(messageId))
@@ -532,7 +542,7 @@ App <- R6Class("App", public = list(
     stopifnot(is.character(dir))
     
     if(!dir.exists(dir))
-      stop(str_interp("There is no such directory: '${dir}'"))
+      stop(str_c("There is no such directory: '", dir, "'"))
     
     self$rootDirectory <- normalizePath(dir)
     
@@ -546,7 +556,7 @@ App <- R6Class("App", public = list(
       self$startPage <- page
     } else {
       if(!file.exists(page))
-        stop(str_interp("There is no such file: '${page}'"))
+        stop(str_c("There is no such file: '", page, "'"))
       page <- normalizePath(page)
       if(grepl(page, self$rootDirectory, fixed = T)) {
         self$startPage <- str_remove(page, str_c(self$rootDirectory, "/"))

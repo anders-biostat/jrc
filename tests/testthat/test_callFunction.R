@@ -13,7 +13,7 @@ test_that("Fucntions can be called on both sides", {
   
   callFunction("Math.random", assignTo = "x")
   allowVariables("x")
-  sendCommand("jrc.sendData('x', x, false)", wait = 3)
+  sendCommand("jrc.sendData('x', x)", wait = 3)
   expect_gte(x, 0)
   expect_lte(x, 1)
   
@@ -35,15 +35,15 @@ test_that("External variables are taken from the correct environment", {
   allowFunctions("f")
   allowVariables("y")
   sendCommand("jrc.callFunction('f', undefined, 'y')", wait = 3)
-  expect_equal(session$getSessionVariable("y"), 2)
+  expect_equal(y, 2)
   
   setEnvironment(e)
   sendCommand("jrc.callFunction('f', undefined, 'y')", wait = 3)
-  expect_equal(session$getSessionVariable("y"), 20)
+  expect_equal(e$y, 20)
   
   setSessionVariables(list(x = 100), id)
   sendCommand("jrc.callFunction('f', undefined, 'y')", wait = 3)
-  expect_equal(session$getSessionVariable("y"), 200)
+  expect_equal(e$y, 200)
   
   expect_message(closePage(), "Server has been stopped.")
 })
