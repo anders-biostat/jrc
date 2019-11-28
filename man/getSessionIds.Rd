@@ -7,7 +7,7 @@
 getSessionIds()
 }
 \value{
-a \code{data.frame} with three columns: \code{id} - session ID, \code{startDate} - time and date
+a \code{data.frame} with three columns: \code{id} - session ID, \code{startTime} - time and date
 of the initialization of this session, \code{lastActive} - time and date of the last received message
 from this web socket.
 }

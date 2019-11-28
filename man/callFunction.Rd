@@ -4,8 +4,15 @@
 \alias{callFunction}
 \title{Trigger a function call}
 \usage{
-callFunction(name, arguments = NULL, assignTo = NULL, thisArg = NULL,
-  id = NULL, ...)
+callFunction(
+  name,
+  arguments = NULL,
+  assignTo = NULL,
+  wait = 0,
+  thisArg = NULL,
+  id = NULL,
+  ...
+)
 }
 \arguments{
 \item{name}{Name of the function. If the function is a method of some object

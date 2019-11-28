@@ -4,7 +4,7 @@
 \alias{sendHTML}
 \title{Send HTML to the server}
 \usage{
-sendHTML(html = "", id = NULL)
+sendHTML(html = "", id = NULL, wait = 0)
 }
 \arguments{
 \item{html}{HTML code that will be added to the web page.}

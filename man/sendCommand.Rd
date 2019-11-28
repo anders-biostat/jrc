@@ -4,7 +4,7 @@
 \alias{sendCommand}
 \title{Send a command to the server}
 \usage{
-sendCommand(command, id = NULL)
+sendCommand(command, id = NULL, wait = 0)
 }
 \arguments{
 \item{command}{A line (or several lines separated by \code{\\n}) of JavaScript code. This code
@@ -32,7 +32,7 @@ sendCommand(paste0("button = document.createElement('input');",
               "button.type = 'button';",
               "button.addEventListener('click', function() {jrc.sendCommand('k <<- k + 1')});", 
               "button.value = '+1';",
-              "document.body.appendChild(button);", collapse = "\\n"))
+              "document.body.appendChild(button);", collapse = "\n"))
 closePage()}
 
 }
