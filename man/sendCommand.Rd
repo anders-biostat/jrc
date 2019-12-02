@@ -4,13 +4,18 @@
 \alias{sendCommand}
 \title{Send a command to the server}
 \usage{
-sendCommand(command, id = NULL, wait = 0)
+sendCommand(command, sessionId = NULL, wait = 0)
 }
 \arguments{
 \item{command}{A line (or several lines separated by \code{\\n}) of JavaScript code. This code
 will be immediately executed on the opened page. No R-side syntax check is performed.}
 
-\item{id}{Session id (randomly generated for each established web socket connection)}
+\item{sessionId}{An ID of the session to which the command should be sent. If \code{NULL}, the command will
+be sent to all currently active sessions.}
+
+\item{wait}{If \code{wait > 0}, after sending the message, R will wait for a reply for a given number of seconds. 
+For this time (or until the reply is received), execution of other commands will be halted. Any incoming message 
+from the session will be considered as a reply.}
 }
 \description{
 \code{sendCommand} sends JavaScript code to the server and executes it on the currently

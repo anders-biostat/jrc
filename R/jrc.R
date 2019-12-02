@@ -39,39 +39,38 @@
 #' @section Methods:
 #' \describe{
 #'   \item{\code{getMessageIds()}}{
-#'      returns IDs of all currently stored messages. ID is combination of 6 random letters and numbers,
+#'      Returns IDs of all currently stored messages. ID is combination of 6 random letters and numbers,
 #'      which is generated, when the message is stored.
 #'   }
 #'   \item{\code{authorize(messageId = NULL, show = FALSE)}}{ 
-#'      authorizes evaluation of the message. Check \code{\link{authorize}} for more information.
+#'      Authorizes evaluation of the message. Check \code{\link{authorize}} for more information.
 #'   }
 #'   \item{\code{removeMessage(messageId)}}{
-#'      removes a stored message. This can also be done with \code{\link{authorize}} function (set
+#'      Removes a stored message. This can also be done with \code{\link{authorize}} function (set
 #'      \code{show = TRUE} and then select to ignore message).
 #'   }
 #'   \item{\code{sendCommand(command, wait = 0)}}{
-#'      sends a JavaScript command to be evaluated on the web page. Check 
+#'      Sends a JavaScript command to be evaluated on the web page. Check 
 #'      \code{\link{sendCommand}} for more information.
 #'   }
 #'   \item{\code{callFunction(name, arguments = NULL, assignTo = NULL, wait = 0, thisArg = NULL,  ...)}}{
-#'      calls an existing JavaScript
+#'      Calls an existing JavaScript
 #'      function on the web page. Check \code{\link{callFunction}} for more information.
 #'   }
 #'   \item{\code{sendData(variableName, variable, wait = 0, keepAsVector = FALSE, rowwise = TRUE)}}{
-#'      sends data and assigns it to 
+#'      Sends data and assigns it to 
 #'      a variable on the web page. Check \code{\link{sendData}} for more information.
 #'   }
 #'   \item{\code{sendHTML(html, wait = 0)}}{
-#'      sends HTML code that will be appended to the web page. Check \code{\link{sendHTML}} for 
+#'      Sends HTML code that will be appended to the web page. Check \code{\link{sendHTML}} for 
 #'      more information.
 #'   }
-#'   \item{\code{setSessionVariables(vars)}}{
-#'      defines variables that will be used (read or rewritten) only by this session. Check 
-#'      \code{\link{setSessionVariables}} for more information.
-#'   }
-#'   \item{\code{getSessionVariable(var)}}{
-#'      returns current value of a variable for this session. \code{var} must be a variable name.
-#'      Throws an error if the requested variable doesn't exist.
+#'   \item{\code{sessionVariables(vars = NULL, varName = NULL)}}{
+#'      Sets or returns variables that are used (read or rewritten) only by this session. If both arguments are
+#'      \code{NULL}, returns environment for this session. If \code{vars} is a named list, adds this variables to the
+#'      session environment. If \code{varName} is a character, returns a variable with this name that can be accessed from
+#'      the session. If no such a variable exists, throws an error. One can add variables to the session evrironment and
+#'      get a specified one back within the same function call.Check \code{\link{setSessionVariables}} for more information.
 #'   }
 #' }
 #' Note, that the \code{Session} class has some other public methods that are not mentioned in this list. These methods are
@@ -328,19 +327,25 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
     invisible(self)
   },
   
-  setSessionVariables = function(vars) {
-    if(!is.null(vars)) {
+  sessionVaribles = function(vars = NULL, varName = NULL) {
+    if(is.null(vars) && is.null(varName))
+      return(private$envir)
+    
+    if(!is.null(vars)){
       if(!is.list(vars) || is.null(names(vars)))
         stop("Session variables must be a named list")
-      
-      list2env(vars, private$envir)
+      list2env(vars, private$envir)   
     }
-  },
-  
-  getSessionVariable = function(var) {
-    stopifnot(is.character(var))
-    
-    get(var, envir = private$envir)
+    if(!is.null(varName)){
+      if(!is.character(varName))
+        stop("Variable name must be a character")
+      if(length(varName) > 1) {
+        warning("Can't get several variables at once. Only the first variable name will be used")
+        varName <- varName[1]
+      }
+      return(get(var, envir = private$envir))
+    }
+    ivisible(self)
   },
   
   setEnvironment = function(envir) {
@@ -418,18 +423,77 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
 #' @name App
 #' @title App class
 #' 
-#' Object of this class represents the entire jrc-based app. It 
+#' @description Object of this class represents the entire jrc-based app. It stores all the active connections,
+#' user-specific variables and all the global app settings. If you use exported wrapper functions, 
+#' without specifying an app object, an instance of this class is stored in the package namespace.
+#' You can always, retrieve it with the \code{\link{getPage}} function. However it is also possible
+#' to run several apps simultaneously by creating new objects of this class and then managing them 
+#' directly.
 #' 
-#' @description 
+#' @section Methods:
+#' \describe{
+#'    \item{\code{getSession(sessionId = NULL)}}{
+#'       Returns a session with a given ID or \code{NULL} if session with this ID doesn't exist. If \code{sessionId = NULL}
+#'       and there is only one active session, returns it.
+#'    }
+#'    \item{\code{closeSession(session = NULL, inactive = NULL, old = NULL)}}{
+#'       Closes websocket connection of the session and removes all the related data from the app. For more information on 
+#'       the arguments, please, check \code{\link{closeSession}}
+#'    }
+#'    \item{\code{getSessionIds()}}{
+#'        Returns IDs of all currently active sessions. 
+#'    }
+#'    \item{\code{startServer(port = NULL)}}{
+#'        Starts a local server that listens to a given port. If \code{port = NULL}, picks up a random available port.
+#'    }
+#'    \item{\code{stopServer()}}{
+#'        Closes all active sessions and stops a running server.
+#'    }
+#'    \item{\code{openPage(useViewer = TRUE, browser = NULL)}}{
+#'       Opens a new web page either in browser, or in R Studio viewer. If \code{useViewer = FALSE}, but browser is not selected,
+#'       a default installed browser is used. If browser is specified, \code{useViewer} is ignored. This method returns
+#'       a new Session object, which should correspond to the page that has been just opened. However, if someone would start
+#'       a new connection at the moment when this function is used, it may return a wrong session.
+#'    }
+#'    \item{\code{setEnvironment(envir)}}{
+#'       Specifies an environment in which all the messages from the web pages will be evaluated. For more information,
+#'       please, check \code{\link{setEnvironment}}.
+#'    }
+#'    \item{\code{allowFunctions(funs = NULL)}}{
+#'       Adds function names to a list of allowed functions. These functions can be called from the web page without authorization
+#'       from the R side. If \code{funs = NULL}, then returns a list of all currently allowed functions. For more information,
+#'       please, check \code{\link{allowFunctions}}.
+#'    }
+#'    \item{\code{allowVariables(vars)}}{
+#'       Adds variable names to  the list of allowed variables. These variables can be rewritten from the web page without 
+#'       authorization from the R side. If \code{vars = NULL}, then returns a vector of all currently allowed variable names.
+#'       For more information, please, check \code{\link{allowVariables}}.
+#'    }
+#'    \item{\code{startPage(path = NULL)}}{
+#'       Sets path to the starting web page of the app. Path can be full or relative to the app's root directory. If 
+#'       \code{path = NULL}, returns current path to the starting page.
+#'    }
+#'    \item{\code{rootDirectory(path = NULL)}}{
+#'       Sets path to the root directory for the server. Any file, requested by the server, will be looked for in this directory.
+#'       Can be a full path or a path relative to the current working directory. If \code{path = NULL}, returns path to the
+#'       current root directory.
+#'    }
+#'    \item{\code{numberOfConnections(maxCon = NULL)}}{
+#'       Sets maximum number of connections to be active simultaneously. If \code{maxCon = NULL}, returns current number of 
+#'       allowed connections. Default value is \code{Inf}.
+#'    }
+#'    \item{\code{new(rootDirectory = NULL, startPage = NULL, onStart = NULL, 
+#'    connectionNumber = Inf, allowedFunctions = c(), allowedVariables = c(), sessionVars = NULL)}}{
+#'       Creates a new instance of class App. Check \code{\link{openPage}} documentaion for information about
+#'       arguments.
+#'    }
+#' }
+#' 
 NULL
 
 #' @import mime
 #' @export
 App <- R6Class("App", cloneable = FALSE, public = list(
-  rootDirectory = "",
-  startPage = "",
-  startPagePath = NULL,
-  
   addSession = function(session) {
     stopifnot("Session" %in% class(session))
     if(length(private$sessions) >= private$maxCon) {
@@ -458,22 +522,40 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     private$sessions[[sessionId]]
   },
   
-  closeSession = function(session) {
-    if(is.character(session))
-      session <- self$getSession(session)
-    if(is.null(session))
-      stop("There is no session with this ID")
+  closeSession = function(session = NULL, inactive = NULL, old = NULL) {
+    if(!is.null(session)) {
+      if(is.character(session))
+        session <- self$getSession(session)
+      if(is.null(session))
+        stop("There is no session with this ID")
       
-    stopifnot("Session" %in% class(session))
-    session$close()
-    private$sessions[[session$id]] <- NULL
+      stopifnot("Session" %in% class(session))
+      session$close()
+      private$sessions[[session$id]] <- NULL
+    }
+    sessionIds <- c()
+    if(!is.null(inactive)) {
+      lastActive <- sapply(private$sessions, `[[`, "lastActive")
+      rem <- (lastActive < Sys.time() - inactive)
+      sessionIds <- names(lastActive)[rem]
+    }
+    if(!is.null(old)) {
+      startTime <- sapply(private$sessions, `[[`, "startTime")
+      rem <- (startTime < Sys.time() - old)
+      sessionIds <- unique(c(sessionIds, names(startTime)[rem]))
+    }
+    
+    for(id in sessionIds) {
+      session <- self$getSession(id)
+      session$close()
+      private$sessions[[id]] <- NULL
+    }
     
     invisible(self)
   },
   
   getSessionIds = function() {
-    data.frame(id = names(private$sessions), startTime = sapply(private$sessions, `[[`, "startTime"), 
-               lastActive = sapply(private$sessions, `[[`, "lastActive"), stringsAsFactors = FALSE)
+    names(private$sessions)
   },
   
   stopServer = function() {
@@ -487,6 +569,8 @@ App <- R6Class("App", cloneable = FALSE, public = list(
       }
       message("Server has been stopped.")      
     }
+    
+    invisible(self)
   },
   
   startServer = function(port = NULL) {
@@ -527,13 +611,19 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     invisible(self)
   },
   
-  openPage = function(useViewer = TRUE, browser = getOption("browser")) {
+  openPage = function(useViewer = TRUE, browser = NULL) {
+    if(!is.null(browser))
+      useViewer <- FALSE
+    
     if(is.null(private$serverHandle))
       stop("No server is running. Please, start a server before opening a page.")
     if( useViewer & !is.null( getOption("viewer") ) )
-      getOption("viewer")( str_c("http://localhost:", private$port, "/", self$startPage) )
-    else
-      browseURL( str_c("http://localhost:", private$port, "/", self$startPage), browser = browser )
+      getOption("viewer")( str_c("http://localhost:", private$port, "/", private$startP) )
+    else{
+      if(is.null(browser))
+        browser = getOption("browser")
+      browseURL( str_c("http://localhost:", private$port, "/", private$startP), browser = browser )
+    }
     
     
     # Wait up to 5 seconds for the a websocket connection
@@ -575,7 +665,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
       stop("'funs' must be a vector of function names")
     
     private$allowedFuns <- unique(c(private$allowedFuns, funs))
-    invisible(private$allowedFuns)
+    invisible(self)
   },
   
   allowVariables = function(vars = NULL) {
@@ -584,74 +674,72 @@ App <- R6Class("App", cloneable = FALSE, public = list(
       stop("'funs' must be a vector of function names")
     
     private$allowedVars <- unique(c(private$allowedVars, vars))
-    invisible(private$allowedVars)
+    invisible(self)
     
   },
   
-  limitStorage = function(n = NULL, size = NULL) {
-    if(!is.null(n)) {
-      if(!is.numeric(n))
-        stop("Maximum number of stored messages 'n' must be numeric")
-      if(n < 0)
-        stop("Maximum number of stored messages 'n' must be non-negative")
-      private$maxCon <- n
-    }
-    if(!is.null(size)) {
-      if(!is.numeric(size))
-        stop("Maximum size of stored messages 'size' must be numeric")
-      if(size < 0)
-        stop("Maximum size of stored messages 'size' must be non-negative")
-      self$maxSize <- size
-    }
+  rootDirectory = function(path = NULL) {
+    if(is.null(path)) return(private$rootDir)
+    stopifnot(is.character(path))
     
-    c(n = private$maxN, size = self$maxSize)
-  },
-  
-  setSessionVariables = function(vars, sessionId = NULL) {
-    if(is.null(sessionId))
-      sessionId = names(private$sessions)
+    if(!dir.exists(path))
+      stop(str_c("There is no such directory: '", path, "'"))
     
-    for(id in sessionId)
-      self$getSession(id)$setSessionVariables(vars)
-  },
-  
-  setRootDirectory = function(dir) {
-    stopifnot(is.character(dir))
-    
-    if(!dir.exists(dir))
-      stop(str_c("There is no such directory: '", dir, "'"))
-    
-    self$rootDirectory <- normalizePath(dir)
+    private$rootDir <- normalizePath(path)
     
     invisible(self)
   },
   
-  setStartPage = function(page) {
-    stopifnot(is.character(page))
-    
-    if(file.exists(file.path(self$rootDirectory, page))){
-      self$startPage <- page
+  startPage = function(path = NULL) {
+    if(is.null(path)) {
+      if(is.null(private$startPagePath)){
+        return(path)
+      } else {
+        return(str_c(private$startPagePath, private$startP))
+      }
+    }
+    stopifnot(is.character(path))
+   
+    if(file.exists(file.path(private$rootDir, page))){
+      private$startP <- page
     } else {
       if(!file.exists(page))
         stop(str_c("There is no such file: '", page, "'"))
       page <- normalizePath(page)
-      if(grepl(page, self$rootDirectory, fixed = T)) {
-        self$startPage <- str_remove(page, str_c(self$rootDirectory, "/"))
+      if(grepl(page, private$rootDir, fixed = T)) {
+        private$start <- str_remove(page, str_c(private$rootDir, "/"))
       } else {
-        self$startPage <- "index.html"
-        self$startPagePath <- page
+        private$startP <- "index.html"
+        private$startPagePath <- page
       }
     }
     
   },
   
-  limitConnectionNumbers = function(maxCon = NULL) {
+  numberOfConnections = function(maxCon = NULL) {
     if(is.null(maxCon))
       return(private$maxCon)
     
     stopifnot(is.numeric(maxCon))
     
     private$maxCon <- maxCon
+    
+    invisible(self)
+  },
+  
+  sessionVariables = function(vars = NULL) {
+    if(is.null(vars))
+      return(private$sessionVariables)
+    
+    vars <- as.list(vars)
+    if(!is.list(vars))
+      stop("Variables must be a list")
+    
+    if(is.null(names(vars)))
+      stop("List of variables must be named")
+    
+    for(n in names(vars))
+      private$sessionVaribles[[n]] <- vars[[n]]
     
     invisible(self)
   },
@@ -694,6 +782,10 @@ App <- R6Class("App", cloneable = FALSE, public = list(
   port = NULL,
   waiting = FALSE,
   onStart = NULL,
+  rootDir = "",
+  startP = "",
+  startPagePath = NULL,
+  sessionVars = list(),
   
   getApp = function() {
     handle_http_request <- function( req ) {
@@ -704,15 +796,15 @@ App <- R6Class("App", cloneable = FALSE, public = list(
         reqPage <- sub(str_c("_", pack), "", reqPage)
         reqPage <- system.file( reqPage, package = pack )
       } else {
-        if(reqPage == "/index.html" & !is.null(self$startPagePath)) {
-          reqPage <- self$startPagePath
+        if(reqPage == "/index.html" & !is.null(private$startPagePath)) {
+          reqPage <- private$startPagePath
         } else {
-          reqPage <- str_c(self$rootDirectory, reqPage)
+          reqPage <- str_c(private$rootDir, reqPage)
         }
       }
       
       if( !file.exists(reqPage) ) {
-        reqPage <- str_remove(reqPage, self$rootDirectory)
+        reqPage <- str_remove(reqPage, private$rootDir)
         if(!file.exists(reqPage)) {
           warning(str_interp("File '${reqPage}' is not found"))
           return( list( 
@@ -753,7 +845,8 @@ App <- R6Class("App", cloneable = FALSE, public = list(
       )
     }
     handle_websocket_open <- function( ws ) {
-      session <- Session$new(ws, envir = new.env(parent = private$envir))  
+      session <- Session$new(ws, envir = new.env(parent = private$envir))
+      session$sessionVariables(private$sessionVars)
       
       ws$onMessage( function( isBinary, msg ) {
         if( isBinary )
@@ -830,20 +923,26 @@ pkg.env <- new.env()
 #' \code{openPage} creates a server and establishes a websocket connection between it and the current
 #' R session. This allows commands exchange. In R use \code{\link{sendCommand}} function to send and 
 #' execute JavaScript code on the server. On the server use \code{jrc.sendCommand} function to send and
-#' execute R code in the current R session. 
+#' execute R code in the current R session.
 #' 
+#' This function is a wrapper around several methods of class \code{\link{App}}. First, it creates an
+#' instance of this class. Then it starts a server that listens to a given port. And finally, it attempts
+#' to open a new web page. It also stores a new app object in tha package namespace, which allows other
+#' wrapper functions access it without being specified by the user.
+#' 
+#' @param useViewer If \code{TRUE}, the start page will be opened in the RStudio Viewer. If \code{FALSE}
+#' a default web browser will be used.
+#' @param rootDirectory A path to the root directory of the server. If \code{rootDirectory} is not 
+#' defined, the \code{http_root} in the package directory will be used as a root directory.
 #' @param startPage A path to the HTML file that should be opened, when the server is initialised.
 #' This can be an absolute path to a local file, or it can be relative to the \code{rootDirectory}
 #' or to the current R working directory. If \code{startPage} is not defined, this function opens an 
 #' empty HTML page. The file must have \emph{.html} extension.
-#' @param rootDirectory A path to the root directory of the server. If \code{rootDirectory} is not 
-#' defined, the \code{http_root} in the package directory will be used as a root directory.
-#' @param useViewer If \code{TRUE}, the start page will be opened in the RStudio Viewer. If \code{FALSE}
-#' a default web browser will be used.
 #' @param port Defines which TCP port to use for websocket connection. If not defined, random available port
 #' is used.
-#' @param browser A browser in which the web page will be opened. Is used only if \code{useViewer = FALSE}.
+#' @param browser A browser in which the web page will be opened.
 #' If not defined, default browser will be used. For more information check \code{\link[utils]{browseURL}}.
+#' Specifying a browser, will automatically set \code{useViewer} to \code{FALSE}.
 #' @param allowedFunctions List of functions that can be called from the web page without any additional actions 
 #' from the user. All other functions will require authorization in the current R session to be executed. 
 #' This should be a vector of function names. Check \code{\link{authorize}} and \code{\link{allowFunctions}}
@@ -852,18 +951,26 @@ pkg.env <- new.env()
 #' from the user. All other reassignments will require authorization in the current R session to be executed. 
 #' This should be a vector of variable names. Check \code{\link{authorize}} and \code{\link{allowVariables}}
 #' for more information.
-#' @param connectionNumber Maximum number of connections that is allowed simultaneously.
+#' @param connectionNumber Maximum number of connections that is allowed to be active simultaneously.
+#' @param sessionVars Named list of variables, that will be declared for each session, when a new connection is opened.
+#' These variables can be used, for instance, to store a state of each session. For more information, please, check
+#' \code{\link{setSessionVariables}}.
+#' @param onStart A callback function that will be executed when a new connection is opened. This function get a single 
+#' variable, which is an object of class \code{\link{Session}}. General purpose of the function is to populate each 
+#' new web page with some default content.
 #' 
 #' @seealso \code{\link{closePage}}, \code{\link{setEnvironment}}, \code{\link{limitStorage}}, \code{\link{allowVariables}},
-#' \code{\link{allowFunctions}}.
+#' \code{\link{allowFunctions}}, \code{\link{setSessionVariables}}.
+#' 
+#' @return Object of class \code{\link{App}}.
 #' 
 #' @export
 #' @import httpuv
 #' @importFrom utils browseURL
 #' @importFrom utils compareVersion
 #' @importFrom utils packageVersion
-openPage <- function(useViewer = T, rootDirectory = NULL, startPage = NULL, port = NULL, browser = getOption("browser"),
-                     allowedFunctions = NULL, allowedVariables = NULL, connectionNumber = Inf, sessionVars = list(),
+openPage <- function(useViewer = TRUE, rootDirectory = NULL, startPage = NULL, port = NULL, browser = NULL,
+                     allowedFunctions = NULL, allowedVariables = NULL, connectionNumber = Inf, sessionVars = NULL,
                      onStart = NULL) {
   if(!is.null(pkg.env$app))
     closePage()
@@ -916,7 +1023,11 @@ sendMessage <- function(type, id, ...) {
 #' 
 #' @param command A line (or several lines separated by \code{\\n}) of JavaScript code. This code
 #' will be immediately executed on the opened page. No R-side syntax check is performed.
-#' @param id Session id (randomly generated for each established web socket connection)
+#' @param sessionId An ID of the session to which the command should be sent. If \code{NULL}, the command will
+#' be sent to all currently active sessions.
+#' @param wait If \code{wait > 0}, after sending the message, R will wait for a reply for a given number of seconds. 
+#' For this time (or until the reply is received), execution of other commands will be halted. Any incoming message 
+#' from the session will be considered as a reply.
 #' 
 #' @examples  
 #' \donttest{k <- 0
@@ -933,14 +1044,14 @@ sendMessage <- function(type, id, ...) {
 #' 
 #' @export
 #' @importFrom jsonlite toJSON
-sendCommand <- function(command, id = NULL, wait = 0) {
-  sendMessage("sendCommand", id, wait = wait, command = command)
+sendCommand <- function(command, sessionId = NULL, wait = 0) {
+  sendMessage("sendCommand", sessionId, wait = wait, command = command)
 }
 
 
 #' Stop server
 #' 
-#' Stop the server and close currently opened page (if any).
+#' Stop the server and close all currently opened pages (if any).
 #' 
 #' @seealso \code{\link{openPage}}
 #' 
@@ -963,6 +1074,11 @@ closePage <- function() {
 #' 
 #' @param variableName Name that the variable will have on the server.
 #' @param variable Variable to send.
+#' @param sessionId An ID of the session to which the data should be sent. If \code{NULL}, the data will
+#' be sent to all currently active sessions.
+#' @param wait If \code{wait > 0}, after sending the message, R will wait for a reply for a given number of seconds. 
+#' For this time (or until the reply is received), execution of other commands will be halted. Any incoming message 
+#' from the session will be considered as a reply.
 #' @param keepAsVector If \code{TRUE}, variables with length 1 will be saved as arrays on the server, otherwise they 
 #' will be converted to atomic types.
 #' @param rowwise If \code{TRUE}, matrices and data.frames will be transformed into JavaScript Objects or Arrays
@@ -981,8 +1097,8 @@ closePage <- function() {
 #'  
 #' @export
 #' @importFrom jsonlite toJSON
-sendData <- function(variableName, variable, id = NULL, wait = 0, keepAsVector = FALSE, rowwise = TRUE) {
-  sendMessage("sendData", id, wait = wait, variableName = variableName, variable = variable, keepAsVector = keepAsVector,
+sendData <- function(variableName, variable, sessionId = NULL, wait = 0, keepAsVector = FALSE, rowwise = TRUE) {
+  sendMessage("sendData", sessionId, wait = wait, variableName = variableName, variable = variable, keepAsVector = keepAsVector,
               rowwise = rowwise)
 }
 
@@ -997,11 +1113,11 @@ sendData <- function(variableName, variable, id = NULL, wait = 0, keepAsVector =
 #' setEnvironment(environment())
 #' 
 #' @export
-setEnvironment <- function(envir, sessionId = NULL) {
+setEnvironment <- function(envir) {
   if(is.null(pkg.env$app))
     stop("There is no opened page. Please, use 'openPage()' function to create one.")
   
-  pkg.env$app$setEnvironment(envir, sessionId)
+  pkg.env$app$setEnvironment(envir)
 }
 
 #' Send HTML to the server
@@ -1010,6 +1126,11 @@ setEnvironment <- function(envir, sessionId = NULL) {
 #' or the \code{body} element.
 #' 
 #' @param html HTML code that will be added to the web page.
+#' @param sessionId An ID of the session to which the HTML should be sent. If \code{NULL}, the HTML will
+#' be sent to all currently active sessions.
+#' @param wait If \code{wait > 0}, after sending the message, R will wait for a reply for a given number of seconds. 
+#' For this time (or until the reply is received), execution of other commands will be halted. Any incoming message 
+#' from the session will be considered as a reply.
 #' 
 #' @examples 
 #' \donttest{
@@ -1023,8 +1144,8 @@ setEnvironment <- function(envir, sessionId = NULL) {
 #' \code{\link{openPage}}.
 #' 
 #' @export
-sendHTML <- function(html = "", id = NULL, wait = 0) {
-  sendMessage("sendHTML", id, wait = wait, html = html)
+sendHTML <- function(html = "", sessionId = NULL, wait = 0) {
+  sendMessage("sendHTML", sessionId, wait = wait, html = html)
 }
 
 #' Trigger a function call
@@ -1190,7 +1311,26 @@ allowVariables <- function(vars = NULL) {
 #' 
 #' @export
 limitStorage <- function(n = NULL, size = NULL) {
-  if(is.null(pkg.env$app))
+  limitStorage = function(n = NULL, size = NULL) {
+    if(!is.null(n)) {
+      if(!is.numeric(n))
+        stop("Maximum number of stored messages 'n' must be numeric")
+      if(n < 0)
+        stop("Maximum number of stored messages 'n' must be non-negative")
+      private$maxCon <- n
+    }
+    if(!is.null(size)) {
+      if(!is.numeric(size))
+        stop("Maximum size of stored messages 'size' must be numeric")
+      if(size < 0)
+        stop("Maximum size of stored messages 'size' must be non-negative")
+      self$maxSize <- size
+    }
+    
+    c(n = private$maxN, size = self$maxSize)
+  }
+  
+    if(is.null(pkg.env$app))
     stop("There is no opened page. Please, use 'openPage()' function to create one.")  
   
   pkg.env$app$limitStorage(n, size)
@@ -1237,4 +1377,9 @@ getSessionIds <- function() {
     stop("There is no opened page. Please, use 'openPage()' function to create one.")  
   
   pkg.env$app$getSessionIds()
+}
+
+#' @export
+closeSession <- function(sessionId = NULL, inactive = NULL, old = NULL) {
+  
 }

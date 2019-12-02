@@ -7,7 +7,7 @@
 sendData(
   variableName,
   variable,
-  id = NULL,
+  sessionId = NULL,
   wait = 0,
   keepAsVector = FALSE,
   rowwise = TRUE
@@ -17,6 +17,13 @@ sendData(
 \item{variableName}{Name that the variable will have on the server.}
 
 \item{variable}{Variable to send.}
+
+\item{sessionId}{An ID of the session to which the data should be sent. If \code{NULL}, the data will
+be sent to all currently active sessions.}
+
+\item{wait}{If \code{wait > 0}, after sending the message, R will wait for a reply for a given number of seconds. 
+For this time (or until the reply is received), execution of other commands will be halted. Any incoming message 
+from the session will be considered as a reply.}
 
 \item{keepAsVector}{If \code{TRUE}, variables with length 1 will be saved as arrays on the server, otherwise they 
 will be converted to atomic types.}

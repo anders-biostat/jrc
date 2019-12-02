@@ -5,9 +5,13 @@
 \title{Session class}
 \description{
 Objects of this class handle all the incoming and outgoing messages for one active connection.
-Please, avoid creating instances of this class manually. Each Session object is created when
-a web socket is opened and serves as a wraper around it. Manually created object will not have
-a web socket connection and thus is not functional.
+Please, avoid creating instances of this class manually. Each \code{Session} object is created, when
+a web socket is opened, and serves as a wraper around it. Manually created object will not have
+a web socket connection and thus are not functional.
+
+All sessions are stored whithin an object of class \code{\link{App}} and cannot exist and function without it.
+One can manipulate a session directly, using its methods that are described bellow, via methods of the corresponding 
+App object, or using provided wrapper function (links to them can be found in the Methods section).
 }
 \section{Fields}{
 
@@ -42,41 +46,41 @@ a web socket connection and thus is not functional.
 
 \describe{
   \item{\code{getMessageIds()}}{
-     returns IDs of all currently stored messages. ID is combination of 6 random letters and numbers,
+     Returns IDs of all currently stored messages. ID is combination of 6 random letters and numbers,
      which is generated, when the message is stored.
   }
   \item{\code{authorize(messageId = NULL, show = FALSE)}}{ 
-     authorizes evaluation of the message. Check \code{\link{authorize}} for more information.
+     Authorizes evaluation of the message. Check \code{\link{authorize}} for more information.
   }
   \item{\code{removeMessage(messageId)}}{
-     removes a stored message. This can also be done with \code{\link{authorize}} function (set
+     Removes a stored message. This can also be done with \code{\link{authorize}} function (set
      \code{show = TRUE} and then select to ignore message).
   }
   \item{\code{sendCommand(command, wait = 0)}}{
-     sends a JavaScript command to be evaluated on the web page. Check 
+     Sends a JavaScript command to be evaluated on the web page. Check 
      \code{\link{sendCommand}} for more information.
   }
   \item{\code{callFunction(name, arguments = NULL, assignTo = NULL, wait = 0, thisArg = NULL,  ...)}}{
-     calls an existing JavaScript
+     Calls an existing JavaScript
      function on the web page. Check \code{\link{callFunction}} for more information.
   }
   \item{\code{sendData(variableName, variable, wait = 0, keepAsVector = FALSE, rowwise = TRUE)}}{
-     sends data and assigns it to 
+     Sends data and assigns it to 
      a variable on the web page. Check \code{\link{sendData}} for more information.
   }
   \item{\code{sendHTML(html, wait = 0)}}{
-     sends HTML code that will be appended to the web page. Check \code{\link{sendHTML}} for 
+     Sends HTML code that will be appended to the web page. Check \code{\link{sendHTML}} for 
      more information.
   }
-  \item{\code{setSessionVariables(vars)}}{
-     defines variables that will be used (read or rewritten) only by this session. Check 
-     \code{\link{setSessionVariables}} for more information.
+  \item{\code{sessionVariables(vars = NULL, varName = NULL)}}{
+     Sets or returns variables that are used (read or rewritten) only by this session. If both arguments are
+     \code{NULL}, returns environment for this session. If \code{vars} is a named list, adds this variables to the
+     session environment. If \code{varName} is a character, returns a variable with this name that can be accessed from
+     the session. If no such a variable exists, throws an error. One can add variables to the session evrironment and
+     get a specified one back within the same function call.Check \code{\link{setSessionVariables}} for more information.
   }
-  \item{\code{getSessionVariable(var)}}{
-     returns current value of a variable for this session. \code{var} must be a variable name.
-     Throws an error if the requested variable doesn't exist.
-  }
-  
 }
+Note, that the \code{Session} class has some other public methods that are not mentioned in this list. These methods are
+intended to be used only by other functions of \code{jrc} package and therefore are not documented.
 }
 

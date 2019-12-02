@@ -4,7 +4,7 @@
 \alias{setEnvironment}
 \title{Set Environment}
 \usage{
-setEnvironment(envir, sessionId = NULL)
+setEnvironment(envir)
 }
 \arguments{
 \item{envir}{Environment where to evaluate the commands.}

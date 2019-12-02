@@ -5,15 +5,15 @@
 \title{Create a server}
 \usage{
 openPage(
-  useViewer = T,
+  useViewer = TRUE,
   rootDirectory = NULL,
   startPage = NULL,
   port = NULL,
-  browser = getOption("browser"),
+  browser = NULL,
   allowedFunctions = NULL,
   allowedVariables = NULL,
   connectionNumber = Inf,
-  sessionVars = list(),
+  sessionVars = NULL,
   onStart = NULL
 )
 }
@@ -32,8 +32,9 @@ empty HTML page. The file must have \emph{.html} extension.}
 \item{port}{Defines which TCP port to use for websocket connection. If not defined, random available port
 is used.}
 
-\item{browser}{A browser in which the web page will be opened. Is used only if \code{useViewer = FALSE}.
-If not defined, default browser will be used. For more information check \code{\link[utils]{browseURL}}.}
+\item{browser}{A browser in which the web page will be opened.
+If not defined, default browser will be used. For more information check \code{\link[utils]{browseURL}}.
+Specifying a browser, will automatically set \code{useViewer} to \code{FALSE}.}
 
 \item{allowedFunctions}{List of functions that can be called from the web page without any additional actions 
 from the user. All other functions will require authorization in the current R session to be executed. 
@@ -45,7 +46,18 @@ from the user. All other reassignments will require authorization in the current
 This should be a vector of variable names. Check \code{\link{authorize}} and \code{\link{allowVariables}}
 for more information.}
 
-\item{connectionNumber}{Maximum number of connections that is allowed simultaneously.}
+\item{connectionNumber}{Maximum number of connections that is allowed to be active simultaneously.}
+
+\item{sessionVars}{Named list of variables, that will be declared for each session, when a new connection is opened.
+These variables can be used, for instance, to store a state of each session. For more information, please, check
+\code{\link{setSessionVariables}}.}
+
+\item{onStart}{A callback function that will be executed when a new connection is opened. This function get a single 
+variable, which is an object of class \code{\link{Session}}. General purpose of the function is to populate each 
+new web page with some default content.}
+}
+\value{
+Object of class \code{\link{App}}.
 }
 \description{
 \code{openPage} creates a server and establishes a websocket connection between it and the current
@@ -53,7 +65,13 @@ R session. This allows commands exchange. In R use \code{\link{sendCommand}} fun
 execute JavaScript code on the server. On the server use \code{jrc.sendCommand} function to send and
 execute R code in the current R session.
 }
+\details{
+This function is a wrapper around several methods of class \code{\link{App}}. First, it creates an
+instance of this class. Then it starts a server that listens to a given port. And finally, it attempts
+to open a new web page. It also stores a new app object in tha package namespace, which allows other
+wrapper functions access it without being specified by the user.
+}
 \seealso{
 \code{\link{closePage}}, \code{\link{setEnvironment}}, \code{\link{limitStorage}}, \code{\link{allowVariables}},
-\code{\link{allowFunctions}}.
+\code{\link{allowFunctions}}, \code{\link{setSessionVariables}}.
 }
