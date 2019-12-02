@@ -14,7 +14,7 @@ sendData(
 )
 }
 \arguments{
-\item{variableName}{Name that the variable will have on the server.}
+\item{variableName}{Name that the variable will have on the web page.}
 
 \item{variable}{Variable to send.}
 
@@ -32,10 +32,30 @@ will be converted to atomic types.}
 rowwise (e.g. a matrix will become an Array of its rows).}
 }
 \description{
-Sends a variable to the server, where it is assigned to the variable with a specified name. A JavaScript function
-\code{jrc.sendData(variableName, variable)} can send data back from the server to the current R session. If variable
-name hasn't been previously added to the list of the allowed variables, attempt to assign it from the server will
-require manual authorization in the R session.
+Sends a variable to a web page, where it is assigned to the variable with a specified name.
+}
+\details{
+To send data back from the web page to the currend R session \code{jrc.sendData(variableName, variable, internal)} 
+should be used. Its arguments are:
+
+\describe{
+   \item{\code{variableName}}{
+      Name that the variable will have in the R session. If variable name hasn't been previously added to the list
+      of allowed variables (see \code{\link{allowVariables}} or \code{allowedVariables} argument of the \code{\link{openPage}}
+      fuction), attempt to assign it from a web page will require manual authorization in the R session.
+   }
+   \item{\code{variable}}{
+      Variable to send.
+   }
+   \item{\code{internal} (optional)}{
+      Whether this variable should be used only by the session that sent it. If \code{true}, variable will be stored
+      in the session-specific environment and can be accessed from the outside with \code{\link{getSessionVariable}}
+      function. If \code{false}, variable will be saved to the outer environment of the app (see \code{\link{setEnvironment}}).
+      By default, uses \code{true} for variables that already exist in the session specific environment 
+      (see \code{\link{setSessionVariables}} or \code{sessionVariables} argument of the \code{\link{openPage}} function.)
+      and \code{false} otherwise.
+   }
+}
 }
 \examples{
 \donttest{openPage()

@@ -9,8 +9,8 @@ callFunction(
   arguments = NULL,
   assignTo = NULL,
   wait = 0,
+  sessionId = NULL,
   thisArg = NULL,
-  id = NULL,
   ...
 )
 }
@@ -24,8 +24,14 @@ arguments must be given in a fixed order, naming is not necessary and will
 be ignored.}
 
 \item{assignTo}{Name of a variable to which will be assigned the returned value
-of the called function. If variable with this name doesn't exist, it will be added
-to the currently active environment.}
+of the called function.}
+
+\item{wait}{If \code{wait > 0}, after sending the message, R will wait for a reply for a given number of seconds. 
+For this time (or until the reply is received), execution of other commands will be halted. Any incoming message 
+from the session will be considered as a reply.}
+
+\item{sessionId}{An ID of the session to which the function call should be sent. If \code{NULL}, the function call will
+be sent to all currently active sessions.}
 
 \item{thisArg}{JavaScript functions (methods) can belong to some object, which 
 is referred as \code{this} inside the function (e.g. in
@@ -34,18 +40,41 @@ is referred as \code{this} inside the function (e.g. in
 then the function will be applied to the global object.}
 
 \item{...}{further arguments passed to \code{\link{sendData}} that is used to send
-\code{arguments} to the web server.}
+\code{arguments} to the web page.}
 }
 \description{
 Calls a function on an opened web page given its name and arguments.
-JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo, package)}, 
-where the \code{package} argument allow to call function from some other
-package. The result, however, will be anyway assigned to a variable in the
-environment set by \code{\link{setEnvironment}}.
-For security reasons, if function or variable to which its returned value
-should be assigned are not in the lists of allowed functions and variables,
-manual authorization of the call form JavaScript in the R session will be 
-required. For more details check \code{\link{authorize}}.
+}
+\details{
+JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo, package, internal)},
+and its arguments are:
+\describe{
+   \item{\code{name}}{
+      Name of the function to call. If function name hasn't been previously added to the list
+      of allowed functions (see \code{\link{allowFunctions}} or \code{allowedFunctions} argument of the \code{\link{openPage}}
+      fuction), attempt to assign it from a web page will require manual authorization in the R session.
+   }
+   \item{\code{arguments} (optional)}{
+      arguments for the function. This should be an Array or an Object with argument names as keys.
+   }
+   \item{\code{assignTo} (optional)}{
+      Name of the variable to which the returned value of the function will be assignedin the R session. 
+      If variable name hasn't been previously added to the list
+      of allowed variables (see \code{\link{allowVariables}} or \code{allowedVariables} argument of the \code{\link{openPage}}
+      fuction), attempt to assign it from a web page will require manual authorization in the R session.
+   }
+   \item{\code{package} (optional)}{
+      If the function should be imported from an installed package, name of this package.
+   }
+   \item{\code{internal} (optional)}{
+      Whether assignment of the function returned value should happen internally or not. If \code{true}, result will be stored
+      in the session-specific environment and can be accessed from the outside with \code{\link{getSessionVariable}}
+      function. If \code{false}, result will be saved to the outer environment of the app (see \code{\link{setEnvironment}}).
+      By default, uses \code{true} for variables that already exist in the session specific environment 
+      (see \code{\link{setSessionVariables}} or \code{sessionVariables} argument of the \code{\link{openPage}} function.)
+      and \code{false} otherwise.
+   }
+}
 }
 \examples{
 \donttest{

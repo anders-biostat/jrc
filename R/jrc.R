@@ -1095,12 +1095,31 @@ closePage <- function() {
 
 #' Send data to a web page
 #' 
-#' Sends a variable to the server, where it is assigned to the variable with a specified name. A JavaScript function
-#' \code{jrc.sendData(variableName, variable)} can send data back from the server to the current R session. If variable
-#' name hasn't been previously added to the list of the allowed variables, attempt to assign it from the server will
-#' require manual authorization in the R session. 
+#' Sends a variable to a web page, where it is assigned to the variable with a specified name. 
 #' 
-#' @param variableName Name that the variable will have on the server.
+#' To send data back from the web page to the currend R session \code{jrc.sendData(variableName, variable, internal)} 
+#' should be used. Its arguments are:
+#' 
+#' \describe{
+#'    \item{\code{variableName}}{
+#'       Name that the variable will have in the R session. If variable name hasn't been previously added to the list
+#'       of allowed variables (see \code{\link{allowVariables}} or \code{allowedVariables} argument of the \code{\link{openPage}}
+#'       fuction), attempt to assign it from a web page will require manual authorization in the R session.
+#'    }
+#'    \item{\code{variable}}{
+#'       Variable to send.
+#'    }
+#'    \item{\code{internal} (optional)}{
+#'       Whether this variable should be used only by the session that sent it. If \code{true}, variable will be stored
+#'       in the session-specific environment and can be accessed from the outside with \code{\link{getSessionVariable}}
+#'       function. If \code{false}, variable will be saved to the outer environment of the app (see \code{\link{setEnvironment}}).
+#'       By default, uses \code{true} for variables that already exist in the session specific environment 
+#'       (see \code{\link{setSessionVariables}} or \code{sessionVariables} argument of the \code{\link{openPage}} function.)
+#'       and \code{false} otherwise.
+#'    }
+#' }
+#' 
+#' @param variableName Name that the variable will have on the web page.
 #' @param variable Variable to send.
 #' @param sessionId An ID of the session to which the data should be sent. If \code{NULL}, the data will
 #' be sent to all currently active sessions.
@@ -1163,7 +1182,7 @@ setEnvironment <- function(envir) {
 
 #' Send HTML to a web page
 #' 
-#' Sends a piece of HTML code to the given opend web page and adds it at the end
+#' Sends a piece of HTML code to an opend web page and adds it at the end
 #' or the \code{body} element.
 #' 
 #' @param html HTML code that will be added to the web page.
@@ -1192,14 +1211,36 @@ sendHTML <- function(html = "", sessionId = NULL, wait = 0) {
 #' Trigger a function call
 #' 
 #' Calls a function on an opened web page given its name and arguments.
-#' JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo, package)}, 
-#' where the \code{package} argument allow to call function from some other
-#' package. The result, however, will be anyway assigned to a variable in the
-#' environment set by \code{\link{setEnvironment}}.
-#' For security reasons, if function or variable to which its returned value
-#' should be assigned are not in the lists of allowed functions and variables,
-#' manual authorization of the call form JavaScript in the R session will be 
-#' required. For more details check \code{\link{authorize}}.
+#' 
+#' JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo, package, internal)},
+#' and its arguments are:
+#' \describe{
+#'    \item{\code{name}}{
+#'       Name of the function to call. If function name hasn't been previously added to the list
+#'       of allowed functions (see \code{\link{allowFunctions}} or \code{allowedFunctions} argument of the \code{\link{openPage}}
+#'       fuction), attempt to assign it from a web page will require manual authorization in the R session.
+#'    }
+#'    \item{\code{arguments} (optional)}{
+#'       arguments for the function. This should be an Array or an Object with argument names as keys.
+#'    }
+#'    \item{\code{assignTo} (optional)}{
+#'       Name of the variable to which the returned value of the function will be assignedin the R session. 
+#'       If variable name hasn't been previously added to the list
+#'       of allowed variables (see \code{\link{allowVariables}} or \code{allowedVariables} argument of the \code{\link{openPage}}
+#'       fuction), attempt to assign it from a web page will require manual authorization in the R session.
+#'    }
+#'    \item{\code{package} (optional)}{
+#'       If the function should be imported from an installed package, name of this package.
+#'    }
+#'    \item{\code{internal} (optional)}{
+#'       Whether assignment of the function returned value should happen internally or not. If \code{true}, result will be stored
+#'       in the session-specific environment and can be accessed from the outside with \code{\link{getSessionVariable}}
+#'       function. If \code{false}, result will be saved to the outer environment of the app (see \code{\link{setEnvironment}}).
+#'       By default, uses \code{true} for variables that already exist in the session specific environment 
+#'       (see \code{\link{setSessionVariables}} or \code{sessionVariables} argument of the \code{\link{openPage}} function.)
+#'       and \code{false} otherwise.
+#'    }
+#' }
 #' 
 #' @param name Name of the function. If the function is a method of some object
 #' its name must contain the full chain of calls (e.g. \code{myArray.sort} or 
@@ -1208,15 +1249,19 @@ sendHTML <- function(html = "", sessionId = NULL, wait = 0) {
 #' arguments must be given in a fixed order, naming is not necessary and will 
 #' be ignored.
 #' @param assignTo Name of a variable to which will be assigned the returned value
-#' of the called function. If variable with this name doesn't exist, it will be added
-#' to the currently active environment.
+#' of the called function.
+#' @param sessionId An ID of the session to which the function call should be sent. If \code{NULL}, the function call will
+#' be sent to all currently active sessions.
+#' @param wait If \code{wait > 0}, after sending the message, R will wait for a reply for a given number of seconds. 
+#' For this time (or until the reply is received), execution of other commands will be halted. Any incoming message 
+#' from the session will be considered as a reply.
 #' @param thisArg JavaScript functions (methods) can belong to some object, which 
 #' is referred as \code{this} inside the function (e.g. in
 #' \code{someObject.myFunction()} function \code{myFunction} is a method of \code{someObject}).
 #' \code{thisArg} specified object that will be passed as \code{this} to the function. If \code{NULL}
 #' then the function will be applied to the global object.
 #' @param ... further arguments passed to \code{\link{sendData}} that is used to send
-#' \code{arguments} to the web server.
+#' \code{arguments} to the web page.
 #' 
 #' @examples 
 #' \donttest{
@@ -1229,8 +1274,8 @@ sendHTML <- function(html = "", sessionId = NULL, wait = 0) {
 #' \code{\link{setEnvironment}}.
 #' 
 #' @export
-callFunction <- function(name, arguments = NULL, assignTo = NULL, wait = 0, thisArg = NULL, id = NULL, ...) {
-  sendMessage("callFunction", id, wait = wait, name = name, arguments = arguments, assignTo = assignTo, thisArg = thisArg,
+callFunction <- function(name, arguments = NULL, assignTo = NULL, wait = 0, sessionId = NULL, thisArg = NULL, ...) {
+  sendMessage("callFunction", sessionId, wait = wait, name = name, arguments = arguments, assignTo = assignTo, thisArg = thisArg,
                 ...)
 }
 

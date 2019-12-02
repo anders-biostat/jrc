@@ -102,13 +102,13 @@ jrc.sendCommand = function(command) {
 	jrc.ws.send(JSON.stringify(["COM", command]));
 }
 
-jrc.sendData = function(variableName, variable, sessionwise) {
-	jrc.ws.send(JSON.stringify(["DATA", variableName, JSON.stringify(variable), sessionwise]));
+jrc.sendData = function(variableName, variable, internal) {
+	jrc.ws.send(JSON.stringify(["DATA", variableName, JSON.stringify(variable), internal]));
 }
 
 //args must be object (to be converted to names list in R)
-jrc.callFunction = function(functionName, args, assingTo, package, sessionwise) {
-	jrc.ws.send(JSON.stringify(["FUN", functionName, JSON.stringify(args), assingTo, package, sessionwise]));
+jrc.callFunction = function(functionName, args, assingTo, package, internal) {
+	jrc.ws.send(JSON.stringify(["FUN", functionName, JSON.stringify(args), assingTo, package, internal]));
 }
 
 jrc.notifyStorage = function(id) {
