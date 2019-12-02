@@ -7,7 +7,7 @@
 Object of this class represents the entire jrc-based app. It stores all the active connections,
 user-specific variables and all the global app settings. If you use exported wrapper functions, 
 without specifying an app object, an instance of this class is stored in the package namespace.
-You can always, retrieve it with the \code{\link{getPage}} function. However it is also possible
+You can always retrieve it with the \code{\link{getPage}} function. However, it is also possible
 to run several apps simultaneously by creating new objects of this class and then managing them 
 directly.
 }
@@ -16,26 +16,27 @@ directly.
 \describe{
    \item{\code{getSession(sessionId = NULL)}}{
       Returns a session with a given ID or \code{NULL} if session with this ID doesn't exist. If \code{sessionId = NULL}
-      and there is only one active session, returns it.
+      and there is only one active session, returns it. See also \code{\link{getSession}}.
    }
    \item{\code{closeSession(session = NULL, inactive = NULL, old = NULL)}}{
       Closes websocket connection of the session and removes all the related data from the app. For more information on 
       the arguments, please, check \code{\link{closeSession}}
    }
    \item{\code{getSessionIds()}}{
-       Returns IDs of all currently active sessions. 
+       Returns IDs of all currently active sessions. See also \code{\link{getSessionIds}}.
    }
    \item{\code{startServer(port = NULL)}}{
        Starts a local server that listens to a given port. If \code{port = NULL}, picks up a random available port.
+       See also \code{\link{openPage}}.
    }
    \item{\code{stopServer()}}{
-       Closes all active sessions and stops a running server.
+       Closes all active sessions and stops a running server. See also \code{\link{closePage}}.
    }
    \item{\code{openPage(useViewer = TRUE, browser = NULL)}}{
       Opens a new web page either in browser, or in R Studio viewer. If \code{useViewer = FALSE}, but browser is not selected,
       a default installed browser is used. If browser is specified, \code{useViewer} is ignored. This method returns
       a new Session object, which should correspond to the page that has been just opened. However, if someone would start
-      a new connection at the moment when this function is used, it may return a wrong session.
+      a new connection at the moment when this function is used, it may return a wrong session. See also \code{\link{openPage}}.
    }
    \item{\code{setEnvironment(envir)}}{
       Specifies an environment in which all the messages from the web pages will be evaluated. For more information,

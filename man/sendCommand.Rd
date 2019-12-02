@@ -2,7 +2,7 @@
 % Please edit documentation in R/jrc.R
 \name{sendCommand}
 \alias{sendCommand}
-\title{Send a command to the server}
+\title{Send a command to a web page}
 \usage{
 sendCommand(command, sessionId = NULL, wait = 0)
 }
@@ -18,16 +18,20 @@ For this time (or until the reply is received), execution of other commands will
 from the session will be considered as a reply.}
 }
 \description{
-\code{sendCommand} sends JavaScript code to the server and executes it on the currently
-opened page. Use JavaScript function \code{jrc.sendCommand} to send R code from the server
+\code{sendCommand} sends JavaScript code to the server and executes it on the specified
+opened page. Use JavaScript function \code{jrc.sendCommand} to send R code from the web page
 and execute it in the current R session. All commands send to R from the server will be executed
 only after authorization in the currently running R session.
 }
 \details{
-Note, that in both cases commands are executed inside a function. Therefore use for R code use \code{<<-} instead
-of \code{<-} to change global variables and in JavaScript use \code{windows.varibleName = "SomeValue"} or
-\code{varibleName = "SomeValue"}. Variables declared like \code{var variableName = "SomeValue"} or 
-\code{variableName <- "SomeValue"} will be accessible only within the current \code{sendCommand} call.
+Each opened page gets its own environment, where all the commands are evaluated. Thus, any changes
+made with the usual assignment operator \code{<-} will be limited to the page-specific environment. The changes
+are still saved, but can be accessed only with \code{\link{getSessionVariable}} function. To make changes outside
+of the page-specific environment use \code{<<-} instead. In JavaScript \code{windows.varibleName = "SomeValue"}
+should be used instead of \code{varibleName = "SomeValue"}, if you want the variable to be accessable outside the
+currend \code{sendCommand} call.
+
+This function is a wrapper around \code{sendCommand} method of class \code{\link{Session}}.
 }
 \examples{
  

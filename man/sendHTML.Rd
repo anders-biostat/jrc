@@ -2,7 +2,7 @@
 % Please edit documentation in R/jrc.R
 \name{sendHTML}
 \alias{sendHTML}
-\title{Send HTML to the server}
+\title{Send HTML to a web page}
 \usage{
 sendHTML(html = "", sessionId = NULL, wait = 0)
 }
@@ -17,7 +17,7 @@ For this time (or until the reply is received), execution of other commands will
 from the session will be considered as a reply.}
 }
 \description{
-Sends a piece of HTML code to the server and adds it at the end
+Sends a piece of HTML code to the given opend web page and adds it at the end
 or the \code{body} element.
 }
 \examples{

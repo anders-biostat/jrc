@@ -7,13 +7,27 @@
 setEnvironment(envir)
 }
 \arguments{
-\item{envir}{Environment where to evaluate the commands.}
+\item{envir}{Environment to be used as outer environment.}
 }
 \description{
-Defines the environment, where the commands, received from the server, will be evaluated. By default,
-\code{globalenv()} is used.
+Defines an outer environment for the app. Outer environment is a parent for all session environments.
+It is used to store variables that are common for all the sessions. The only way to make changes outside
+the outer environment is to use the global assignment operator \code{<<-} if and only if changes are 
+made to the variable that does not exist in the outer environment.
+}
+\details{
+By default, an environment where app was initialized (via \code{\link{openPage}} function or with \code{App$new()} call)
+is used.
 }
 \examples{
-setEnvironment(environment())
+\donttest{
+openPage()
+e <- new.env()
+setEnvironment(e)
+
+sendCommand("jrc.sendData('x', 10)", wait = 3)
+print(e$x)
+closePage()
+}
 
 }

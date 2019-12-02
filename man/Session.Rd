@@ -6,8 +6,8 @@
 \description{
 Objects of this class handle all the incoming and outgoing messages for one active connection.
 Please, avoid creating instances of this class manually. Each \code{Session} object is created, when
-a web socket is opened, and serves as a wraper around it. Manually created object will not have
-a web socket connection and thus are not functional.
+a websocket is opened, and serves as a wraper around it. Manually created object will not have
+a websocket connection and thus are not functional.
 
 All sessions are stored whithin an object of class \code{\link{App}} and cannot exist and function without it.
 One can manipulate a session directly, using its methods that are described bellow, via methods of the corresponding 
@@ -47,14 +47,14 @@ App object, or using provided wrapper function (links to them can be found in th
 \describe{
   \item{\code{getMessageIds()}}{
      Returns IDs of all currently stored messages. ID is combination of 6 random letters and numbers,
-     which is generated, when the message is stored.
+     which is generated, when the message is stored. See also \code{\link{getMessageIds}}.
   }
   \item{\code{authorize(messageId = NULL, show = FALSE)}}{ 
      Authorizes evaluation of the message. Check \code{\link{authorize}} for more information.
   }
   \item{\code{removeMessage(messageId)}}{
      Removes a stored message. This can also be done with \code{\link{authorize}} function (set
-     \code{show = TRUE} and then select to ignore message).
+     \code{show = TRUE} and then select to ignore message). See also \code{\link{removeMessage}}.
   }
   \item{\code{sendCommand(command, wait = 0)}}{
      Sends a JavaScript command to be evaluated on the web page. Check 
@@ -76,7 +76,7 @@ App object, or using provided wrapper function (links to them can be found in th
      Sets or returns variables that are used (read or rewritten) only by this session. If both arguments are
      \code{NULL}, returns environment for this session. If \code{vars} is a named list, adds this variables to the
      session environment. If \code{varName} is a character, returns a variable with this name that can be accessed from
-     the session. If no such a variable exists, throws an error. One can add variables to the session evrironment and
+     the session. If no such variable exists, throws an error. One can add variables to the session evrironment and
      get a specified one back within the same function call.Check \code{\link{setSessionVariables}} for more information.
   }
 }

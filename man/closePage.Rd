@@ -7,7 +7,8 @@
 closePage()
 }
 \description{
-Stop the server and close all currently opened pages (if any).
+Stop the server and close all currently opened pages (if any). This function is a 
+wrapper of \code{stopServer} method of class \code{\link{App}}.
 }
 \seealso{
 \code{\link{openPage}}

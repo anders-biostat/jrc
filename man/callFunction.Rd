@@ -37,7 +37,7 @@ then the function will be applied to the global object.}
 \code{arguments} to the web server.}
 }
 \description{
-Calls a function on the opened web page given its name and arguments.
+Calls a function on an opened web page given its name and arguments.
 JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo, package)}, 
 where the \code{package} argument allow to call function from some other
 package. The result, however, will be anyway assigned to a variable in the

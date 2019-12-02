@@ -3,8 +3,8 @@
 #' 
 #' @description Objects of this class handle all the incoming and outgoing messages for one active connection.
 #' Please, avoid creating instances of this class manually. Each \code{Session} object is created, when
-#' a web socket is opened, and serves as a wraper around it. Manually created object will not have
-#' a web socket connection and thus are not functional.
+#' a websocket is opened, and serves as a wraper around it. Manually created object will not have
+#' a websocket connection and thus are not functional.
 #' 
 #' All sessions are stored whithin an object of class \code{\link{App}} and cannot exist and function without it.
 #' One can manipulate a session directly, using its methods that are described bellow, via methods of the corresponding 
@@ -40,14 +40,14 @@
 #' \describe{
 #'   \item{\code{getMessageIds()}}{
 #'      Returns IDs of all currently stored messages. ID is combination of 6 random letters and numbers,
-#'      which is generated, when the message is stored.
+#'      which is generated, when the message is stored. See also \code{\link{getMessageIds}}.
 #'   }
 #'   \item{\code{authorize(messageId = NULL, show = FALSE)}}{ 
 #'      Authorizes evaluation of the message. Check \code{\link{authorize}} for more information.
 #'   }
 #'   \item{\code{removeMessage(messageId)}}{
 #'      Removes a stored message. This can also be done with \code{\link{authorize}} function (set
-#'      \code{show = TRUE} and then select to ignore message).
+#'      \code{show = TRUE} and then select to ignore message). See also \code{\link{removeMessage}}.
 #'   }
 #'   \item{\code{sendCommand(command, wait = 0)}}{
 #'      Sends a JavaScript command to be evaluated on the web page. Check 
@@ -69,7 +69,7 @@
 #'      Sets or returns variables that are used (read or rewritten) only by this session. If both arguments are
 #'      \code{NULL}, returns environment for this session. If \code{vars} is a named list, adds this variables to the
 #'      session environment. If \code{varName} is a character, returns a variable with this name that can be accessed from
-#'      the session. If no such a variable exists, throws an error. One can add variables to the session evrironment and
+#'      the session. If no such variable exists, throws an error. One can add variables to the session evrironment and
 #'      get a specified one back within the same function call.Check \code{\link{setSessionVariables}} for more information.
 #'   }
 #' }
@@ -291,7 +291,13 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
   
   authorize = function(messageId = NULL, show = FALSE) {
     
-    if(is.null(messageId)) return(sapply(private$storage, `[[`, "id"))
+    if(is.null(messageId)) {
+      if(length(private$storage) > 1)
+        stop("More than one message is stored for this session. Please, specify message ID.")
+      if(length(private$storage) == 0)
+        stope("There are no stored messages for this session")
+      messageId <- names(private$storage)
+    }
     
     if(!is.logical(show))
       stop("show must be a logical variable")
@@ -426,7 +432,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
 #' @description Object of this class represents the entire jrc-based app. It stores all the active connections,
 #' user-specific variables and all the global app settings. If you use exported wrapper functions, 
 #' without specifying an app object, an instance of this class is stored in the package namespace.
-#' You can always, retrieve it with the \code{\link{getPage}} function. However it is also possible
+#' You can always retrieve it with the \code{\link{getPage}} function. However, it is also possible
 #' to run several apps simultaneously by creating new objects of this class and then managing them 
 #' directly.
 #' 
@@ -434,26 +440,27 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
 #' \describe{
 #'    \item{\code{getSession(sessionId = NULL)}}{
 #'       Returns a session with a given ID or \code{NULL} if session with this ID doesn't exist. If \code{sessionId = NULL}
-#'       and there is only one active session, returns it.
+#'       and there is only one active session, returns it. See also \code{\link{getSession}}.
 #'    }
 #'    \item{\code{closeSession(session = NULL, inactive = NULL, old = NULL)}}{
 #'       Closes websocket connection of the session and removes all the related data from the app. For more information on 
 #'       the arguments, please, check \code{\link{closeSession}}
 #'    }
 #'    \item{\code{getSessionIds()}}{
-#'        Returns IDs of all currently active sessions. 
+#'        Returns IDs of all currently active sessions. See also \code{\link{getSessionIds}}.
 #'    }
 #'    \item{\code{startServer(port = NULL)}}{
 #'        Starts a local server that listens to a given port. If \code{port = NULL}, picks up a random available port.
+#'        See also \code{\link{openPage}}.
 #'    }
 #'    \item{\code{stopServer()}}{
-#'        Closes all active sessions and stops a running server.
+#'        Closes all active sessions and stops a running server. See also \code{\link{closePage}}.
 #'    }
 #'    \item{\code{openPage(useViewer = TRUE, browser = NULL)}}{
 #'       Opens a new web page either in browser, or in R Studio viewer. If \code{useViewer = FALSE}, but browser is not selected,
 #'       a default installed browser is used. If browser is specified, \code{useViewer} is ignored. This method returns
 #'       a new Session object, which should correspond to the page that has been just opened. However, if someone would start
-#'       a new connection at the moment when this function is used, it may return a wrong session.
+#'       a new connection at the moment when this function is used, it may return a wrong session. See also \code{\link{openPage}}.
 #'    }
 #'    \item{\code{setEnvironment(envir)}}{
 #'       Specifies an environment in which all the messages from the web pages will be evaluated. For more information,
@@ -920,41 +927,57 @@ pkg.env <- new.env()
 
 #' Create a server
 #' 
-#' \code{openPage} creates a server and establishes a websocket connection between it and the current
-#' R session. This allows commands exchange. In R use \code{\link{sendCommand}} function to send and 
-#' execute JavaScript code on the server. On the server use \code{jrc.sendCommand} function to send and
-#' execute R code in the current R session.
+#' \code{openPage} starts a server and opens a new page with a websocket connection between it and the current
+#' R session. After that messages can be exchanged between R session and the web page to generate content on the
+#' web page and to trigger calculation in R as a response to user activity on the page.
 #' 
-#' This function is a wrapper around several methods of class \code{\link{App}}. First, it creates an
+#' \code{jrc} supports four types of messages:
+#' \itemize{
+#'    \item{Commands are pieces of R or JavaScript code that will be evaluated on the receiving side. Note, 
+#'    that any command from the web page must be authorized in the R session for security reasons. A message 
+#'    with information on how to do that is printed in the console each time a command is received. For more
+#'    information, please, check \code{\link{sendCommand}}}
+#'    \item{Data is any variable that is sent to a from the current R session. It must always come with a 
+#'    name of variable to which it should be assigned on the receiving side. For more information, please,
+#'    check \code{\link{sendData}}}
+#'    \item{Function calls can be triggered on each side of the websocket connection. Alongside the function name,
+#'    one can also send a list of arguments and name of a variable to which the returned value of the function will
+#'    be assigned. For more information, please, check \code{\link{callFunction}}}
+#'    \item{Unlike other types of messages, HTML code can be sent only from R session to the web page. This code will
+#'    be added to the body of the page.}
+#' }
+#' 
+#' \code{openPage} function is a wrapper around several methods of class \code{\link{App}}. First, it creates an
 #' instance of this class. Then it starts a server that listens to a given port. And finally, it attempts
 #' to open a new web page. It also stores a new app object in tha package namespace, which allows other
 #' wrapper functions access it without being specified by the user.
 #' 
-#' @param useViewer If \code{TRUE}, the start page will be opened in the RStudio Viewer. If \code{FALSE}
-#' a default web browser will be used.
-#' @param rootDirectory A path to the root directory of the server. If \code{rootDirectory} is not 
+#' @param useViewer If \code{TRUE}, the new web page will be opened in the RStudio Viewer. If \code{FALSE}
+#' a default web browser will be used (if other is not specified with the \code{browser} argument.
+#' @param rootDirectory A path to the root directory of the server. Any file, requested by the server
+#' will be searched for in this directory. If \code{rootDirectory} is not 
 #' defined, the \code{http_root} in the package directory will be used as a root directory.
-#' @param startPage A path to the HTML file that should be opened, when the server is initialised.
+#' @param startPage A path to the HTML file that should be used as a starting page of the app.
 #' This can be an absolute path to a local file, or it can be relative to the \code{rootDirectory}
-#' or to the current R working directory. If \code{startPage} is not defined, this function opens an 
-#' empty HTML page. The file must have \emph{.html} extension.
-#' @param port Defines which TCP port to use for websocket connection. If not defined, random available port
-#' is used.
-#' @param browser A browser in which the web page will be opened.
+#' or to the current R working directory. If \code{startPage} is not defined, an empty page will be used.
+#' The file must have \emph{.html} extension.
+#' @param port Defines which TCP port the server will listen to. If not defined, random available port
+#' will be used.
+#' @param browser A browser in which to open a new web page.
 #' If not defined, default browser will be used. For more information check \code{\link[utils]{browseURL}}.
 #' Specifying a browser, will automatically set \code{useViewer} to \code{FALSE}.
 #' @param allowedFunctions List of functions that can be called from the web page without any additional actions 
-#' from the user. All other functions will require authorization in the current R session to be executed. 
+#' from the user. All other functions will require authorization in the current R session before they are executed. 
 #' This should be a vector of function names. Check \code{\link{authorize}} and \code{\link{allowFunctions}}
 #' for more information. 
 #' @param allowedVariables List of variables that can be reassigned from the web page without any additional actions 
-#' from the user. All other reassignments will require authorization in the current R session to be executed. 
+#' from the user. All other reassignments will require authorization in the current R session before they are executed. 
 #' This should be a vector of variable names. Check \code{\link{authorize}} and \code{\link{allowVariables}}
 #' for more information.
 #' @param connectionNumber Maximum number of connections that is allowed to be active simultaneously.
 #' @param sessionVars Named list of variables, that will be declared for each session, when a new connection is opened.
-#' These variables can be used, for instance, to store a state of each session. For more information, please, check
-#' \code{\link{setSessionVariables}}.
+#' Any changes to these variables will affect only a certain session. Thus they can be used, for instance, to 
+#' store a state of each session. For more information, please, check \code{\link{setSessionVariables}}.
 #' @param onStart A callback function that will be executed when a new connection is opened. This function get a single 
 #' variable, which is an object of class \code{\link{Session}}. General purpose of the function is to populate each 
 #' new web page with some default content.
@@ -1010,16 +1033,20 @@ sendMessage <- function(type, id, ...) {
   
 }
 
-#' Send a command to the server
+#' Send a command to a web page
 #' 
-#' \code{sendCommand} sends JavaScript code to the server and executes it on the currently
-#' opened page. Use JavaScript function \code{jrc.sendCommand} to send R code from the server
+#' \code{sendCommand} sends JavaScript code to the server and executes it on the specified
+#' opened page. Use JavaScript function \code{jrc.sendCommand} to send R code from the web page
 #' and execute it in the current R session. All commands send to R from the server will be executed
 #' only after authorization in the currently running R session.
-#' @details Note, that in both cases commands are executed inside a function. Therefore use for R code use \code{<<-} instead
-#' of \code{<-} to change global variables and in JavaScript use \code{windows.varibleName = "SomeValue"} or
-#' \code{varibleName = "SomeValue"}. Variables declared like \code{var variableName = "SomeValue"} or 
-#' \code{variableName <- "SomeValue"} will be accessible only within the current \code{sendCommand} call.
+#' @details Each opened page gets its own environment, where all the commands are evaluated. Thus, any changes
+#' made with the usual assignment operator \code{<-} will be limited to the page-specific environment. The changes
+#' are still saved, but can be accessed only with \code{\link{getSessionVariable}} function. To make changes outside
+#' of the page-specific environment use \code{<<-} instead. In JavaScript \code{windows.varibleName = "SomeValue"}
+#' should be used instead of \code{varibleName = "SomeValue"}, if you want the variable to be accessable outside the
+#' currend \code{sendCommand} call.
+#' 
+#' This function is a wrapper around \code{sendCommand} method of class \code{\link{Session}}.
 #' 
 #' @param command A line (or several lines separated by \code{\\n}) of JavaScript code. This code
 #' will be immediately executed on the opened page. No R-side syntax check is performed.
@@ -1051,7 +1078,8 @@ sendCommand <- function(command, sessionId = NULL, wait = 0) {
 
 #' Stop server
 #' 
-#' Stop the server and close all currently opened pages (if any).
+#' Stop the server and close all currently opened pages (if any). This function is a 
+#' wrapper of \code{stopServer} method of class \code{\link{App}}.
 #' 
 #' @seealso \code{\link{openPage}}
 #' 
@@ -1065,7 +1093,7 @@ closePage <- function() {
   }
 }
 
-#' Send data to the server
+#' Send data to a web page
 #' 
 #' Sends a variable to the server, where it is assigned to the variable with a specified name. A JavaScript function
 #' \code{jrc.sendData(variableName, variable)} can send data back from the server to the current R session. If variable
@@ -1104,13 +1132,26 @@ sendData <- function(variableName, variable, sessionId = NULL, wait = 0, keepAsV
 
 #' Set Environment
 #' 
-#' Defines the environment, where the commands, received from the server, will be evaluated. By default,
-#' \code{globalenv()} is used.
+#' Defines an outer environment for the app. Outer environment is a parent for all session environments.
+#' It is used to store variables that are common for all the sessions. The only way to make changes outside
+#' the outer environment is to use the global assignment operator \code{<<-} if and only if changes are 
+#' made to the variable that does not exist in the outer environment.
 #' 
-#' @param envir Environment where to evaluate the commands.
+#' By default, an environment where app was initialized (via \code{\link{openPage}} function or with \code{App$new()} call)
+#' is used.
+#' 
+#' @param envir Environment to be used as outer environment. 
 #' 
 #' @examples
-#' setEnvironment(environment())
+#' \donttest{
+#' openPage()
+#' e <- new.env()
+#' setEnvironment(e)
+#' 
+#' sendCommand("jrc.sendData('x', 10)", wait = 3)
+#' print(e$x)
+#' closePage()
+#' }
 #' 
 #' @export
 setEnvironment <- function(envir) {
@@ -1120,9 +1161,9 @@ setEnvironment <- function(envir) {
   pkg.env$app$setEnvironment(envir)
 }
 
-#' Send HTML to the server
+#' Send HTML to a web page
 #' 
-#' Sends a piece of HTML code to the server and adds it at the end
+#' Sends a piece of HTML code to the given opend web page and adds it at the end
 #' or the \code{body} element.
 #' 
 #' @param html HTML code that will be added to the web page.
@@ -1150,7 +1191,7 @@ sendHTML <- function(html = "", sessionId = NULL, wait = 0) {
 
 #' Trigger a function call
 #' 
-#' Calls a function on the opened web page given its name and arguments.
+#' Calls a function on an opened web page given its name and arguments.
 #' JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo, package)}, 
 #' where the \code{package} argument allow to call function from some other
 #' package. The result, however, will be anyway assigned to a variable in the
@@ -1381,5 +1422,15 @@ getSessionIds <- function() {
 
 #' @export
 closeSession <- function(sessionId = NULL, inactive = NULL, old = NULL) {
+  
+}
+
+#' @export
+getMessageIds <- function(sessionId = NULL) {
+  
+}
+
+#' @export
+removeMessage <- function(messageId = NULL, sessionId = NULL) {
   
 }

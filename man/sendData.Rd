@@ -2,7 +2,7 @@
 % Please edit documentation in R/jrc.R
 \name{sendData}
 \alias{sendData}
-\title{Send data to the server}
+\title{Send data to a web page}
 \usage{
 sendData(
   variableName,
