@@ -7,9 +7,13 @@
 getPage()
 }
 \value{
-page-handling object if there is a currently opened jrc page, \code{NULL} otherwise.
+Object of class \code{\link{App}} or \code{NULL} if there is no active app.
 }
 \description{
-Checks if there is a currently opened page. If so, returns an object with all
-the information about the current session.
+\code{jrc} offers to way to control an interactive app. One is by using methods of classed
+\code{\link{App}} and \code{\link{Session}}. This allows one to have any number of apps within one
+R session, but requires some understanding of object oriented programming. Another way is to use
+provided wrapper functions that are exported by the package. These functions internally work with 
+an \code{\link{App}} object, which is stored in the package namespace upon initialization with 
+\code{\link{openPage}} function. This function retrieves this object if any.
 }

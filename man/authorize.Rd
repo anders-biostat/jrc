@@ -4,20 +4,23 @@
 \alias{authorize}
 \title{Authorize further message processing}
 \usage{
-authorize(sessionId, messageId = NULL, show = FALSE)
+authorize(sessionId = NULL, messageId = NULL, show = FALSE)
 }
 \arguments{
+\item{sessionId}{ID of the session that received the message. Each session gets a randomed ID
+when it is started (a web socket connection is established). You can get IDs of all currently
+active sessions with \code{\link{getSessionIds}}. If there is only one active session, this 
+argument becomes optional.}
+
+\item{messageId}{ID of the message to be processed. In `jrc` library all stored messages are
+give a random ID that consists of 6 letters or numbers. The ID is reported when the
+message is stored. You can also get IDs of all the stored messages for a sessioin with
+\code{\link{getMessageIds}}. If the session has only one stored message, this argument becomes
+optional.}
+
 \item{show}{If \code{TRUE} information of the message with a given ID will be show before executing
 it with a choice to go on with execution, ignore the message (meaning it will be removed from memory) or
 do nothing.}
-
-\item{id}{ID of the message to be processed. In `jrc` library all stored messages are
-give a random ID that consists of 6 letters or numbers. The ID is reported when the
-message is stored. To get a list of IDs of all currently stored messages, set this argument
-to \code{NULL}.}
-}
-\value{
-A vector of IDs of all currently stored messages.
 }
 \description{
 `jrc` library allows one to get a full control over the currently running R session from 
@@ -30,6 +33,8 @@ from a message with a given ID
 Expressions has to be always authorized before evaluation. One can specify a list of
 variables that can be reassigned automatically and functions that can be called without
 authorization.
+
+This function is a wrapper around \code{authorize} method of class \code{\link{Session}}.
 }
 \seealso{
 \code{\link{allowFunctions}}, \code{\link{allowVariables}}, \code{\link{sendCommand}},

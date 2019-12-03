@@ -18,6 +18,8 @@ made to the variable that does not exist in the outer environment.
 \details{
 By default, an environment where app was initialized (via \code{\link{openPage}} function or with \code{App$new()} call)
 is used.
+
+This function is a wrapper around \code{setEnvironment} method of class \code{\link{App}}.
 }
 \examples{
 \donttest{

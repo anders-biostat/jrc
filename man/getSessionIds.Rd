@@ -7,11 +7,10 @@
 getSessionIds()
 }
 \value{
-a \code{data.frame} with three columns: \code{id} - session ID, \code{startTime} - time and date
-of the initialization of this session, \code{lastActive} - time and date of the last received message
-from this web socket.
+a vector of session IDs.
 }
 \description{
-Returns IDs of all currently active sessions with date and time of their initialization
-and the last received message.
+Returns IDs of all currently active sessions. An ID is a randomly generated combination of 6 letters and
+numbers that is assigned to each session upon opening. This function is a wrapper around method \code{getSessionIds}
+of class \code{\link{App}}.
 }

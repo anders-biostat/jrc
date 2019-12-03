@@ -30,8 +30,8 @@ of the called function.}
 For this time (or until the reply is received), execution of other commands will be halted. Any incoming message 
 from the session will be considered as a reply.}
 
-\item{sessionId}{An ID of the session to which the function call should be sent. If \code{NULL}, the function call will
-be sent to all currently active sessions.}
+\item{sessionId}{An ID of the session to which the function call should be sent. Can also be a vector of multiple
+session IDs. If \code{NULL}, the function call will be sent to all currently active sessions.}
 
 \item{thisArg}{JavaScript functions (methods) can belong to some object, which 
 is referred as \code{this} inside the function (e.g. in
@@ -43,7 +43,8 @@ then the function will be applied to the global object.}
 \code{arguments} to the web page.}
 }
 \description{
-Calls a function on an opened web page given its name and arguments.
+Calls a function on an opened web page given its name and arguments. This function is a wrapper
+around \code{callFunction} method of class \code{\link{Session}}.
 }
 \details{
 JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo, package, internal)},

@@ -2,12 +2,31 @@
 % Please edit documentation in R/jrc.R
 \name{setSessionVariables}
 \alias{setSessionVariables}
-\title{Set session-specific variables}
+\title{Adds variables to session environments}
 \usage{
-setSessionVariables(vars, sessionId = NULL)
+setSessionVariables(vars, sessionId = NULL, makeDefault = FALSE)
+}
+\arguments{
+\item{vars}{Named list of variables to be added to the session environments. Names are required and 
+will be used as variable names.}
+
+\item{sessionId}{ID of the session to which variables should be added. Can also be a vector of
+multiple session IDs. If \code{NULL}, then variables will be added to all currently active sessions.}
+
+\item{makeDefault}{If \code{TRUE} then, in addition, the specified variables will be added to each
+new opened session as default ones.}
 }
 \description{
-Specifies variables that will be available (can be read or rewritten) only within a given session.
-This is useful to safe state of the app for each client or for other personal settings. You can
-also use it to limit user's access to data loaded in the current R session.
+Each client session in a \code{jrc}, gets its own environment that can be accessed only by this
+session (or from the outside with the \code{\link{getSessionVariable}} function). General purpose
+of this environments is to store some session-specific information such as state of the app for
+each user. It can also be used to mask variables from the user: if there are two variables with the
+same name in the session environment and outside of it, user will not be able to see the latter one.
+This function adds new variables to a session environment or changes values of the existing ones.
+}
+\details{
+This function is a wrapper around method \code{sessionVariables} of class \code{\link{Session}}.
+If \code{makeDefault = TRUE}, it is also a wrapper around method \code{sessionVariables} of class
+\code{\link{App}}. The first one changes the current state of the session environment, while the
+second specifies default variables for each new session.
 }

@@ -18,8 +18,8 @@ sendData(
 
 \item{variable}{Variable to send.}
 
-\item{sessionId}{An ID of the session to which the data should be sent. If \code{NULL}, the data will
-be sent to all currently active sessions.}
+\item{sessionId}{An ID of the session to which the data should be sent. Can also be a vector of multiple session IDs.
+If \code{NULL}, the data will be sent to all currently active sessions.}
 
 \item{wait}{If \code{wait > 0}, after sending the message, R will wait for a reply for a given number of seconds. 
 For this time (or until the reply is received), execution of other commands will be halted. Any incoming message 
@@ -32,7 +32,8 @@ will be converted to atomic types.}
 rowwise (e.g. a matrix will become an Array of its rows).}
 }
 \description{
-Sends a variable to a web page, where it is assigned to the variable with a specified name.
+Sends a variable to a web page, where it is assigned to the variable with a specified name. This function
+is a wrapper around \code{sendData} method of class \code{\link{Session}}.
 }
 \details{
 To send data back from the web page to the currend R session \code{jrc.sendData(variableName, variable, internal)} 

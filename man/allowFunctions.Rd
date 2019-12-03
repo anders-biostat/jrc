@@ -15,7 +15,7 @@ Names of all currently allowed functions if \code{funs = NULL}.
 }
 \description{
 This function adds function names to the list of functions, which
-can be called from the web page without manual confirmation in the R
+can be called from a web page without manual confirmation in the R
 session.
 }
 \examples{

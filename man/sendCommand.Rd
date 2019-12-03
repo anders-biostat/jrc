@@ -10,8 +10,8 @@ sendCommand(command, sessionId = NULL, wait = 0)
 \item{command}{A line (or several lines separated by \code{\\n}) of JavaScript code. This code
 will be immediately executed on the opened page. No R-side syntax check is performed.}
 
-\item{sessionId}{An ID of the session to which the command should be sent. If \code{NULL}, the command will
-be sent to all currently active sessions.}
+\item{sessionId}{An ID of the session to which the command should be sent. Can also be a vector of multiple session IDs.
+If \code{NULL}, the command will be sent to all currently active sessions.}
 
 \item{wait}{If \code{wait > 0}, after sending the message, R will wait for a reply for a given number of seconds. 
 For this time (or until the reply is received), execution of other commands will be halted. Any incoming message 

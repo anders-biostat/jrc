@@ -15,7 +15,7 @@ Names of all currently allowed variables if \code{vars = NULL}.
 }
 \description{
 This function adds variable names to the list of variables, which
-can be reassigned from the web page without manual confirmation in the R
+can be reassigned from a web page without manual confirmation in the R
 session.
 }
 \examples{
