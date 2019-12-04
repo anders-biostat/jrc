@@ -349,7 +349,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
         warning("Can't get several variables at once. Only the first variable name will be used")
         varName <- varName[1]
       }
-      return(get(var, envir = private$envir))
+      return(get(varName, envir = private$envir))
     }
     invisible(self)
   },
@@ -1644,7 +1644,7 @@ getSession <- function(sessionId = NULL){
 #' 
 #' @return Requested variable
 #' @export
-getSessionVariable <- function(varName, sessionId) {
+getSessionVariable <- function(varName, sessionId = NULL) {
   if(is.null(pkg.env$app))
     stop("There is no opened page. Please, use 'openPage()' function to create one.") 
   

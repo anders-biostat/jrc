@@ -125,17 +125,14 @@ test_that("Data messages can be stored for later execution", {
   
   sendCommand('jrc.sendData("x", 15, false)', wait = 3)
   
-  app <- getPage()
-  session <- app$getSession(app$getSessionIds()$id)
+  expect_length(getMessageIds(), 1)
   
-  expect_length(session$getMessageIds(), 1)
-  
-  messageId <- session$getMessageIds()
-  session$authorize(messageId)
+  messageId <- getMessageIds()
+  authorize(messageId = messageId)
   
   expect_equal(x, 15)
   
-  expect_length(session$getMessageIds(), 0)
+  expect_length(getMessageIds(), 0)
   expect_message(closePage(), "Server has been stopped.")
 })
 
@@ -153,16 +150,14 @@ test_that("Variables are assigned in a correct environment", {
   expect_false(exists(".y_ut"))
   expect_false(exists(".y_ut", envir = e))
   
-  id <- getPage()$getSessionIds()$id
-  session <- getPage()$getSession(id)
-  y <- session$getSessionVariable(".y_ut")
+  y <- getSessionVariable(".y_ut")
   expect_equal(y, 22)
   
   setEnvironment(environment())
-  session$setSessionVariables(list(.z_ut = 10))
+  setSessionVariables(list(.z_ut = 10))
   sendCommand('jrc.sendData(".z_ut", 19)', wait = 3)
   expect_false(exists(".z_ut"))
-  z <- session$getSessionVariable(".z_ut")
+  z <- getSessionVariable(".z_ut")
   expect_equal(z, 19)
   
   expect_message(closePage(), "Server has been stopped.")
