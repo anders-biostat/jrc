@@ -18,7 +18,7 @@ directly.
       Returns a session with a given ID or \code{NULL} if session with this ID doesn't exist. If \code{sessionId = NULL}
       and there is only one active session, returns it. See also \code{\link{getSession}}.
    }
-   \item{\code{closeSession(session = NULL, inactive = NULL, old = NULL)}}{
+   \item{\code{closeSession(sessionId = NULL, inactive = NULL, old = NULL)}}{
       Closes websocket connection of the session and removes all the related data from the app. For more information on 
       the arguments, please, check \code{\link{closeSession}}
    }

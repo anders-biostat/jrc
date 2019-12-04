@@ -5,40 +5,40 @@ test_that("Pages can be opened in different browsers", {
   app$startServer()
   
   app$openPage()
-  expect_equal(nrow(app$getSessionIds()), 1)
+  expect_length(app$getSessionIds(), 1)
   
-  app$openPage(useViewer = F, browser = "google-chrome")
-  expect_equal(nrow(app$getSessionIds()), 2)
+  app$openPage(browser = "google-chrome")
+  expect_length(app$getSessionIds(), 2)
   
-  app$openPage(useViewer = F, browser = "firefox")
-  expect_equal(nrow(app$getSessionIds()), 3)
-  
+  app$openPage(browser = "firefox")
+  expect_length(app$getSessionIds(), 3)
+
+  app$openPage(useViewer = F)
+  expect_length(app$getSessionIds(), 4)
+    
   ids <- app$getSessionIds()
-  expect_output(str(ids), "3 obs")
-  expect_output(str(ids), "3 variables")
+  expect_type(ids, "character")
   
-  expect_type(ids$id, "character")
+  app$closeSession(ids[1:2])
+  expect_length(app$getSessionIds(), 2)
   
-  app$closeSession(ids$id[1])
-  expect_equal(nrow(app$getSessionIds()), 2)
+  expect_warning(app$closeSession(ids[1]), "There is no session with ID")
   
-  expect_error(app$closeSession(ids$id[1]), "There is no session with this ID")
-  
-  app$closeSession(ids$id[2])
-  expect_equal(nrow(app$getSessionIds()), 1)
-  
-  session <- app$getSession(ids$id[3])
+  session <- app$getSession(ids[3])
   expect_true("Session" %in% class(session))
   
-  app$closeSession(session)
-  expect_equal(nrow(app$getSessionIds()), 0)
+  app$closeSession(session$id)
+  expect_length(app$getSessionIds(), 1)
+  
+  app$closeSession()
+  expect_length(app$getSessionIds(), 0)
   
   expect_message(app$stopServer(), "Server has been stopped.")
 })
 
 test_that("Wrapper functions to open and close pages are working", {
   openPage()
-  expect_equal(nrow(getPage()$getSessionIds()), 1)
+  expect_length(getSessionIds(), 1)
   expect_message(closePage(), "Server has been stopped.")
   expect_message(closePage(), "There is no opened page.")
 })
@@ -55,4 +55,32 @@ test_that("Port is freed after page is closed", {
   openPage(port = port)
   expect_message(openPage(port = port), "Server has been stopped.")
   expect_message(closePage(), "Server has been stopped.")
+})
+
+test_that("Sessions can be closed according to there time stamps", {
+  start <- Sys.time()
+  openPage()
+  
+  app <- getPage()
+  time <- Sys.time()
+  
+  app$openPage(F)
+  app$openPage(F)
+  
+  expect_error(app$closeSession(), "There is more than one active session.")
+  
+  app$closeSession(old = Sys.time() - start)
+  expect_length(app$getSessionIds(), 3)
+  
+  app$closeSession(old = Sys.time() - time)
+  expect_length(app$getSessionIds(), 2)
+  
+  time <- Sys.time()
+  session <- app$getSession(app$getSessionIds()[1])
+  session$sendCommand("jrc.sendCommand('print(\"Hi!\")')", wait = 3)
+  
+  app$closeSession(inactive = Sys.time() - time)
+  expect_length(app$getSessionIds(), 1)
+  
+  app$stopServer()
 })

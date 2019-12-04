@@ -333,11 +333,11 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
     invisible(self)
   },
   
-  sessionVaribles = function(vars = NULL, varName = NULL) {
+  sessionVariables = function(vars = NULL, varName = NULL) {
     if(is.null(vars) && is.null(varName))
       return(private$envir)
     
-    if(!is.null(vars)){
+    if(!is.null(vars) & length(vars) > 0){
       if(!is.list(vars) || is.null(names(vars)))
         stop("Session variables must be a named list")
       list2env(vars, private$envir)   
@@ -351,7 +351,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
       }
       return(get(var, envir = private$envir))
     }
-    ivisible(self)
+    invisible(self)
   },
   
   setEnvironment = function(envir) {
@@ -385,8 +385,8 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
     self$startTime <- Sys.time()
     
     private$ws <- ws
-    
-    self$setSessionVariables(list(.id = self$id))      
+
+    self$sessionVariables(list(.id = self$id))      
   }
   
 ), private = list(
@@ -442,7 +442,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
 #'       Returns a session with a given ID or \code{NULL} if session with this ID doesn't exist. If \code{sessionId = NULL}
 #'       and there is only one active session, returns it. See also \code{\link{getSession}}.
 #'    }
-#'    \item{\code{closeSession(session = NULL, inactive = NULL, old = NULL)}}{
+#'    \item{\code{closeSession(sessionId = NULL, inactive = NULL, old = NULL)}}{
 #'       Closes websocket connection of the session and removes all the related data from the app. For more information on 
 #'       the arguments, please, check \code{\link{closeSession}}
 #'    }
@@ -529,33 +529,38 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     private$sessions[[sessionId]]
   },
   
-  closeSession = function(session = NULL, inactive = NULL, old = NULL) {
-    if(!is.null(session)) {
-      if(is.character(session))
-        session <- self$getSession(session)
-      if(is.null(session))
-        stop("There is no session with this ID")
+  closeSession = function(sessionId = NULL, inactive = NULL, old = NULL) {
+    if(length(private$sessions) == 0)
+      stop("There are no active sessions.")
+    
+    if(is.null(sessionId))
+      if(is.null(inactive) & is.null(old)){
+        if(length(private$sessions) > 1)
+          stop("There is more than one active session. Please, specify ID of the session you want to close")
+        sessionId <- names(private$sessions)
+      }
+    
+    stopifnot(is.vector(sessionId) | is.null(sessionId))
       
-      stopifnot("Session" %in% class(session))
-      session$close()
-      private$sessions[[session$id]] <- NULL
-    }
-    sessionIds <- c()
     if(!is.null(inactive)) {
       lastActive <- sapply(private$sessions, `[[`, "lastActive")
       rem <- (lastActive < Sys.time() - inactive)
-      sessionIds <- names(lastActive)[rem]
+      sessionId <- unique(c(sessionId, names(lastActive)[rem]))
     }
     if(!is.null(old)) {
       startTime <- sapply(private$sessions, `[[`, "startTime")
       rem <- (startTime < Sys.time() - old)
-      sessionIds <- unique(c(sessionIds, names(startTime)[rem]))
+      sessionId <- unique(c(sessionId, names(startTime)[rem]))
     }
     
-    for(id in sessionIds) {
+    for(id in sessionId) {
       session <- self$getSession(id)
-      session$close()
-      private$sessions[[id]] <- NULL
+      if(!is.null(session)){
+        session$close()
+        private$sessions[[id]] <- NULL
+      } else {
+        warning(str_c("There is no session with ID ", id))
+      }
     }
     
     invisible(self)
@@ -566,7 +571,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
   },
   
   stopServer = function() {
-    lapply(private$sessions, self$closeSession)
+    lapply(names(private$sessions), self$closeSession)
     
     if(!is.null(private$serverHandle)) {
       if(compareVersion(as.character(packageVersion("httpuv")), "1.3.5") > 0) {
@@ -707,17 +712,17 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     }
     stopifnot(is.character(path))
    
-    if(file.exists(file.path(private$rootDir, page))){
-      private$startP <- page
+    if(file.exists(file.path(private$rootDir, path))){
+      private$startP <- path
     } else {
-      if(!file.exists(page))
-        stop(str_c("There is no such file: '", page, "'"))
-      page <- normalizePath(page)
-      if(grepl(page, private$rootDir, fixed = T)) {
-        private$start <- str_remove(page, str_c(private$rootDir, "/"))
+      if(!file.exists(path))
+        stop(str_c("There is no such file: '", path, "'"))
+      path <- normalizePath(path)
+      if(grepl(path, private$rootDir, fixed = T)) {
+        private$start <- str_remove(path, str_c(private$rootDir, "/"))
       } else {
         private$startP <- "index.html"
-        private$startPagePath <- page
+        private$startPagePath <- path
       }
     }
     
@@ -756,11 +761,11 @@ App <- R6Class("App", cloneable = FALSE, public = list(
                         allowedVariables = c(), sessionVars = NULL) {
     if(is.null(rootDirectory)) 
       rootDirectory <- system.file("http_root", package = "jrc")
-    self$setRootDirectory(rootDirectory)
+    self$rootDirectory(rootDirectory)
     
     if(is.null(startPage))
       startPage <- system.file("http_root/index.html", package = "jrc")
-    self$setStartPage(startPage)
+    self$startPage(startPage)
     
     private$envir <- parent.frame(n = 2)
     
@@ -773,8 +778,8 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     
     self$allowFunctions(allowedFunctions)
     self$allowVariables(allowedVariables)
-    self$setSessionVariables(sessionVars)
-    self$limitConnectionNumbers(connectionNumber)
+    self$sessionVariables(sessionVars)
+    self$numberOfConnections(connectionNumber)
     
     invisible(self)
   }
@@ -854,7 +859,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     handle_websocket_open <- function( ws ) {
       session <- Session$new(ws, envir = new.env(parent = private$envir))
       session$sessionVariables(private$sessionVars)
-      
+
       ws$onMessage( function( isBinary, msg ) {
         if( isBinary )
           stop( "Unexpected binary message received via WebSocket" )
@@ -910,7 +915,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
           self$closeSession(session$id)
       })      
       
-      session$setSessionVariables(private$sessionVars)
+      session$sessionVariables(private$sessionVars)
       self$addSession(session)
     
       private$onStart(session)
