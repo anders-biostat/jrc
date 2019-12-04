@@ -84,7 +84,7 @@ web page and to trigger calculation in R as a response to user activity on the p
 
 \code{openPage} function is a wrapper around several methods of class \code{\link{App}}. First, it creates an
 instance of this class. Then it starts a server that listens to a given port. And finally, it attempts
-to open a new web page. It also stores a new app object in tha package namespace, which allows other
+to open a new web page. It also stores a new app object in the package namespace, which allows other
 wrapper functions access it without being specified by the user.
 }
 \seealso{

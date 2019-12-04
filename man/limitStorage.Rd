@@ -11,7 +11,7 @@ limitStorage(n = NULL, size = NULL, sessionId = NULL)
 
 \item{size}{Maxim total size of all stored messages in bytes.}
 
-\item{sessionId}{ID of the session, for wich the storage size should be changed.
+\item{sessionId}{ID of the session, for which the storage size should be changed.
 Can also be a vector of session IDs to change storage size for multiple sessions at once.
 It this argument is \code{NULL} changes will be applied to all the currently active sessions.}
 }

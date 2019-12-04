@@ -20,11 +20,11 @@ Either a named list or a vector with message IDs.
 Returns a list of IDs of all currently stored messages.
 }
 \details{
-For securtity reasons, most of the messages that are received
+For security reasons, most of the messages that are received
 from web pages require manual authorization in the R session with \code{\link{authorize}} function. Until that happens,
 messages are given randomly generated IDs and are stored in memory. 
 
-This function is a wrapper arount method \code{getMessageIds} of class \code{\link{Session}}.
+This function is a wrapper around method \code{getMessageIds} of class \code{\link{Session}}.
 }
 \seealso{
 \code{\link{authorize}}, \code{\link{getSessionIds}}, \code{\link{limitStorage}}.

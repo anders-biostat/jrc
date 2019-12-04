@@ -67,7 +67,7 @@ directly.
    }
    \item{\code{new(rootDirectory = NULL, startPage = NULL, onStart = NULL, 
    connectionNumber = Inf, allowedFunctions = c(), allowedVariables = c(), sessionVars = NULL)}}{
-      Creates a new instance of class App. Check \code{\link{openPage}} documentaion for information about
+      Creates a new instance of class App. Check \code{\link{openPage}} man page for information about
       arguments.
    }
 }

@@ -4,12 +4,12 @@
 \alias{getSessionVariable}
 \title{Get a variable from a client session environment}
 \usage{
-getSessionVariable(varName, sessionId)
+getSessionVariable(varName, sessionId = NULL)
 }
 \arguments{
 \item{varName}{Name of the variable to search for. Must be a character.}
 
-\item{sessionId}{ID of the session. If there is only one active session, this argument becomes oprional.}
+\item{sessionId}{ID of the session. If there is only one active session, this argument becomes optional.}
 }
 \value{
 Requested variable

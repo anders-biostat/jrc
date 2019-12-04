@@ -53,16 +53,16 @@ and its arguments are:
    \item{\code{name}}{
       Name of the function to call. If function name hasn't been previously added to the list
       of allowed functions (see \code{\link{allowFunctions}} or \code{allowedFunctions} argument of the \code{\link{openPage}}
-      fuction), attempt to assign it from a web page will require manual authorization in the R session.
+      function), attempt to assign it from a web page will require manual authorization in the R session.
    }
    \item{\code{arguments} (optional)}{
       arguments for the function. This should be an Array or an Object with argument names as keys.
    }
    \item{\code{assignTo} (optional)}{
-      Name of the variable to which the returned value of the function will be assignedin the R session. 
+      Name of the variable to which the returned value of the function will be assigned in the R session. 
       If variable name hasn't been previously added to the list
       of allowed variables (see \code{\link{allowVariables}} or \code{allowedVariables} argument of the \code{\link{openPage}}
-      fuction), attempt to assign it from a web page will require manual authorization in the R session.
+      function), attempt to assign it from a web page will require manual authorization in the R session.
    }
    \item{\code{package} (optional)}{
       If the function should be imported from an installed package, name of this package.

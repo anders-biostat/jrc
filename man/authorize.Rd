@@ -7,14 +7,14 @@
 authorize(sessionId = NULL, messageId = NULL, show = FALSE)
 }
 \arguments{
-\item{sessionId}{ID of the session that received the message. Each session gets a randomed ID
+\item{sessionId}{ID of the session that received the message. Each session gets a random ID
 when it is started (a web socket connection is established). You can get IDs of all currently
 active sessions with \code{\link{getSessionIds}}. If there is only one active session, this 
 argument becomes optional.}
 
 \item{messageId}{ID of the message to be processed. In `jrc` library all stored messages are
 give a random ID that consists of 6 letters or numbers. The ID is reported when the
-message is stored. You can also get IDs of all the stored messages for a sessioin with
+message is stored. You can also get IDs of all the stored messages for a session with
 \code{\link{getMessageIds}}. If the session has only one stored message, this argument becomes
 optional.}
 

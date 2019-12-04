@@ -3,10 +3,10 @@
 #' 
 #' @description Objects of this class handle all the incoming and outgoing messages for one active connection.
 #' Please, avoid creating instances of this class manually. Each \code{Session} object is created, when
-#' a websocket is opened, and serves as a wraper around it. Manually created object will not have
+#' a websocket is opened, and serves as a wrapper around it. Manually created object will not have
 #' a websocket connection and thus are not functional.
 #' 
-#' All sessions are stored whithin an object of class \code{\link{App}} and cannot exist and function without it.
+#' All sessions are stored within an object of class \code{\link{App}} and cannot exist and function without it.
 #' One can manipulate a session directly, using its methods that are described bellow, via methods of the corresponding 
 #' App object, or using provided wrapper function (links to them can be found in the Methods section).
 #' 
@@ -69,7 +69,7 @@
 #'      Sets or returns variables that are used (read or rewritten) only by this session. If both arguments are
 #'      \code{NULL}, returns environment for this session. If \code{vars} is a named list, adds this variables to the
 #'      session environment. If \code{varName} is a character, returns a variable with this name that can be accessed from
-#'      the session. If no such variable exists, throws an error. One can add variables to the session evrironment and
+#'      the session. If no such variable exists, throws an error. One can add variables to the session environment and
 #'      get a specified one back within the same function call.Check \code{\link{setSessionVariables}} for more information.
 #'   }
 #' }
@@ -491,7 +491,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
 #'    }
 #'    \item{\code{new(rootDirectory = NULL, startPage = NULL, onStart = NULL, 
 #'    connectionNumber = Inf, allowedFunctions = c(), allowedVariables = c(), sessionVars = NULL)}}{
-#'       Creates a new instance of class App. Check \code{\link{openPage}} documentaion for information about
+#'       Creates a new instance of class App. Check \code{\link{openPage}} man page for information about
 #'       arguments.
 #'    }
 #' }
@@ -954,7 +954,7 @@ pkg.env <- new.env()
 #' 
 #' \code{openPage} function is a wrapper around several methods of class \code{\link{App}}. First, it creates an
 #' instance of this class. Then it starts a server that listens to a given port. And finally, it attempts
-#' to open a new web page. It also stores a new app object in tha package namespace, which allows other
+#' to open a new web page. It also stores a new app object in the package namespace, which allows other
 #' wrapper functions access it without being specified by the user.
 #' 
 #' @param useViewer If \code{TRUE}, the new web page will be opened in the RStudio Viewer. If \code{FALSE}
@@ -1048,8 +1048,8 @@ sendMessage <- function(type, id, ...) {
 #' made with the usual assignment operator \code{<-} will be limited to the page-specific environment. The changes
 #' are still saved, but can be accessed only with \code{\link{getSessionVariable}} function. To make changes outside
 #' of the page-specific environment use \code{<<-} instead. In JavaScript \code{windows.varibleName = "SomeValue"}
-#' should be used instead of \code{varibleName = "SomeValue"}, if you want the variable to be accessable outside the
-#' currend \code{sendCommand} call.
+#' should be used instead of \code{varibleName = "SomeValue"}, if you want the variable to be accessible outside the
+#' current \code{sendCommand} call.
 #' 
 #' This function is a wrapper around \code{sendCommand} method of class \code{\link{Session}}.
 #' 
@@ -1103,14 +1103,14 @@ closePage <- function() {
 #' Sends a variable to a web page, where it is assigned to the variable with a specified name. This function
 #' is a wrapper around \code{sendData} method of class \code{\link{Session}}.
 #' 
-#' To send data back from the web page to the currend R session \code{jrc.sendData(variableName, variable, internal)} 
+#' To send data back from the web page to the current R session \code{jrc.sendData(variableName, variable, internal)} 
 #' should be used. Its arguments are:
 #' 
 #' \describe{
 #'    \item{\code{variableName}}{
 #'       Name that the variable will have in the R session. If variable name hasn't been previously added to the list
 #'       of allowed variables (see \code{\link{allowVariables}} or \code{allowedVariables} argument of the \code{\link{openPage}}
-#'       fuction), attempt to assign it from a web page will require manual authorization in the R session.
+#'       function), attempt to assign it from a web page will require manual authorization in the R session.
 #'    }
 #'    \item{\code{variable}}{
 #'       Variable to send.
@@ -1135,7 +1135,7 @@ closePage <- function() {
 #' @param keepAsVector If \code{TRUE}, variables with length 1 will be saved as arrays on the server, otherwise they 
 #' will be converted to atomic types.
 #' @param rowwise If \code{TRUE}, matrices and data.frames will be transformed into JavaScript Objects or Arrays
-#' rowwise (e.g. a matrix will become an Array of its rows). 
+#' row wise (e.g. a matrix will become an Array of its rows). 
 #' 
 #' @examples 
 #' \donttest{openPage()
@@ -1190,7 +1190,7 @@ setEnvironment <- function(envir) {
 
 #' Send HTML to a web page
 #' 
-#' Sends a piece of HTML code to an opend web page and adds it at the end
+#' Sends a piece of HTML code to an open web page and adds it at the end
 #' or the \code{body} element. This function is a wrapper around \code{sendHTML} method of 
 #' class \code{\link{Session}}.
 #' 
@@ -1228,16 +1228,16 @@ sendHTML <- function(html = "", sessionId = NULL, wait = 0) {
 #'    \item{\code{name}}{
 #'       Name of the function to call. If function name hasn't been previously added to the list
 #'       of allowed functions (see \code{\link{allowFunctions}} or \code{allowedFunctions} argument of the \code{\link{openPage}}
-#'       fuction), attempt to assign it from a web page will require manual authorization in the R session.
+#'       function), attempt to assign it from a web page will require manual authorization in the R session.
 #'    }
 #'    \item{\code{arguments} (optional)}{
 #'       arguments for the function. This should be an Array or an Object with argument names as keys.
 #'    }
 #'    \item{\code{assignTo} (optional)}{
-#'       Name of the variable to which the returned value of the function will be assignedin the R session. 
+#'       Name of the variable to which the returned value of the function will be assigned in the R session. 
 #'       If variable name hasn't been previously added to the list
 #'       of allowed variables (see \code{\link{allowVariables}} or \code{allowedVariables} argument of the \code{\link{openPage}}
-#'       fuction), attempt to assign it from a web page will require manual authorization in the R session.
+#'       function), attempt to assign it from a web page will require manual authorization in the R session.
 #'    }
 #'    \item{\code{package} (optional)}{
 #'       If the function should be imported from an installed package, name of this package.
@@ -1303,13 +1303,13 @@ callFunction <- function(name, arguments = NULL, assignTo = NULL, wait = 0, sess
 #' 
 #' This function is a wrapper around \code{authorize} method of class \code{\link{Session}}.
 #' 
-#' @param sessionId ID of the session that received the message. Each session gets a randomed ID
+#' @param sessionId ID of the session that received the message. Each session gets a random ID
 #' when it is started (a web socket connection is established). You can get IDs of all currently
 #' active sessions with \code{\link{getSessionIds}}. If there is only one active session, this 
 #' argument becomes optional.
 #' @param messageId ID of the message to be processed. In `jrc` library all stored messages are
 #' give a random ID that consists of 6 letters or numbers. The ID is reported when the
-#' message is stored. You can also get IDs of all the stored messages for a sessioin with
+#' message is stored. You can also get IDs of all the stored messages for a session with
 #' \code{\link{getMessageIds}}. If the session has only one stored message, this argument becomes
 #' optional.
 #' @param show If \code{TRUE} information of the message with a given ID will be show before executing
@@ -1405,7 +1405,7 @@ allowVariables <- function(vars = NULL) {
 #' 
 #' @param n Number of messages that can be stored simultaneously.
 #' @param size Maxim total size of all stored messages in bytes.
-#' @param sessionId ID of the session, for wich the storage size should be changed.
+#' @param sessionId ID of the session, for which the storage size should be changed.
 #' Can also be a vector of session IDs to change storage size for multiple sessions at once.
 #' It this argument is \code{NULL} changes will be applied to all the currently active sessions.
 #' 
@@ -1533,7 +1533,7 @@ getSessionIds <- function() {
 #' 
 #' @param sessionId IDs of the sessions to close. Can be a vector of multiple IDs.
 #' @param inactive All sessions that were inactive (didn't receive any messages) for the
-#' specified amout of time (in seconds) will be closed.
+#' specified amount of time (in seconds) will be closed.
 #' @param old All sessions that has been opened for at least specified amount of time (in seconds)
 #' will be closed.
 #' 
@@ -1549,11 +1549,11 @@ closeSession <- function(sessionId = NULL, inactive = NULL, old = NULL) {
 #' 
 #' Returns a list of IDs of all currently stored messages. 
 #' 
-#' For securtity reasons, most of the messages that are received
+#' For security reasons, most of the messages that are received
 #' from web pages require manual authorization in the R session with \code{\link{authorize}} function. Until that happens,
 #' messages are given randomly generated IDs and are stored in memory. 
 #' 
-#' This function is a wrapper arount method \code{getMessageIds} of class \code{\link{Session}}.
+#' This function is a wrapper around method \code{getMessageIds} of class \code{\link{Session}}.
 #' 
 #' @param sessionId ID of the session for which to return message IDs. Can also be a vector of multiple session IDs.
 #' If \code{NULL}, returns message IDs for all currently active sessions.
@@ -1598,7 +1598,7 @@ getMessageIds <- function(sessionId = NULL, simplify = TRUE) {
 #' 
 #' @param sessionId ID of the session from where to remove a message. If there is only one active session, this argument
 #' becomes optional.
-#' @param messageId ID of the message to remove. If there is only one stored message, this agrument becomes optional.
+#' @param messageId ID of the message to remove. If there is only one stored message, this argument becomes optional.
 #' 
 #' @seealso \code{\link{authorize}}, \code{\link{getMessageIds}}.
 #' 
@@ -1640,7 +1640,7 @@ getSession <- function(sessionId = NULL){
 #' is a wrapper around method \code{sessionVariables} of the class \code{\link{Session}}.
 #' 
 #' @param varName Name of the variable to search for. Must be a character.
-#' @param sessionId ID of the session. If there is only one active session, this argument becomes oprional.
+#' @param sessionId ID of the session. If there is only one active session, this argument becomes optional.
 #' 
 #' @return Requested variable
 #' @export

@@ -10,7 +10,7 @@ closeSession(sessionId = NULL, inactive = NULL, old = NULL)
 \item{sessionId}{IDs of the sessions to close. Can be a vector of multiple IDs.}
 
 \item{inactive}{All sessions that were inactive (didn't receive any messages) for the
-specified amout of time (in seconds) will be closed.}
+specified amount of time (in seconds) will be closed.}
 
 \item{old}{All sessions that has been opened for at least specified amount of time (in seconds)
 will be closed.}

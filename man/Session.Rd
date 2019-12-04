@@ -6,10 +6,10 @@
 \description{
 Objects of this class handle all the incoming and outgoing messages for one active connection.
 Please, avoid creating instances of this class manually. Each \code{Session} object is created, when
-a websocket is opened, and serves as a wraper around it. Manually created object will not have
+a websocket is opened, and serves as a wrapper around it. Manually created object will not have
 a websocket connection and thus are not functional.
 
-All sessions are stored whithin an object of class \code{\link{App}} and cannot exist and function without it.
+All sessions are stored within an object of class \code{\link{App}} and cannot exist and function without it.
 One can manipulate a session directly, using its methods that are described bellow, via methods of the corresponding 
 App object, or using provided wrapper function (links to them can be found in the Methods section).
 }
@@ -76,7 +76,7 @@ App object, or using provided wrapper function (links to them can be found in th
      Sets or returns variables that are used (read or rewritten) only by this session. If both arguments are
      \code{NULL}, returns environment for this session. If \code{vars} is a named list, adds this variables to the
      session environment. If \code{varName} is a character, returns a variable with this name that can be accessed from
-     the session. If no such variable exists, throws an error. One can add variables to the session evrironment and
+     the session. If no such variable exists, throws an error. One can add variables to the session environment and
      get a specified one back within the same function call.Check \code{\link{setSessionVariables}} for more information.
   }
 }

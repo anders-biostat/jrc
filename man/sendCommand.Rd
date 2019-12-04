@@ -28,8 +28,8 @@ Each opened page gets its own environment, where all the commands are evaluated.
 made with the usual assignment operator \code{<-} will be limited to the page-specific environment. The changes
 are still saved, but can be accessed only with \code{\link{getSessionVariable}} function. To make changes outside
 of the page-specific environment use \code{<<-} instead. In JavaScript \code{windows.varibleName = "SomeValue"}
-should be used instead of \code{varibleName = "SomeValue"}, if you want the variable to be accessable outside the
-currend \code{sendCommand} call.
+should be used instead of \code{varibleName = "SomeValue"}, if you want the variable to be accessible outside the
+current \code{sendCommand} call.
 
 This function is a wrapper around \code{sendCommand} method of class \code{\link{Session}}.
 }

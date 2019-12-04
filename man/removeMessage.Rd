@@ -10,7 +10,7 @@ removeMessage(sessionId = NULL, messageId = NULL)
 \item{sessionId}{ID of the session from where to remove a message. If there is only one active session, this argument
 becomes optional.}
 
-\item{messageId}{ID of the message to remove. If there is only one stored message, this agrument becomes optional.}
+\item{messageId}{ID of the message to remove. If there is only one stored message, this argument becomes optional.}
 }
 \description{
 Removes a message with a given ID from the storage of a specified session. This functions is a wrapper around
