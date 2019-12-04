@@ -6,9 +6,7 @@ test_that("Fucntions can be called on both sides", {
   k <- -1
   f <- function() k <<- 10
   sendCommand("jrc.callFunction('f')", wait = 3)
-  id <- getPage()$getSessionIds()$id
-  mid <- authorize(id)
-  authorize(id, mid)
+  authorize()
   expect_equal(k, 10)
   
   callFunction("Math.random", assignTo = "x")
@@ -29,9 +27,7 @@ test_that("External variables are taken from the correct environment", {
   e$x <- 10
   
   f <- function() x * 2
-  id <- getPage()$getSessionIds()$id
-  session <- getPage()$getSession(id)
-  
+
   allowFunctions("f")
   allowVariables("y")
   sendCommand("jrc.callFunction('f', undefined, 'y')", wait = 3)
@@ -41,7 +37,7 @@ test_that("External variables are taken from the correct environment", {
   sendCommand("jrc.callFunction('f', undefined, 'y')", wait = 3)
   expect_equal(e$y, 20)
   
-  setSessionVariables(list(x = 100), id)
+  setSessionVariables(list(x = 100))
   sendCommand("jrc.callFunction('f', undefined, 'y')", wait = 3)
   expect_equal(e$y, 200)
   
@@ -51,12 +47,11 @@ test_that("External variables are taken from the correct environment", {
 test_that("Function from a specified package can be called", {
   openPage()
   a <- ""
-  session <- getPage()$getSession(getSessionIds()$id)
-  
+
   allowFunctions("str_c")
   allowVariables("a")
   sendCommand("jrc.callFunction('str_c', ['abc', 'def'], 'a', 'stringr')", wait = 3)
-  expect_equal(session$getSessionVariable("a"), "abcdef")
+  expect_equal(getSessionVariable("a"), "abcdef")
   
   expect_message(closePage(), "Server has been stopped.")  
 })
