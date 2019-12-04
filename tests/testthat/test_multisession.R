@@ -3,10 +3,10 @@ context("Handle multiple sessions")
 test_that("Messages from different sessions are properly stored and can be executed via the wrapper function", {
   app <- openPage()
 
-  ses1 <- app$getSession(app$getSessionIds()$id)
-  ses2 <- app$openPage(useViewer = F, browser = "google-chrome")
+  ses1 <- app$getSession()
+  ses2 <- app$openPage(browser = "google-chrome")
   
-  expect_length(app$getSessionIds()$id, 2)
+  expect_length(app$getSessionIds(), 2)
   
   ses1$sendCommand("jrc.sendCommand('k <- 1')", wait = 1)
   ses1$sendCommand("jrc.sendCommand('k <- 2')", wait = 3)
@@ -19,7 +19,7 @@ test_that("Messages from different sessions are properly stored and can be execu
   expect_length(ids2, 1)
 
   authorize(ses1$id, ids1[1])
-  authorize(ses2$id, ids2)
+  authorize(ses2$id)
   
   expect_length(ses1$getMessageIds(), 1)
   expect_length(ses2$getMessageIds(), 0)
@@ -32,17 +32,15 @@ test_that("Each session can store and use its own state", {
   app$startServer()
   
   ses1 <- app$openPage()
-  ses2 <- app$openPage(useViewer = F, browser = "google-chrome")
+  ses2 <- app$openPage(browser = "google-chrome")
   
   ses1$sendCommand("jrc.sendCommand('k <- 1')", wait = 3)
-  id <- ses1$getMessageIds()
-  ses1$authorize(id)
+  ses1$authorize()
   ses2$sendCommand("jrc.sendCommand('k <- 2')", wait = 3)
-  id <- ses2$getMessageIds()
-  ses2$authorize(id)
+  ses2$authorize()
   
-  k1 <- ses1$getSessionVariable("k")
-  k2 <- ses2$getSessionVariable("k")
+  k1 <- ses1$sessionVariables(varName = "k")
+  k2 <- ses2$sessionVariables(varName = "k")
   
   expect_equal(k1, 1)
   expect_equal(k2, 2)
@@ -56,8 +54,8 @@ test_that("Each session can store and use its own state", {
   
   expect_false(exists("k", inherits = FALSE))
   
-  k1 <- ses1$getSessionVariable("k")
-  k2 <- ses2$getSessionVariable("k")
+  k1 <- ses1$sessionVariables(varName = "k")
+  k2 <- ses2$sessionVariables(varName = "k")
   
   expect_equal(k1, 3)
   expect_equal(k2, 6)
