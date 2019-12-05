@@ -28,8 +28,8 @@ openPage()
 app <- getPage()
 time <- Sys.time()
 
-app$openPage(F)
-app$openPage(F)
+app$openPage(FALSE)
+app$openPage(FALSE)
 
 print(getSessionIds())
 

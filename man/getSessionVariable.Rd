@@ -26,7 +26,7 @@ is a wrapper around method \code{sessionVariables} of the class \code{\link{Sess
 }
 \examples{
 \donttest{f <- function(x) {x * 3}
-openPage(allowedFunctions = "f", allowedVars = "k")
+openPage(allowedFunctions = "f", allowedVariables = "k")
 getPage()$openPage(FALSE)
 id1 <- getSessionIds()[1]
 id2 <- getSessionIds()[2]

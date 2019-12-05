@@ -18,8 +18,10 @@ Adds R function names to the list of functions, that
 can be called from a web page without manual confirmation on the R side.
 }
 \examples{
-\donttest{allowFunctions(c("myFunction1", "print", "someObject$method"))
-funs <- allowFunctions()}
+\donttest{openPage()
+allowFunctions(c("myFunction1", "print", "someObject$method"))
+funs <- allowFunctions()
+closePage()}
 
 }
 \seealso{

@@ -1341,7 +1341,8 @@ callFunction <- function(name, arguments = NULL, assignTo = NULL, wait = 0, sess
 #' callFunction("jrc.sendData", list("y", 20), wait = 1)
 #' msgId <- getMessageIds()
 #' authorize(messageId = msgId[1])
-#' authorize(messageId = msgId[2], show = TRUE)
+#' #run that to first see some information about the message
+#' #authorize(messageId = msgId[2], show = TRUE)
 #' 
 #' closePage()}
 #' @seealso \code{\link{allowFunctions}}, \code{\link{allowVariables}}, \code{\link{limitStorage}}, \code{\link{getSessionIds}},
@@ -1371,8 +1372,10 @@ authorize <- function(sessionId = NULL, messageId = NULL, show = FALSE) {
 #' @return Names of all currently allowed functions if \code{funs = NULL}.
 #' 
 #' @examples
-#' \donttest{allowFunctions(c("myFunction1", "print", "someObject$method"))
-#' funs <- allowFunctions()}
+#' \donttest{openPage()
+#' allowFunctions(c("myFunction1", "print", "someObject$method"))
+#' funs <- allowFunctions()
+#' closePage()}
 #' 
 #' @seealso \code{\link{allowVariables}}, \code{\link{authorize}}, \code{\link{openPage}} (check argument
 #' \code{allowedFunctions}), \code{\link{callFunction}}.
@@ -1394,8 +1397,10 @@ allowFunctions <- function(funs = NULL) {
 #' returns names of all currently allowed variables.
 #' 
 #' @examples 
-#' \donttest{allowVariables(c("myVariable", "anotherOne"))
-#' vars <- allowVariables()}
+#' \donttest{openPage()
+#' allowVariables(c("myVariable", "anotherOne"))
+#' vars <- allowVariables()
+#' closePage()}
 #' 
 #' @return Names of all currently allowed variables if \code{vars = NULL}.
 #' 
@@ -1436,8 +1441,10 @@ allowVariables <- function(vars = NULL) {
 #' If \code{NULL}, changes will be applied to all currently active sessions.
 #' 
 #' @examples 
-#' \donttest{limitStorage(n = 10)
-#' limitStorage(size = 10 * 1024^2)}
+#' \donttest{openPage()
+#' limitStorage(n = 10)
+#' limitStorage(size = 10 * 1024^2)
+#' closePage()}
 #' 
 #' @seealso \code{\link{authorize}}, \code{\link{allowFunctions}}, \code{\link{allowVariables}}.
 #' 
@@ -1585,8 +1592,8 @@ getSessionIds <- function() {
 #' app <- getPage()
 #' time <- Sys.time()
 #' 
-#' app$openPage(F)
-#' app$openPage(F)
+#' app$openPage(FALSE)
+#' app$openPage(FALSE)
 #' 
 #' print(getSessionIds())
 #' 
@@ -1717,7 +1724,7 @@ getSession <- function(sessionId = NULL){
 #' 
 #' @examples
 #' \donttest{f <- function(x) {x * 3}
-#' openPage(allowedFunctions = "f", allowedVars = "k")
+#' openPage(allowedFunctions = "f", allowedVariables = "k")
 #' getPage()$openPage(FALSE)
 #' id1 <- getSessionIds()[1]
 #' id2 <- getSessionIds()[2]

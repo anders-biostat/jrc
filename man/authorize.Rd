@@ -41,7 +41,8 @@ callFunction("jrc.sendData", list("x", 15), wait = 1)
 callFunction("jrc.sendData", list("y", 20), wait = 1)
 msgId <- getMessageIds()
 authorize(messageId = msgId[1])
-authorize(messageId = msgId[2], show = TRUE)
+#run that to first see some information about the message
+#authorize(messageId = msgId[2], show = TRUE)
 
 closePage()}
 }

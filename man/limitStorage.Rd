@@ -35,8 +35,10 @@ One can also directly change public fields \code{maxN} and \code{maxSize} of any
 of class \code{\link{Session}} (see also \code{\link{getSession}}).
 }
 \examples{
-\donttest{limitStorage(n = 10)
-limitStorage(size = 10 * 1024^2)}
+\donttest{openPage()
+limitStorage(n = 10)
+limitStorage(size = 10 * 1024^2)
+closePage()}
 
 }
 \seealso{
