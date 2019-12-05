@@ -1688,7 +1688,7 @@ removeMessage <- function(sessionId = NULL, messageId = NULL) {
 #' Returns \code{\link{Session}} by its ID. This function is a wrapper around method
 #' \code{getSession} of class \code{\link{App}}.
 #' 
-#' @param sessionID ID of the session. If there is only one active session, this argument becomes optional.
+#' @param sessionId ID of the session. If there is only one active session, this argument becomes optional.
 #' 
 #' @return Object of class \code{\link{Session}}.
 #' 

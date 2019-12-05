@@ -7,7 +7,7 @@
 getSession(sessionId = NULL)
 }
 \arguments{
-\item{sessionID}{ID of the session. If there is only one active session, this argument becomes optional.}
+\item{sessionId}{ID of the session. If there is only one active session, this argument becomes optional.}
 }
 \value{
 Object of class \code{\link{Session}}.
