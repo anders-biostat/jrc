@@ -2,16 +2,24 @@
 % Please edit documentation in R/jrc.R
 \name{sendHTML}
 \alias{sendHTML}
-\title{Send HTML to the server}
+\title{Send HTML to a web page}
 \usage{
-sendHTML(html = "")
+sendHTML(html = "", sessionId = NULL, wait = 0)
 }
 \arguments{
 \item{html}{HTML code that will be added to the web page.}
+
+\item{sessionId}{An ID of the session to which the HTML should be sent. Can also be a vector of multiple session IDs.
+If \code{NULL}, the HTML will be sent to all currently active sessions.}
+
+\item{wait}{If \code{wait > 0}, after sending the message, R will wait for a reply for a given number of seconds. 
+For this time (or until the reply is received), execution of other commands will be halted. Any incoming message 
+from the session will be considered as a reply.}
 }
 \description{
-Sends a piece of HTML code to the server and adds it at the end
-or the \code{body} element.
+Sends a piece of HTML code to a web page and adds it at the end
+or the \code{body} element. This function is a wrapper around \code{sendHTML} method of 
+class \code{\link{Session}}.
 }
 \examples{
 \donttest{

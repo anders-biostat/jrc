@@ -2,25 +2,38 @@
 % Please edit documentation in R/jrc.R
 \name{sendCommand}
 \alias{sendCommand}
-\title{Send a command to the server}
+\title{Send a command to a web page}
 \usage{
-sendCommand(command)
+sendCommand(command, sessionId = NULL, wait = 0)
 }
 \arguments{
 \item{command}{A line (or several lines separated by \code{\\n}) of JavaScript code. This code
-will be immediately executed on the opened page. No R-side syntax check is performed.}
+will be directly evaluated on the web page. No R-side syntax check is performed.}
+
+\item{sessionId}{An ID of the session to which the command should be sent. Can also be a vector of multiple session IDs.
+If \code{NULL}, the command will be sent to all currently active sessions.}
+
+\item{wait}{If \code{wait > 0}, after sending the message, R will wait for a reply for a given number of seconds. 
+For this time (or until the reply is received), execution of other commands will be halted. Any incoming message 
+from the session will be considered as a reply.}
 }
 \description{
-\code{sendCommand} sends JavaScript code to the server and executes it on the currently
-opened page. Use JavaScript function \code{jrc.sendCommand} to send R code from the server
-and execute it in the current R session. All commands send to R from the server will be executed
-only after authorization in the currently running R session.
+\code{sendCommand} sends JavaScript code through the selected websocket connection and evaluates it on the specified
+web page. Use JavaScript function \code{jrc.sendCommand} to send R code from the web page
+and evaluate it in the current R session. All commands send to R from the server will be evaluated
+only after authorization in the currently running R session (see \code{\link{authorize}}).
 }
 \details{
-Note, that in both cases commands are executed inside a function. Therefore use for R code use \code{<<-} instead
-of \code{<-} to change global variables and in JavaScript use \code{windows.varibleName = "SomeValue"} or
-\code{varibleName = "SomeValue"}. Variables declared like \code{var variableName = "SomeValue"} or 
-\code{variableName <- "SomeValue"} will be accessible only within the current \code{sendCommand} call.
+Each opened page gets its own environment, where all the commands are evaluated. Any changes
+made with the usual assignment operator \code{<-} will be limited to this page-specific environment. The changes
+are still saved, but can be accessed only with \code{\link{getSessionVariable}} function. To make changes outside
+of the page-specific environment use \code{<<-} instead.
+
+In JavaScript one should use \code{windows.varibleName = "SomeValue"}
+instead of \code{varibleName = "SomeValue"}, in order to make the variable accessible outside of the
+current \code{sendCommand} call.
+
+This function is a wrapper around \code{sendCommand} method of class \code{\link{Session}}.
 }
 \examples{
  
@@ -30,11 +43,11 @@ sendCommand(paste0("button = document.createElement('input');",
               "button.type = 'button';",
               "button.addEventListener('click', function() {jrc.sendCommand('k <<- k + 1')});", 
               "button.value = '+1';",
-              "document.body.appendChild(button);", collapse = "\\n"))
+              "document.body.appendChild(button);", collapse = "\n"))
 closePage()}
 
 }
 \seealso{
 \code{\link{authorize}}, \code{\link{sendData}}, \code{\link{sendHTML}}, \code{\link{callFunction}},
-\code{\link{openPage}}.
+\code{\link{openPage}}, \code{\link{getSessionIds}}.
 }

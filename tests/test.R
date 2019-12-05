@@ -1,11 +1,59 @@
 library( jrc )
 library( stringr )
 
+app <- App$new()
+app$startServer()
+app$openPage()
+app$getSessionIds()
+app$openPage(useViewer = F, browser = "google-chrome")
+app$getSessionIds()
+session <- app$getSession("A4Iqa2")
+app$closeSession("Ld0mWS")
+app$closeSession(session)
+app$stopServer()
+
+port <- httpuv::randomPort()
+openPage(port = port)
+
+appTest <- App$new()
+env <- new.env()
+env$someVariable <- 1
+appTest$setEnvironment(env)
+appTest$startServer()
+appTest$openPage()
+id <- appTest$getSessionIds()$id
+sessionTest <- appTest$getSession(id)
+#sessionTest$sendCommand("jrc.sendCommand('k_test <<- 15')", wait = 3)
+#mesId <- sessionTest$getMessageIds()
+#msg <- sessionTest$getMessage(mesId)
+#sessionTest$authorize(mesId, show = T)
+sessionTest$sendCommand("jrc.sendCommand('env1 <<- environment()')", wait = 1)
+mesIds <- sessionTest$getMessageIds()
+sessionTest$authorize(mesIds[1])
+appTest$stopServer()
+
+appTest <- App$new()
+appTest$startServer()
+appTest$openPage()
+id <- appTest$getSessionIds()$id
+sessionTest <- appTest$getSession(id)
+sessionTest$sendCommand("jrc.sendCommand('env1 <<- environment()')", wait = 1)
+mesIds <- sessionTest$getMessageIds()
+sessionTest$authorize(mesIds[1])
+appTest$stopServer()
+
+
+
 openPage(useViewer = F, port = 12345, browser = "firefox")
 closePage()
 
 #test basic functions
 openPage(useViewer = F)
+allowVariables("type")
+
+appTest <- getPage()
+sessionTest <- appTest$getSession(appTest$getSessionIds()$id)
+sessionTest$getMessage("1ivSCK")
 
 sendCommand("alert('Bla-bla-bla')")
 
@@ -82,7 +130,7 @@ closePage()
 
 
 #load linked charts from a local file
-openPage(rootDirectory = "~/Work/Git/linked-charts/")
+openPage(rootDirectory = "~/Work/Git/linked-charts/", useViewer = F)
 x <- seq(0, 5, length.out = 100)
 y <- sin(x) + rnorm(n = 100, sd = 0.2)
 
@@ -113,3 +161,52 @@ sendCommand(str_c("sc = lc.scatter()",
               ".place()", collapse = "\n"))
 
 closePage()
+
+k <- 0
+a <- 0
+#try multiple sessions
+openPage(useViewer = F, onStart = function(id) {
+  sendHTML(str_c("<p>Session ID: <b>", id, "</b></p>"), id = id)
+  sendHTML("<p><b>a = </b><span id = 'a'></span>; <b>k = </b><span id = 'k'></span></p>", id = id)
+  
+  sendCommand(str_c("buttonK = document.createElement('input');",
+                    "buttonK.type = 'button';",
+                    "buttonK.addEventListener('click', function() {jrc.sendCommand('k <- k + 1'); jrc.callFunction('updateText')});", 
+                    "buttonK.value = 'k + 1';",
+                    "document.body.appendChild(buttonK);", collapse = "\n"), id = id)
+  
+  sendCommand(str_c("buttonA = document.createElement('input');",
+                    "buttonA.type = 'button';",
+                    "buttonA.addEventListener('click', function() {jrc.sendCommand('a <<- a + 1'); jrc.callFunction('updateText')});", 
+                    "buttonA.value = 'a + 1';",
+                    "document.body.appendChild(buttonA);", collapse = "\n"), id = id)  
+  
+  }, allowedFunctions = "updateText")
+
+
+updateText <- function() {
+  sendCommand(str_c("document.getElementById('a').innerHTML = ", a, ";",
+                    "document.getElementById('k').innerHTML = ", k, ";"), id = .id)
+}
+
+
+
+
+
+
+
+setSessionVariables(list(k = 10), sessionId = "Ch5vIS")
+sendCommand('alert("AAAAA!")', id = "KCZobp")
+
+
+`%<-%` <- function(a, b) {
+  p <- parent.frame()
+  if(exists(deparse(substitute(a)), inherits = FALSE, envir = p)) {
+    print("exists")
+    assign(deparse(substitute(a)), b, envir = p)
+  } else {
+    print("can't find")
+    `<<-`(a, b)
+  }
+}
+a %<-% (a + 1)

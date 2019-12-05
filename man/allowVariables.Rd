@@ -7,20 +7,21 @@
 allowVariables(vars = NULL)
 }
 \arguments{
-\item{vars}{Vector of variable names to be added to the list. If is \code{NULL},
+\item{vars}{Vector of variable names to be added to the list. If \code{NULL},
 returns names of all currently allowed variables.}
 }
 \value{
 Names of all currently allowed variables if \code{vars = NULL}.
 }
 \description{
-This function adds variable names to the list of variables, which
-can be reassigned from the web page without manual confirmation in the R
-session.
+This function adds variable names to the list of variables, that
+can be modified from a web page without manual confirmation on the R side.
 }
 \examples{
+\donttest{openPage()
 allowVariables(c("myVariable", "anotherOne"))
 vars <- allowVariables()
+closePage()}
 
 }
 \seealso{

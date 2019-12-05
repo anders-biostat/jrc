@@ -4,8 +4,15 @@
 \alias{callFunction}
 \title{Trigger a function call}
 \usage{
-callFunction(name, arguments = NULL, assignTo = NULL, thisArg = NULL,
-  ...)
+callFunction(
+  name,
+  arguments = NULL,
+  assignTo = NULL,
+  wait = 0,
+  sessionId = NULL,
+  thisArg = NULL,
+  ...
+)
 }
 \arguments{
 \item{name}{Name of the function. If the function is a method of some object
@@ -17,38 +24,73 @@ arguments must be given in a fixed order, naming is not necessary and will
 be ignored.}
 
 \item{assignTo}{Name of a variable to which will be assigned the returned value
-of the called function. If variable with this name doesn't exist, it will be added
-to the currently active environment.}
+of the called function.}
+
+\item{wait}{If \code{wait > 0}, after sending the message, R will wait for a reply for a given number of seconds. 
+For this time (or until the reply is received), execution of other commands will be halted. Any incoming message 
+from the session will be considered as a reply.}
+
+\item{sessionId}{An ID of the session to which the function call should be sent. Can also be a vector of multiple
+session IDs. If \code{NULL}, the function call will be sent to all currently active sessions.}
 
 \item{thisArg}{JavaScript functions (methods) can belong to some object, which 
-is referred as \code{this} inside the function (e.g. in
+is referred to as \code{this} inside the function (e.g. in
 \code{someObject.myFunction()} function \code{myFunction} is a method of \code{someObject}).
-\code{thisArg} specified object that will be passed as \code{this} to the function. If \code{NULL}
-then the function will be applied to the global object.}
+\code{thisArg} specifies object that will be known as \code{this} inside the function. If \code{NULL},
+the function will be applied to the global object (\code{window}).}
 
-\item{...}{further arguments passed to \code{\link{sendData}} that is used to send
-\code{arguments} to the web server.}
+\item{...}{further arguments passed to \code{\link{sendData}}. It is used to send
+\code{arguments} to the web page.}
 }
 \description{
-Calls a function on the opened web page given its name and arguments.
-JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo, package)}, 
-where the \code{package} argument allow to call function from some other
-package. The result, however, will be anyway assigned to a variable in the
-environment set by \code{\link{setEnvironment}}.
-For security reasons, if function or variable to which its returned value
-should be assigned are not in the lists of allowed functions and variables,
-manual authorization of the call form JavaScript in the R session will be 
-required. For more details check \code{\link{authorize}}.
+Calls a function in a web page by its name. It can also pass a list of arguments for the function and 
+save the returned result to a variable.
+}
+\details{
+JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo, package, internal)}.
+Its arguments are:
+\describe{
+   \item{\code{name}}{
+      Name of an R function. If function name hasn't been previously added to the list
+      of allowed functions (see \code{\link{allowFunctions}} or \code{allowedFunctions} argument of \code{\link{openPage}}),
+      attempt to call it from a web page will require manual authorization on the R side.
+   }
+   \item{\code{arguments} (optional)}{
+      arguments for the function. This should be an Array (for unnamed arguments) or an Object with argument names as keys
+      (for named arguments).
+   }
+   \item{\code{assignTo} (optional)}{
+      Name of the variable to which the returned value of the function will be assigned in the R session. 
+      If the variable name hasn't been previously added to the list
+      of allowed variables (see \code{\link{allowVariables}} or \code{allowedVariables} argument of \code{\link{openPage}}),
+      attempt to assign it from a web page will require manual authorization on the R side.
+   }
+   \item{\code{package} (optional)}{
+      If the function needs to be imported from an installed package, name of this package.
+   }
+   \item{\code{internal} (optional)}{
+      Whether assignment of the function returned value should happen internally or not. If \code{true}, result will be stored
+      in the session environment and can be accessed from the outside with \code{\link{getSessionVariable}}
+      function. If \code{false}, result will be saved to the outer environment of the app (see \code{\link{setEnvironment}}).
+      By default, uses \code{true} for variables that already exist in the session environment 
+      (see \code{\link{setSessionVariables}} or \code{sessionVariables} argument of the \code{\link{openPage}} function)
+      and \code{false} otherwise.
+   }
+}
+
+This function is a wrapper
+around \code{callFunction} method of class \code{\link{Session}}.
 }
 \examples{
 \donttest{
 openPage()
 callFunction("alert", list("Some alertText"))
 callFunction("Math.random", assignTo = "randomNumber")
+sendCommand("alert(randomNumber)")
 }
 
 }
 \seealso{
 \code{\link{authorize}}, \code{\link{allowFunctions}}, \code{\link{allowVariables}},
-\code{\link{setEnvironment}}.
+\code{\link{setEnvironment}}, \code{\link{getSessionIds}}.
 }
