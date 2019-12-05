@@ -7,36 +7,45 @@
 authorize(sessionId = NULL, messageId = NULL, show = FALSE)
 }
 \arguments{
-\item{sessionId}{ID of the session that received the message. Each session gets a random ID
-when it is started (a web socket connection is established). You can get IDs of all currently
-active sessions with \code{\link{getSessionIds}}. If there is only one active session, this 
+\item{sessionId}{ID of the session that received the message. If there is only one active session, this 
 argument becomes optional.}
 
-\item{messageId}{ID of the message to be processed. In `jrc` library all stored messages are
-give a random ID that consists of 6 letters or numbers. The ID is reported when the
-message is stored. You can also get IDs of all the stored messages for a session with
-\code{\link{getMessageIds}}. If the session has only one stored message, this argument becomes
+\item{messageId}{ID of the message to be processed. If the session has only one stored message, this argument becomes
 optional.}
 
-\item{show}{If \code{TRUE} information of the message with a given ID will be show before executing
-it with a choice to go on with execution, ignore the message (meaning it will be removed from memory) or
+\item{show}{If \code{TRUE} information about the message will be shown first. After that user gets
+a choice to go on with evaluation, to ignore the message (meaning it will be removed from memory) or to
 do nothing.}
 }
 \description{
-`jrc` library allows one to get a full control over the currently running R session from 
+\code{jrc} library allows one to get full control over the currently running R session from 
 a web page. Therefore for security reasons one should manually authorize function calls,
 variable assignments or expression evaluations. All the received messages that are not
-processed automatically are given an ID and stored. This function executes a command
-from a message with a given ID
+processed automatically are given an ID and stored. This function allows a message with the 
+given ID to be evaluated. It can also show a short description of the message and give user
+a choice between running it or discarding.
 }
 \details{
 Expressions has to be always authorized before evaluation. One can specify a list of
-variables that can be reassigned automatically and functions that can be called without
+variables that can be changed automatically and functions that can be called without
 authorization.
 
 This function is a wrapper around \code{authorize} method of class \code{\link{Session}}.
 }
+\examples{
+\donttest{openPage()
+
+callFunction("jrc.sendCommand", list("k <<- 10"), wait = 1)
+allowVariables("x")
+callFunction("jrc.sendData", list("x", 15), wait = 1)
+callFunction("jrc.sendData", list("y", 20), wait = 1)
+msgId <- getMessageIds()
+authorize(messageId = msgId[1])
+authorize(messageId = msgId[2], show = TRUE)
+
+closePage()}
+}
 \seealso{
-\code{\link{allowFunctions}}, \code{\link{allowVariables}}, \code{\link{sendCommand}},
-\code{\link{sendData}}, \code{\link{callFunction}}, \code{\link{limitStorage}}.
+\code{\link{allowFunctions}}, \code{\link{allowVariables}}, \code{\link{limitStorage}}, \code{\link{getSessionIds}},
+\code{\link{getMessageIds}}.
 }

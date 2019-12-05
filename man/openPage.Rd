@@ -18,33 +18,33 @@ openPage(
 )
 }
 \arguments{
-\item{useViewer}{If \code{TRUE}, the new web page will be opened in the RStudio Viewer. If \code{FALSE}
-a default web browser will be used (if other is not specified with the \code{browser} argument.}
+\item{useViewer}{If \code{TRUE}, the new web page will be opened in the RStudio Viewer. If \code{FALSE},
+a default web browser will be used (if other is not specified with the \code{browser} argument).}
 
 \item{rootDirectory}{A path to the root directory of the server. Any file, requested by the server
 will be searched for in this directory. If \code{rootDirectory} is not 
 defined, the \code{http_root} in the package directory will be used as a root directory.}
 
 \item{startPage}{A path to the HTML file that should be used as a starting page of the app.
-This can be an absolute path to a local file, or it can be relative to the \code{rootDirectory}
+It can be an absolute path to a local file, or it can be relative to the \code{rootDirectory}
 or to the current R working directory. If \code{startPage} is not defined, an empty page will be used.
 The file must have \emph{.html} extension.}
 
 \item{port}{Defines which TCP port the server will listen to. If not defined, random available port
-will be used.}
+will be used (see \code{\link[httpuv]{randomPort}}).}
 
 \item{browser}{A browser in which to open a new web page.
 If not defined, default browser will be used. For more information check \code{\link[utils]{browseURL}}.
-Specifying a browser, will automatically set \code{useViewer} to \code{FALSE}.}
+If this argument is specified, \code{useViewer} will be ignored.}
 
-\item{allowedFunctions}{List of functions that can be called from the web page without any additional actions 
-from the user. All other functions will require authorization in the current R session before they are executed. 
-This should be a vector of function names. Check \code{\link{authorize}} and \code{\link{allowFunctions}}
+\item{allowedFunctions}{List of functions that can be called from a web page without any additional actions 
+on the R side. All other functions will require authorization in the current R session before they are called. 
+This argument should be a vector of R function names. Check \code{\link{authorize}} and \code{\link{allowFunctions}}
 for more information.}
 
-\item{allowedVariables}{List of variables that can be reassigned from the web page without any additional actions 
-from the user. All other reassignments will require authorization in the current R session before they are executed. 
-This should be a vector of variable names. Check \code{\link{authorize}} and \code{\link{allowVariables}}
+\item{allowedVariables}{List of variables that can be modified from a web page without any additional actions 
+on the R side. All other variable reassignments must be confirmed in the current R session. 
+This argument should be a vector of variable names. Check \code{\link{authorize}} and \code{\link{allowVariables}}
 for more information.}
 
 \item{connectionNumber}{Maximum number of connections that is allowed to be active simultaneously.}
@@ -53,8 +53,8 @@ for more information.}
 Any changes to these variables will affect only a certain session. Thus they can be used, for instance, to 
 store a state of each session. For more information, please, check \code{\link{setSessionVariables}}.}
 
-\item{onStart}{A callback function that will be executed when a new connection is opened. This function get a single 
-variable, which is an object of class \code{\link{Session}}. General purpose of the function is to populate each 
+\item{onStart}{A callback function that will be executed when a new connection is opened. This function gets a single 
+argument, which is an object of class \code{\link{Session}}. General purpose of the function is to populate each 
 new web page with some default content.}
 }
 \value{
@@ -62,30 +62,30 @@ Object of class \code{\link{App}}.
 }
 \description{
 \code{openPage} starts a server and opens a new page with a websocket connection between it and the current
-R session. After that messages can be exchanged between R session and the web page to generate content on the
-web page and to trigger calculation in R as a response to user activity on the page.
+R session. After that, messages can be exchanged between R session and the web page to generate content on the
+web page and to trigger calculations in R as a response to user activity on the page.
 }
 \details{
 \code{jrc} supports four types of messages:
 \itemize{
    \item{Commands are pieces of R or JavaScript code that will be evaluated on the receiving side. Note, 
-   that any command from the web page must be authorized in the R session for security reasons. A message 
-   with information on how to do that is printed in the console each time a command is received. For more
-   information, please, check \code{\link{sendCommand}}}
-   \item{Data is any variable that is sent to a from the current R session. It must always come with a 
-   name of variable to which it should be assigned on the receiving side. For more information, please,
-   check \code{\link{sendData}}}
+   that any command from a web page must be authorized in the R session for security reasons. A message 
+   with information about how to do that is printed in the console each time a command is received. For more
+   information, please, check \code{\link{sendCommand}}.}
+   \item{Data is any variable that is sent to or from the R session. It must always come with a 
+   name of the variable to which it should be assigned on the receiving side. For more information, please,
+   check \code{\link{sendData}}.}
    \item{Function calls can be triggered on each side of the websocket connection. Alongside the function name,
    one can also send a list of arguments and name of a variable to which the returned value of the function will
-   be assigned. For more information, please, check \code{\link{callFunction}}}
-   \item{Unlike other types of messages, HTML code can be sent only from R session to the web page. This code will
+   be assigned. For more information, please, check \code{\link{callFunction}}.}
+   \item{Unlike other types of messages, HTML code can be sent only from the R session to a web page. This code will
    be added to the body of the page.}
 }
 
 \code{openPage} function is a wrapper around several methods of class \code{\link{App}}. First, it creates an
-instance of this class. Then it starts a server that listens to a given port. And finally, it attempts
+instance of this class. Then it starts a server that listens to the given port. And finally, it attempts
 to open a new web page. It also stores a new app object in the package namespace, which allows other
-wrapper functions access it without being specified by the user.
+wrapper functions to access it.
 }
 \seealso{
 \code{\link{closePage}}, \code{\link{setEnvironment}}, \code{\link{limitStorage}}, \code{\link{allowVariables}},

@@ -12,11 +12,41 @@ closeSession(sessionId = NULL, inactive = NULL, old = NULL)
 \item{inactive}{All sessions that were inactive (didn't receive any messages) for the
 specified amount of time (in seconds) will be closed.}
 
-\item{old}{All sessions that has been opened for at least specified amount of time (in seconds)
+\item{old}{All sessions that were opened for at least specified amount of time (in seconds)
 will be closed.}
 }
 \description{
-Closes web socket connections for the selected client sessions and removes all the related
-information from memory. This is a wrapper function around method \code{closeSession} of 
+Closes websocket connections for the selected client sessions and removes all the related
+information from memory. If no arguments are provided and there is only one active session,
+closes it. This function is a wrapper around method \code{closeSession} of 
 class \code{\link{App}}.
+}
+\examples{
+\donttest{start <- Sys.time()
+openPage()
+
+app <- getPage()
+time <- Sys.time()
+
+app$openPage(F)
+app$openPage(F)
+
+print(getSessionIds())
+
+# No sessions will be closed
+closeSession(old = Sys.time() - start)
+print(getSessionIds())
+
+# One session (the one that has been opened first) will be closed
+closeSession(old = Sys.time() - time)
+print(getSessionIds())
+
+time <- Sys.time()
+sendCommand("jrc.sendCommand('print(\"Hi!\")')", sessionId = getSessionIds()[1],  wait = 3)
+
+closeSession(inactive = Sys.time() - time)
+closeSession()
+
+closePage()}
+
 }

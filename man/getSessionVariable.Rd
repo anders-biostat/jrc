@@ -16,11 +16,28 @@ Requested variable
 }
 \description{
 This function returns a variable, how it is seen from a session, e.g. for all the received function calls and
-commands. It searches for the variable in the session environment and then, if variable is not found, checks enclosing 
-frames on the environment, starting from the outer environment of the app (see \code{\link{setEnvironment}}). If the variable
+commands. It searches for the variable in the session environment first, and then, if variable is not found, checks enclosing 
+frames of the environment, starting from the outer environment of the app (see \code{\link{setEnvironment}}). If the variable
 doesn't exist, throws an error.
 }
 \details{
 This function
 is a wrapper around method \code{sessionVariables} of the class \code{\link{Session}}.
+}
+\examples{
+\donttest{f <- function(x) {x * 3}
+openPage(allowedFunctions = "f", allowedVars = "k")
+getPage()$openPage(FALSE)
+id1 <- getSessionIds()[1]
+id2 <- getSessionIds()[2]
+sendCommand("jrc.callFunction('f', [10], 'k')", sessionId = id1, wait = 3)
+sendCommand("jrc.callFunction('f', [20], 'k')", sessionId = id2, wait = 3)
+k1 <- getSessionVariable("k", id1)
+k2 <- getSessionVariable("k", id2)
+
+closePage()}
+
+}
+\seealso{
+\code{\link{setSessionVariables}}
 }

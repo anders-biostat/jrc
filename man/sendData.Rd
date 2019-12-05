@@ -25,25 +25,25 @@ If \code{NULL}, the data will be sent to all currently active sessions.}
 For this time (or until the reply is received), execution of other commands will be halted. Any incoming message 
 from the session will be considered as a reply.}
 
-\item{keepAsVector}{If \code{TRUE}, variables with length 1 will be saved as arrays on the server, otherwise they 
+\item{keepAsVector}{If \code{TRUE}, variables with length 1 will be saved as arrays on the web page, otherwise they 
 will be converted to atomic types.}
 
-\item{rowwise}{If \code{TRUE}, matrices and data.frames will be transformed into JavaScript Objects or Arrays
+\item{rowwise}{If \code{TRUE}, matrices and data.frames will be transformed into JavaScript objects or arrays
 row wise (e.g. a matrix will become an Array of its rows).}
 }
 \description{
-Sends a variable to a web page, where it is assigned to the variable with a specified name. This function
+Sends a variable to a web page, where it is saved under a specified name. This function
 is a wrapper around \code{sendData} method of class \code{\link{Session}}.
 }
 \details{
-To send data back from the web page to the current R session \code{jrc.sendData(variableName, variable, internal)} 
-should be used. Its arguments are:
+To send data back from the web page to the current R session one should use\code{jrc.sendData(variableName, variable, internal)}.
+Its arguments are:
 
 \describe{
    \item{\code{variableName}}{
       Name that the variable will have in the R session. If variable name hasn't been previously added to the list
       of allowed variables (see \code{\link{allowVariables}} or \code{allowedVariables} argument of the \code{\link{openPage}}
-      function), attempt to assign it from a web page will require manual authorization in the R session.
+      function), attempt to assign it from a web page will require manual authorization on the R side.
    }
    \item{\code{variable}}{
       Variable to send.
@@ -69,5 +69,5 @@ closePage()}
 }
 \seealso{
 \code{\link{authorize}}, \code{\link{allowVariables}}, \code{\link{sendCommand}},
-\code{\link{callFunction}}, \code{\link{sendHTML}}, \code{\link{openPage}}.
+\code{\link{callFunction}}, \code{\link{sendHTML}}, \code{\link{openPage}}, \code{\link{getSessionIds}}.
 }

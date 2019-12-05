@@ -7,7 +7,7 @@
 getSessionIds()
 }
 \value{
-a vector of session IDs.
+Vector of session IDs.
 }
 \description{
 Returns IDs of all currently active sessions. An ID is a randomly generated combination of 6 letters and

@@ -10,8 +10,8 @@ setEnvironment(envir)
 \item{envir}{Environment to be used as outer environment.}
 }
 \description{
-Defines an outer environment for the app. Outer environment is a parent for all session environments.
-It is used to store variables that are common for all the sessions. The only way to make changes outside
+Defines the outer environment of the app. Outer environment is a parent for all session environments.
+It is used to store variables that are common for all the client sessions. The only way to make changes outside of
 the outer environment is to use the global assignment operator \code{<<-} if and only if changes are 
 made to the variable that does not exist in the outer environment.
 }

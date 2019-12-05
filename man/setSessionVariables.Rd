@@ -2,12 +2,12 @@
 % Please edit documentation in R/jrc.R
 \name{setSessionVariables}
 \alias{setSessionVariables}
-\title{Adds variables to session environments}
+\title{Adds variables to a session environment}
 \usage{
 setSessionVariables(vars, sessionId = NULL, makeDefault = FALSE)
 }
 \arguments{
-\item{vars}{Named list of variables to be added to the session environments. Names are required and 
+\item{vars}{Named list of variables to be added to a session environment. Names are required and 
 will be used as variable names.}
 
 \item{sessionId}{ID of the session to which variables should be added. Can also be a vector of
@@ -17,16 +17,32 @@ multiple session IDs. If \code{NULL}, then variables will be added to all curren
 new opened session as default ones.}
 }
 \description{
-Each client session in a \code{jrc}, gets its own environment that can be accessed only by this
+Each client session in \code{jrc}, gets its own environment that can be accessed only by this
 session (or from the outside with the \code{\link{getSessionVariable}} function). General purpose
-of this environments is to store some session-specific information such as state of the app for
+of these environments is to store some session-specific information such as state of the app for
 each user. It can also be used to mask variables from the user: if there are two variables with the
 same name in the session environment and outside of it, user will not be able to see the latter one.
-This function adds new variables to a session environment or changes values of the existing ones.
+This function adds new variables to a session environment or changes values of some existing ones.
 }
 \details{
 This function is a wrapper around method \code{sessionVariables} of class \code{\link{Session}}.
 If \code{makeDefault = TRUE}, it is also a wrapper around method \code{sessionVariables} of class
 \code{\link{App}}. The first one changes the current state of the session environment, while the
 second specifies default variables for each new session.
+}
+\examples{
+\donttest{openPage(allowedFunctions = "f", allowedVariables = "res")
+
+m <- 1
+f <- function() {v * m}
+setSessionVariables(list(v = 1:10, m = 2))
+
+sendCommand("jrc.callFunction('f', [], 'res')", wait = 1)
+print(res)
+
+closePage()}
+
+}
+\seealso{
+\code{\link{getSessionVariable}}.
 }

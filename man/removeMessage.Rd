@@ -13,7 +13,7 @@ becomes optional.}
 \item{messageId}{ID of the message to remove. If there is only one stored message, this argument becomes optional.}
 }
 \description{
-Removes a message with a given ID from the storage of a specified session. This functions is a wrapper around
+Removes a message from the storage of a session. This function is a wrapper around
 method \code{removeMessage} of class \code{\link{Session}}.
 }
 \seealso{

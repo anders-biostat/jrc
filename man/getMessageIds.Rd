@@ -17,7 +17,7 @@ a vector of message IDs. Otherwise returns a named list with one vector for each
 Either a named list or a vector with message IDs.
 }
 \description{
-Returns a list of IDs of all currently stored messages.
+Returns IDs of all currently stored messages.
 }
 \details{
 For security reasons, most of the messages that are received
@@ -27,5 +27,5 @@ messages are given randomly generated IDs and are stored in memory.
 This function is a wrapper around method \code{getMessageIds} of class \code{\link{Session}}.
 }
 \seealso{
-\code{\link{authorize}}, \code{\link{getSessionIds}}, \code{\link{limitStorage}}.
+\code{\link{authorize}}, \code{\link{getSessionIds}}.
 }

@@ -7,36 +7,36 @@
 limitStorage(n = NULL, size = NULL, sessionId = NULL)
 }
 \arguments{
-\item{n}{Number of messages that can be stored simultaneously.}
+\item{n}{Maximum number of messages that can be stored simultaneously.}
 
-\item{size}{Maxim total size of all stored messages in bytes.}
+\item{size}{Maximum total size of all stored messages in bytes.}
 
 \item{sessionId}{ID of the session, for which the storage size should be changed.
 Can also be a vector of session IDs to change storage size for multiple sessions at once.
-It this argument is \code{NULL} changes will be applied to all the currently active sessions.}
+If \code{NULL}, changes will be applied to all currently active sessions.}
 }
 \description{
-This function allows to change number of total size of the messages
-that are received via the websocket and are stored in the memory.
+This function allows to change number or total size of the messages
+that are received via the websocket and are stored in memory.
 }
 \details{
-For security reasons, the control of the currently running R session is limited
-to calling only some user specified functions and reassigning some user specified
-variables. All other messages are stored in the memory and can be later processed
+For security reasons, control of the currently running R session is limited
+to calling and changing only some user specified functions and variables. All other 
+messages are stored in memory and can be later processed
 by calling \code{\link{authorize}} function. To prevent overuse of memory, one can 
-limit the size of the storage by number of messages or by their total size estimated
-by \code{\link[utils]{object.size}}. If the storage grows above the set limits, older
-messages are removed. The last received message will not be removed even if its 
-takes more memory than is allowed by this function. If any of the size parameters is
-set to zero, no massages will be stored. Any message, that requires authorization will be
+limit size of the storage by number of messages or by their total size estimated
+by \code{\link[utils]{object.size}}. If the storage grows above these limits, older
+messages are removed. The last received message will not be removed even if it 
+takes more memory than is allowed. If any of the size parameters are
+set to zero, no massages will be stored. In this case, any message that requires authorization will be
 automatically discarded.
 
 One can also directly change public fields \code{maxN} and \code{maxSize} of any object
 of class \code{\link{Session}} (see also \code{\link{getSession}}).
 }
 \examples{
-limitStorage(n = 10)
-limitStorage(size = 10 * 1024^2)
+\donttest{limitStorage(n = 10)
+limitStorage(size = 10 * 1024^2)}
 
 }
 \seealso{

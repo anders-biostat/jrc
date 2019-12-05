@@ -17,7 +17,7 @@ For this time (or until the reply is received), execution of other commands will
 from the session will be considered as a reply.}
 }
 \description{
-Sends a piece of HTML code to an open web page and adds it at the end
+Sends a piece of HTML code to a web page and adds it at the end
 or the \code{body} element. This function is a wrapper around \code{sendHTML} method of 
 class \code{\link{Session}}.
 }

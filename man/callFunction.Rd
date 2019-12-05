@@ -34,58 +34,63 @@ from the session will be considered as a reply.}
 session IDs. If \code{NULL}, the function call will be sent to all currently active sessions.}
 
 \item{thisArg}{JavaScript functions (methods) can belong to some object, which 
-is referred as \code{this} inside the function (e.g. in
+is referred to as \code{this} inside the function (e.g. in
 \code{someObject.myFunction()} function \code{myFunction} is a method of \code{someObject}).
-\code{thisArg} specified object that will be passed as \code{this} to the function. If \code{NULL}
-then the function will be applied to the global object.}
+\code{thisArg} specifies object that will be known as \code{this} inside the function. If \code{NULL},
+the function will be applied to the global object (\code{window}).}
 
-\item{...}{further arguments passed to \code{\link{sendData}} that is used to send
+\item{...}{further arguments passed to \code{\link{sendData}}. It is used to send
 \code{arguments} to the web page.}
 }
 \description{
-Calls a function on an opened web page given its name and arguments. This function is a wrapper
-around \code{callFunction} method of class \code{\link{Session}}.
+Calls a function in a web page by its name. It can also pass a list of arguments for the function and 
+save the returned result to a variable.
 }
 \details{
-JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo, package, internal)},
-and its arguments are:
+JavaScript counterpart is \code{jrc.callFunction(name, arguments, assignTo, package, internal)}.
+Its arguments are:
 \describe{
    \item{\code{name}}{
-      Name of the function to call. If function name hasn't been previously added to the list
-      of allowed functions (see \code{\link{allowFunctions}} or \code{allowedFunctions} argument of the \code{\link{openPage}}
-      function), attempt to assign it from a web page will require manual authorization in the R session.
+      Name of an R function. If function name hasn't been previously added to the list
+      of allowed functions (see \code{\link{allowFunctions}} or \code{allowedFunctions} argument of \code{\link{openPage}}),
+      attempt to call it from a web page will require manual authorization on the R side.
    }
    \item{\code{arguments} (optional)}{
-      arguments for the function. This should be an Array or an Object with argument names as keys.
+      arguments for the function. This should be an Array (for unnamed arguments) or an Object with argument names as keys
+      (for named arguments).
    }
    \item{\code{assignTo} (optional)}{
       Name of the variable to which the returned value of the function will be assigned in the R session. 
-      If variable name hasn't been previously added to the list
-      of allowed variables (see \code{\link{allowVariables}} or \code{allowedVariables} argument of the \code{\link{openPage}}
-      function), attempt to assign it from a web page will require manual authorization in the R session.
+      If the variable name hasn't been previously added to the list
+      of allowed variables (see \code{\link{allowVariables}} or \code{allowedVariables} argument of \code{\link{openPage}}),
+      attempt to assign it from a web page will require manual authorization on the R side.
    }
    \item{\code{package} (optional)}{
-      If the function should be imported from an installed package, name of this package.
+      If the function needs to be imported from an installed package, name of this package.
    }
    \item{\code{internal} (optional)}{
       Whether assignment of the function returned value should happen internally or not. If \code{true}, result will be stored
-      in the session-specific environment and can be accessed from the outside with \code{\link{getSessionVariable}}
+      in the session environment and can be accessed from the outside with \code{\link{getSessionVariable}}
       function. If \code{false}, result will be saved to the outer environment of the app (see \code{\link{setEnvironment}}).
-      By default, uses \code{true} for variables that already exist in the session specific environment 
-      (see \code{\link{setSessionVariables}} or \code{sessionVariables} argument of the \code{\link{openPage}} function.)
+      By default, uses \code{true} for variables that already exist in the session environment 
+      (see \code{\link{setSessionVariables}} or \code{sessionVariables} argument of the \code{\link{openPage}} function)
       and \code{false} otherwise.
    }
 }
+
+This function is a wrapper
+around \code{callFunction} method of class \code{\link{Session}}.
 }
 \examples{
 \donttest{
 openPage()
 callFunction("alert", list("Some alertText"))
 callFunction("Math.random", assignTo = "randomNumber")
+sendCommand("alert(randomNumber)")
 }
 
 }
 \seealso{
 \code{\link{authorize}}, \code{\link{allowFunctions}}, \code{\link{allowVariables}},
-\code{\link{setEnvironment}}.
+\code{\link{setEnvironment}}, \code{\link{getSessionIds}}.
 }

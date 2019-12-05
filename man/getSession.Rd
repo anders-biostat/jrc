@@ -9,7 +9,10 @@ getSession(sessionId = NULL)
 \arguments{
 \item{sessionID}{ID of the session. If there is only one active session, this argument becomes optional.}
 }
+\value{
+Object of class \code{\link{Session}}.
+}
 \description{
-Returns an object of class \code{\link{Session}} by a given ID. This function is a wrapper around method
+Returns \code{\link{Session}} by its ID. This function is a wrapper around method
 \code{getSession} of class \code{\link{App}}.
 }

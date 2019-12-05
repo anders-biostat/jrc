@@ -8,7 +8,7 @@ sendCommand(command, sessionId = NULL, wait = 0)
 }
 \arguments{
 \item{command}{A line (or several lines separated by \code{\\n}) of JavaScript code. This code
-will be immediately executed on the opened page. No R-side syntax check is performed.}
+will be directly evaluated on the web page. No R-side syntax check is performed.}
 
 \item{sessionId}{An ID of the session to which the command should be sent. Can also be a vector of multiple session IDs.
 If \code{NULL}, the command will be sent to all currently active sessions.}
@@ -18,17 +18,19 @@ For this time (or until the reply is received), execution of other commands will
 from the session will be considered as a reply.}
 }
 \description{
-\code{sendCommand} sends JavaScript code to the server and executes it on the specified
-opened page. Use JavaScript function \code{jrc.sendCommand} to send R code from the web page
-and execute it in the current R session. All commands send to R from the server will be executed
-only after authorization in the currently running R session.
+\code{sendCommand} sends JavaScript code through the selected websocket connection and evaluates it on the specified
+web page. Use JavaScript function \code{jrc.sendCommand} to send R code from the web page
+and evaluate it in the current R session. All commands send to R from the server will be evaluated
+only after authorization in the currently running R session (see \code{\link{authorize}}).
 }
 \details{
-Each opened page gets its own environment, where all the commands are evaluated. Thus, any changes
-made with the usual assignment operator \code{<-} will be limited to the page-specific environment. The changes
+Each opened page gets its own environment, where all the commands are evaluated. Any changes
+made with the usual assignment operator \code{<-} will be limited to this page-specific environment. The changes
 are still saved, but can be accessed only with \code{\link{getSessionVariable}} function. To make changes outside
-of the page-specific environment use \code{<<-} instead. In JavaScript \code{windows.varibleName = "SomeValue"}
-should be used instead of \code{varibleName = "SomeValue"}, if you want the variable to be accessible outside the
+of the page-specific environment use \code{<<-} instead.
+
+In JavaScript one should use \code{windows.varibleName = "SomeValue"}
+instead of \code{varibleName = "SomeValue"}, in order to make the variable accessible outside of the
 current \code{sendCommand} call.
 
 This function is a wrapper around \code{sendCommand} method of class \code{\link{Session}}.
@@ -47,5 +49,5 @@ closePage()}
 }
 \seealso{
 \code{\link{authorize}}, \code{\link{sendData}}, \code{\link{sendHTML}}, \code{\link{callFunction}},
-\code{\link{openPage}}.
+\code{\link{openPage}}, \code{\link{getSessionIds}}.
 }

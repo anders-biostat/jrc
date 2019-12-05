@@ -2,7 +2,7 @@
 % Please edit documentation in R/jrc.R
 \name{getPage}
 \alias{getPage}
-\title{Get opened page}
+\title{Get the currently running app}
 \usage{
 getPage()
 }
@@ -10,10 +10,10 @@ getPage()
 Object of class \code{\link{App}} or \code{NULL} if there is no active app.
 }
 \description{
-\code{jrc} offers to way to control an interactive app. One is by using methods of classed
+\code{jrc} offers two ways to control an interactive app. One is by using methods of classes
 \code{\link{App}} and \code{\link{Session}}. This allows one to have any number of apps within one
 R session, but requires some understanding of object oriented programming. Another way is to use
 provided wrapper functions that are exported by the package. These functions internally work with 
-an \code{\link{App}} object, which is stored in the package namespace upon initialization with 
-\code{\link{openPage}} function. This function retrieves this object if any.
+the \code{\link{App}} object, which is stored in the package namespace upon initialization with 
+\code{\link{openPage}} function. \code{getPage} returns this object if any.
 }

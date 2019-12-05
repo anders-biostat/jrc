@@ -7,20 +7,19 @@
 allowFunctions(funs = NULL)
 }
 \arguments{
-\item{funs}{Vector of function names to be added to the list. If is \code{NULL},
-returns names of all currently allowed functions.}
+\item{funs}{Vector of function names to be added to the list. If \code{NULL},
+returns names of all currently allowed R functions.}
 }
 \value{
 Names of all currently allowed functions if \code{funs = NULL}.
 }
 \description{
-This function adds function names to the list of functions, which
-can be called from a web page without manual confirmation in the R
-session.
+Adds R function names to the list of functions, that
+can be called from a web page without manual confirmation on the R side.
 }
 \examples{
-allowFunctions(c("myFunction1", "print", "someObject$method"))
-funs <- allowFunctions()
+\donttest{allowFunctions(c("myFunction1", "print", "someObject$method"))
+funs <- allowFunctions()}
 
 }
 \seealso{
