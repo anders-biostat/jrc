@@ -65,12 +65,14 @@
 #'      Sends HTML code that will be appended to the web page. Check \code{\link{sendHTML}} for 
 #'      more information.
 #'   }
-#'   \item{\code{sessionVariables(vars = NULL, varName = NULL)}}{
+#'   \item{\code{sessionVariables(vars = NULL, varName = NULL, remove = NULL)}}{
 #'      Sets or returns variables that are used (read or modified) only by this session. If both arguments are
 #'      \code{NULL}, returns environment for this session. If \code{vars} is a named list, adds this variables to the
 #'      session environment. If \code{varName} is a character, returns a variable with this name how it is seen from
-#'      the session. If the variable doesn't exist, throws an error. One can add variables to the session environment and
-#'      get one back with a single function call. Check \code{\link{setSessionVariables}} for more information.
+#'      the session. If the variable doesn't exist, throws an error. If \code{remove} is a vector of characters, removes
+#'      variables with these names from the session environment. One can add variables to the session environment,
+#'      get one back and remove variables with a single function call. Check \code{\link{setSessionVariables}},
+#'      \code{\link{getSessionVariable}}, \code{\link{removeSessionVariables}} for more information.
 #'   }
 #' }
 #' Note, that \code{Session} class has some other public methods that are not mentioned in this list. These methods are
@@ -98,7 +100,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
     }
     if(!is.vector(msg))
       stop("Unknown message format")
-
+    
     if(msg[1] == "COM") {
       message(str_c("Command '", msg[2], "' is stored."))
     } else if(msg[1] == "DATA") {
@@ -131,10 +133,10 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
         msg <- self$getMessage(messageId)
       }
     private$waiting <- FALSE
-
+    
     if(is.null(msg))
       stop(str_c("There is no message with ID ", messageId))
-
+    
     tryCatch({
       if(msg[1] == "COM") {
         eval(parse(text = msg[2]), envir = private$envir)
@@ -184,7 +186,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
       if(!is.null(messageId))
         self$removeMessage(messageId)
       self$lastActive <- Sys.time()
-      }
+    }
     )
   },
   
@@ -218,7 +220,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
       warning("An attepmt to supply several message IDs. Only the first one will be used")
       messageId <- messageId[1]
     }
-  
+    
     private$storage[[messageId]] <- NULL
     
     invisible(self)
@@ -233,7 +235,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
       stop("Websocket is already closed.")
     
     stopifnot(is.character(command))
-      
+    
     private$ws$send( toJSON(c("COM", command)) )
     
     if(wait > 0)
@@ -257,7 +259,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
     }
     
     private$ws$send(toJSON(c("FUN", name, assignTo)))
-
+    
     if(wait > 0)
       private$wait(wait)
   },
@@ -280,8 +282,8 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
       matrix <- "columnmajor"
     }
     private$ws$send( toJSON(c("DATA", variableName, 
-                                      toJSON(variable, digits = NA, dataframe = dataframe, matrix = matrix), 
-                                      keepAsVector)))
+                              toJSON(variable, digits = NA, dataframe = dataframe, matrix = matrix), 
+                              keepAsVector)))
     if(wait > 0)
       private$wait(wait)
   },
@@ -291,9 +293,9 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
       stop("Websocket is already closed.")
     
     stopifnot(is.character(html))
-
+    
     private$ws$send( toJSON(c("HTML", html)) )
-
+    
     if(wait > 0)
       private$wait(wait)
   },
@@ -310,14 +312,14 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
     
     if(!is.logical(show))
       stop("show must be a logical variable")
-  
+    
     if(!show) {
       self$execute(messageId)
     } else {
       msg <- self$getMessage(messageId)
       if(is.null(msg))
         stop(str_c("There is no message with ID ", messageId))
-  
+      
       if(msg[1] == "COM") {
         text <- str_c("Command '", msg[2], "'.")
       } else if(msg[[1]] == "DATA") {
@@ -340,8 +342,8 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
     invisible(self)
   },
   
-  sessionVariables = function(vars = NULL, varName = NULL) {
-    if(is.null(vars) && is.null(varName))
+  sessionVariables = function(vars = NULL, varName = NULL, remove = NULL) {
+    if(is.null(vars) && is.null(varName) && is.null(remove))
       return(private$envir)
     
     if(!is.null(vars) & length(vars) > 0){
@@ -358,6 +360,12 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
       }
       return(get(varName, envir = private$envir))
     }
+    if(!is.null(remove)){
+      if(!is.character(remove))
+        stop("Variable names must be characters")
+      stopifnot(is.vector(remove))
+      rm(list = remove, envir = private$envir)
+    }
     invisible(self)
   },
   
@@ -373,7 +381,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
     if(!is.null(message)) {
       if(!is.character(message))
         stop("Closing message must be a string.")
-  
+      
       self$sendCommand(str_c("alert('", mesage, "');"))
     }
     if(!is.null(private$ws))
@@ -392,7 +400,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
     self$startTime <- Sys.time()
     
     private$ws <- ws
-
+    
     self$sessionVariables(list(.id = self$id))      
   }
   
@@ -417,7 +425,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
   
   wait = function(time) {
     private$waiting <- TRUE
-  
+    
     for( i in 1:(time/0.05) ) {
       service(100)
       if( !private$waiting ){
@@ -554,7 +562,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
       }
     
     stopifnot(is.vector(sessionId) | is.null(sessionId))
-      
+    
     if(!is.null(inactive)) {
       lastActive <- sapply(private$sessions, `[[`, "lastActive")
       rem <- (lastActive < Sys.time() - inactive)
@@ -599,7 +607,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
   },
   
   startServer = function(port = NULL) {
-
+    
     if(is.null(port)) {
       if(compareVersion(as.character(packageVersion("httpuv")), "1.5.4") >= 0){
         port <- randomPort(n = 50)
@@ -657,7 +665,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     for( i in 1:(5/0.05) ) {
       service(100)
       if( !private$waiting ){
-       break
+        break
       } 
       Sys.sleep( .05 )
     }
@@ -724,7 +732,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
       }
     }
     stopifnot(is.character(path))
-   
+    
     if(file.exists(file.path(private$rootDir, path))){
       private$startP <- path
     } else {
@@ -754,7 +762,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
   
   sessionVariables = function(vars = NULL) {
     if(is.null(vars))
-      return(private$sessionVariables)
+      return(private$sessionVars)
     
     vars <- as.list(vars)
     if(!is.list(vars))
@@ -764,7 +772,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
       stop("List of variables must be named")
     
     for(n in names(vars))
-      private$sessionVaribles[[n]] <- vars[[n]]
+      private$sessionVars[[n]] <- vars[[n]]
     
     invisible(self)
   },
@@ -872,7 +880,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     handle_websocket_open <- function( ws ) {
       session <- Session$new(ws, envir = new.env(parent = private$envir))
       session$sessionVariables(private$sessionVars)
-
+      
       ws$onMessage( function( isBinary, msg ) {
         if( isBinary )
           stop( "Unexpected binary message received via WebSocket" )
@@ -930,7 +938,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
       
       session$sessionVariables(private$sessionVars)
       self$addSession(session)
-    
+      
       private$onStart(session)
       private$waiting <- FALSE
     }
@@ -1306,7 +1314,7 @@ sendHTML <- function(html = "", sessionId = NULL, wait = 0) {
 #' @export
 callFunction <- function(name, arguments = NULL, assignTo = NULL, wait = 0, sessionId = NULL, thisArg = NULL, ...) {
   sendMessage("callFunction", sessionId, wait = wait, name = name, arguments = arguments, assignTo = assignTo, thisArg = thisArg,
-                ...)
+              ...)
 }
 
 #' Authorize further message processing
@@ -1747,4 +1755,44 @@ getSessionVariable <- function(varName, sessionId = NULL) {
     stop(str_c("There is no session with ID ", sessionId))
   
   session$sessionVariables(varName = varName)
+}
+
+#' Remove variables from a client session environment
+#' 
+#' This function removes variables from the environment of a client session. It allows, for instance, to unmask
+#' a variable with the same name from the outer app environment (see \code{\link{setEnvironment}}) for the session 
+#' (check the example below). This function
+#' is a wrapper around method \code{sessionVariables} of the class \code{\link{Session}}.
+#' 
+#' @param varNames Names of variables to remove.
+#' @param sessionId ID of the session. If there is only one active session, this argument becomes optional.
+#' 
+#' @examples
+#' \donttest{openPage(allowedVariables = "k", sessionVars = list(k = 10))
+#' 
+#' k <- -1
+#' getPage()$openPage(FALSE)
+#' id1 <- getSessionIds()[1]
+#' id2 <- getSessionIds()[2]
+#' removeSessionVariables("k", id1)
+#' #this changes global 'k', since the variable is no longer masked
+#' sendCommand("jrc.sendData('k', 1)", sessionId = id1, wait = 3)
+#' #this doesn't affect global 'k'
+#' sendCommand("jrc.sendData('k', 5)", sessionId = id2, wait = 3)
+#' local_k <- getSessionVariable("k", id2)
+#' 
+#' closePage()}
+#' 
+#' @seealso \code{\link{setSessionVariables}}
+#' 
+#' @export
+removeSessionVariables <- function(varNames, sessionId = NULL) {
+  if(is.null(pkg.env$app))
+    stop("There is no opened page. Please, use 'openPage()' function to create one.") 
+  
+  session <- getSession(sessionId)
+  if(is.null(session))
+    stop(str_c("There is no session with ID ", sessionId))
+  
+  session$sessionVariables(remove = varNames)
 }

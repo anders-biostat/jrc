@@ -72,12 +72,14 @@ One can manipulate a session directly, using its methods that are described bell
      Sends HTML code that will be appended to the web page. Check \code{\link{sendHTML}} for 
      more information.
   }
-  \item{\code{sessionVariables(vars = NULL, varName = NULL)}}{
+  \item{\code{sessionVariables(vars = NULL, varName = NULL, remove = NULL)}}{
      Sets or returns variables that are used (read or modified) only by this session. If both arguments are
      \code{NULL}, returns environment for this session. If \code{vars} is a named list, adds this variables to the
      session environment. If \code{varName} is a character, returns a variable with this name how it is seen from
-     the session. If the variable doesn't exist, throws an error. One can add variables to the session environment and
-     get one back with a single function call. Check \code{\link{setSessionVariables}} for more information.
+     the session. If the variable doesn't exist, throws an error. If \code{remove} is a vector of characters, removes
+     variables with these names from the session environment. One can add variables to the session environment,
+     get one back and remove variables with a single function call. Check \code{\link{setSessionVariables}},
+     \code{\link{getSessionVariable}}, \code{\link{removeSessionVariables}} for more information.
   }
 }
 Note, that \code{Session} class has some other public methods that are not mentioned in this list. These methods are
