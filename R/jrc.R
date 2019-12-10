@@ -160,17 +160,23 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
         # 5 - package
         # 6 - boolean (sessionwise or outer envir)
         chain <- strsplit(msg[[2]], "[$]")[[1]]
-        if(is.na(msg[[5]])) {
-          f <- get(chain[1], envir = private$envir)
-          chain <- chain[-1]
+        if(!is.na(msg[[5]])){
+          env <- getNamespace(msg[[5]])
         } else {
-          f <- getNamespace(msg[[5]])
+          env <- private$envir
         }
-        for(el in chain) f <- f[[el]]
+        repeat {
+          f <- get(chain[1], envir = env)
+          chain <- chain[-1]
+          if(is.environment(f))
+            env <- f
+          if(length(chain) == 0)
+            break
+        }
         
-        if(is.na(msg[[5]]))
-          environment(f) <- private$envir
-        tmp <- do.call(f, msg[[3]], envir = private$envir)  
+        if(is.na(msg[[5]]) && identical(env, private$envir))
+          environment(f) <- env
+        tmp <- do.call(f, msg[[3]], envir = env)  
         
         if(!is.na(msg[[4]])){
           if(is.na(msg[[6]]))

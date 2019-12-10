@@ -189,24 +189,18 @@ updateText <- function() {
                     "document.getElementById('k').innerHTML = ", k, ";"), id = .id)
 }
 
-
-
-
-
-
-
-setSessionVariables(list(k = 10), sessionId = "Ch5vIS")
-sendCommand('alert("AAAAA!")', id = "KCZobp")
-
-
-`%<-%` <- function(a, b) {
-  p <- parent.frame()
-  if(exists(deparse(substitute(a)), inherits = FALSE, envir = p)) {
-    print("exists")
-    assign(deparse(substitute(a)), b, envir = p)
-  } else {
-    print("can't find")
-    `<<-`(a, b)
+Accum <- R6::R6Class("Accum", public = list(
+  addone = function(){
+    private$count <- private$count + 1
+  },
+  show = function() {
+    private$count
   }
-}
-a %<-% (a + 1)
+),
+private = list(
+  count = 0
+))
+obj <- Accum$new()
+
+openPage(allowedFunctions = c("obj$addone"))
+sendCommand("jrc.callFunction('obj$addone')", wait = 3)

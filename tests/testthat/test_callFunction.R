@@ -55,3 +55,25 @@ test_that("Function from a specified package can be called", {
   
   expect_message(closePage(), "Server has been stopped.")  
 })
+
+test_that("Methods of an object can be called", {
+  Accum <- R6::R6Class("Accum", public = list(
+    addone = function(){
+      private$count <- private$count + 1
+    },
+    show = function() {
+      private$count
+    }
+  ),
+  private = list(
+    count = 0
+  ))
+  obj <- Accum$new()
+  
+  openPage(allowedFunctions = c("obj$addone"))
+  sendCommand("jrc.callFunction('obj$addone')", wait = 3)
+  
+  expect_equal(obj$show(), 1)
+  
+  closePage()
+})
