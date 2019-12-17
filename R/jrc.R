@@ -1168,15 +1168,15 @@ closePage <- function() {
 #' 
 #' @param variableName Name that the variable will have on the web page.
 #' @param variable Variable to send.
+#' @param keepAsVector If \code{TRUE}, variables with length 1 will be saved as arrays on the web page, otherwise they 
+#' will be converted to atomic types.
+#' @param rowwise If \code{TRUE}, matrices and data.frames will be transformed into JavaScript objects or arrays
+#' row wise (e.g. a matrix will become an Array of its rows). 
 #' @param sessionId An ID of the session to which the data should be sent. Can also be a vector of multiple session IDs.
 #' If \code{NULL}, the data will be sent to all currently active sessions.
 #' @param wait If \code{wait > 0}, after sending the message, R will wait for a reply for a given number of seconds. 
 #' For this time (or until the reply is received), execution of other commands will be halted. Any incoming message 
 #' from the session will be considered as a reply.
-#' @param keepAsVector If \code{TRUE}, variables with length 1 will be saved as arrays on the web page, otherwise they 
-#' will be converted to atomic types.
-#' @param rowwise If \code{TRUE}, matrices and data.frames will be transformed into JavaScript objects or arrays
-#' row wise (e.g. a matrix will become an Array of its rows). 
 #' 
 #' @examples 
 #' \donttest{openPage()
@@ -1191,7 +1191,7 @@ closePage <- function() {
 #'  
 #' @export
 #' @importFrom jsonlite toJSON
-sendData <- function(variableName, variable, sessionId = NULL, wait = 0, keepAsVector = FALSE, rowwise = TRUE) {
+sendData <- function(variableName, variable, keepAsVector = FALSE, rowwise = TRUE, sessionId = NULL, wait = 0) {
   sendMessage("sendData", sessionId, wait = wait, variableName = variableName, variable = variable, keepAsVector = keepAsVector,
               rowwise = rowwise)
 }

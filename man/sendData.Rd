@@ -7,10 +7,10 @@
 sendData(
   variableName,
   variable,
-  sessionId = NULL,
-  wait = 0,
   keepAsVector = FALSE,
-  rowwise = TRUE
+  rowwise = TRUE,
+  sessionId = NULL,
+  wait = 0
 )
 }
 \arguments{
@@ -18,18 +18,18 @@ sendData(
 
 \item{variable}{Variable to send.}
 
+\item{keepAsVector}{If \code{TRUE}, variables with length 1 will be saved as arrays on the web page, otherwise they 
+will be converted to atomic types.}
+
+\item{rowwise}{If \code{TRUE}, matrices and data.frames will be transformed into JavaScript objects or arrays
+row wise (e.g. a matrix will become an Array of its rows).}
+
 \item{sessionId}{An ID of the session to which the data should be sent. Can also be a vector of multiple session IDs.
 If \code{NULL}, the data will be sent to all currently active sessions.}
 
 \item{wait}{If \code{wait > 0}, after sending the message, R will wait for a reply for a given number of seconds. 
 For this time (or until the reply is received), execution of other commands will be halted. Any incoming message 
 from the session will be considered as a reply.}
-
-\item{keepAsVector}{If \code{TRUE}, variables with length 1 will be saved as arrays on the web page, otherwise they 
-will be converted to atomic types.}
-
-\item{rowwise}{If \code{TRUE}, matrices and data.frames will be transformed into JavaScript objects or arrays
-row wise (e.g. a matrix will become an Array of its rows).}
 }
 \description{
 Sends a variable to a web page, where it is saved under a specified name. This function
