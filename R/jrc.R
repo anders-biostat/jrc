@@ -174,9 +174,18 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
             break
         }
         
-        if(is.na(msg[[5]]) && identical(env, private$envir))
+        if(identical(private$envir, env) && !isNamespace(environment(f))) {
           environment(f) <- env
-        tmp <- do.call(f, msg[[3]], envir = env)  
+        } else {
+          fors <- formals(f)
+          for(arg in setdiff(names(fors), names(msg[[3]])))
+            if(arg != "...")
+              tryCatch(msg[[3]][[arg]] <- eval(fors[[arg]], private$envir),
+                       error = function(e) {})
+        }
+
+        tmp <- do.call(f, msg[[3]])  
+#        parent.env(private$envir) <- outer
         
         if(!is.na(msg[[4]])){
           if(is.na(msg[[6]]))
@@ -312,7 +321,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
       if(length(private$storage) > 1)
         stop("More than one message is stored for this session. Please, specify message ID.")
       if(length(private$storage) == 0)
-        stope("There are no stored messages for this session")
+        stop("There are no stored messages for this session")
       messageId <- names(private$storage)
     }
     
@@ -833,7 +842,8 @@ App <- R6Class("App", cloneable = FALSE, public = list(
       if(grepl("^/http_root", reqPage)) {
         pack <- substring(strsplit(reqPage, "/")[[1]][2], 11)
         reqPage <- sub(str_c("_", pack), "", reqPage)
-        reqPage <- system.file( reqPage, package = pack )
+        reqPage <- tryCatch(system.file( reqPage, package = pack, mustWork = TRUE ),
+                 error = function(e) system.file( paste0("inst/", reqPage), package = pack)) 
       } else {
         if(reqPage == "/index.html" & !is.null(private$startPagePath)) {
           reqPage <- private$startPagePath
@@ -940,7 +950,9 @@ App <- R6Class("App", cloneable = FALSE, public = list(
       ws$onClose(function() {
         if(!is.null(self$getSession(session$id)))
           self$closeSession(session$id)
-      })      
+      })
+      
+      ws$send(toJSON(c("ID", session$id)))
       
       session$sessionVariables(private$sessionVars)
       self$addSession(session)
