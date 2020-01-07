@@ -666,11 +666,11 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     if(is.null(private$serverHandle))
       stop("No server is running. Please, start a server before opening a page.")
     if( useViewer & !is.null( getOption("viewer") ) )
-      getOption("viewer")( str_c("http://localhost:", private$port, "/", private$startP) )
+      getOption("viewer")( str_c("http://localhost:", private$port, private$startP) )
     else{
       if(is.null(browser))
         browser = getOption("browser")
-      browseURL( str_c("http://localhost:", private$port, "/", private$startP), browser = browser )
+      browseURL( str_c("http://localhost:", private$port, private$startP), browser = browser )
     }
     
     
@@ -746,19 +746,21 @@ App <- R6Class("App", cloneable = FALSE, public = list(
         return(str_c(private$startPagePath, private$startP))
       }
     }
-    stopifnot(is.character(path))
     
     if(file.exists(file.path(private$rootDir, path))){
+      if(substring(path, 1, 1) != .Platform$file.sep)
+        path <- str_c(.Platform$file.sep, path)
       private$startP <- path
     } else {
       if(!file.exists(path))
         stop(str_c("There is no such file: '", path, "'"))
       path <- normalizePath(path)
       if(grepl(path, private$rootDir, fixed = T)) {
-        private$start <- str_remove(path, str_c(private$rootDir, "/"))
+        private$startP <- str_remove(path, private$rootDir)
       } else {
-        private$startP <- "index.html"
-        private$startPagePath <- path
+        spl <- strsplit(path, .Platform$file.sep)
+        private$startP <- str_c(.Platform$file.sep, spl[[1]][length(spl[[1]])])
+        private$startPagePath <- str_remove(path, private$startP)
       }
     }
     
@@ -845,8 +847,10 @@ App <- R6Class("App", cloneable = FALSE, public = list(
         reqPage <- tryCatch(system.file( reqPage, package = pack, mustWork = TRUE ),
                  error = function(e) system.file( paste0("inst/", reqPage), package = pack)) 
       } else {
-        if(reqPage == "/index.html" & !is.null(private$startPagePath)) {
-          reqPage <- private$startPagePath
+        if(reqPage == "/index.html" || reqPage == "/")
+          reqPage <- private$startP
+        if(reqPage == private$startP && !is.null(private$startPagePath)) {
+          reqPage <- str_c(private$startPagePath, private$startP)
         } else {
           reqPage <- str_c(private$rootDir, reqPage)
         }
