@@ -1,5 +1,24 @@
 ## Resubmission
 
+This is a new version that introduces major restructarization of the package. It now supports multiple connections to the interactive apps and
+introduces functions to manage client sessions. The app itself is now contained within a single R6 object, which allows to start multiple apps
+inside one R session.
+
+## Reverse dependencies
+
+Backwards compatibility is fully maintained.
+
+## Test environments
+* local ubuntu 18.04 LST, R 3.6.2
+* win-builder: R-devel
+* ubuntu 14.04.5 LTS, R-devel, R 3.5.2, R 3.4.4 (travis ci)
+
+## R CMD check results
+
+There were no ERRORS, WARNINGS or NOTES
+
+## Resubmission
+
 This is a new version that fixes some existing bugs, such as crashing when one attempts to send data with NAs present,
 and inability to use the package on RStudio Server. For more details, please, check NEWS.md.
 
