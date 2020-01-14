@@ -11,7 +11,7 @@ Backwards compatibility is fully maintained.
 ## Test environments
 * local ubuntu 18.04 LST, R 3.6.2
 * win-builder: R-devel
-* ubuntu 14.04.5 LTS, R-devel, R 3.5.2, R 3.4.4 (travis ci)
+* ubuntu 16.04.6 LTS, R-devel, R 3.6.2, R 3.5.3 (travis ci)
 
 ## R CMD check results
 
