@@ -21,11 +21,11 @@ openPage(
 \item{useViewer}{If \code{TRUE}, the new web page will be opened in the RStudio Viewer. If \code{FALSE},
 a default web browser will be used (if other is not specified with the \code{browser} argument).}
 
-\item{rootDirectory}{A path to the root directory of the server. Any file, requested by the server
+\item{rootDirectory}{A path to the root directory fpr the server. Any file, requested by the server
 will be searched for in this directory. If \code{rootDirectory} is not 
 defined, the \code{http_root} in the package directory will be used as a root directory.}
 
-\item{startPage}{A path to the HTML file that should be used as a starting page of the app.
+\item{startPage}{A path to an HTML file that should be used as a starting page of the app.
 It can be an absolute path to a local file, or it can be relative to the \code{rootDirectory}
 or to the current R working directory. If \code{startPage} is not defined, an empty page will be used.
 The file must have \emph{.html} extension.}

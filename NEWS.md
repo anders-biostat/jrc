@@ -1,3 +1,12 @@
+# jrc 0.3.0
+
+* `jrc` now supports multiple connections to a single server and thus can be used to create server apps that are intended
+to be used by multiple clients simultaneously. This change requires some additional arguments in some of the functions as well
+as several new ones. However, backwards compatibility is maintained.
+
+* `jrc` now depends on `R6` and each app is represented with a single object. One can manage the app with methods of this object,
+which allows to run several apps inside one R session. For more information, check man pages of classes `App` and `Session`.
+
 # jrc 0.2.1
 
 * `jrc` now works properly on RStudio Server
