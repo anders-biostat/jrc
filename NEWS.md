@@ -1,3 +1,7 @@
+# jrc 0.3.1
+
+* Issue with file separator in Windows fixed.
+
 # jrc 0.3.0
 
 * `jrc` now supports multiple connections to a single server and thus can be used to create server apps that are intended

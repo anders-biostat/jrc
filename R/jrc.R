@@ -733,7 +733,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     if(!dir.exists(path))
       stop(str_c("There is no such directory: '", path, "'"))
     
-    private$rootDir <- normalizePath(path)
+    private$rootDir <- normalizePath(path, winslash = .Platform$file.sep)
     
     invisible(self)
   },
@@ -754,7 +754,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     } else {
       if(!file.exists(path))
         stop(str_c("There is no such file: '", path, "'"))
-      path <- normalizePath(path)
+      path <- normalizePath(path, winslash = .Platform$file.sep)
       if(grepl(path, private$rootDir, fixed = T)) {
         private$startP <- str_remove(path, private$rootDir)
       } else {
@@ -763,7 +763,6 @@ App <- R6Class("App", cloneable = FALSE, public = list(
         private$startPagePath <- str_remove(path, private$startP)
       }
     }
-    
   },
   
   numberOfConnections = function(maxCon = NULL) {
