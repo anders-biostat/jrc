@@ -7,12 +7,12 @@ test_that("Pages can be opened in different browsers", {
   app$openPage()
   expect_length(app$getSessionIds(), 1)
   
-  #app$openPage(browser = "google-chrome")
-  app$openPage(browser = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe")
+  app$openPage(browser = "google-chrome")
+  #app$openPage(browser = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe")
   expect_length(app$getSessionIds(), 2)
   
-  #app$openPage(browser = "firefox")
-  app$openPage(browser = "C:\\Program Files\\Mozilla Firefox\\firefox.exe")
+  app$openPage(browser = "firefox")
+  #app$openPage(browser = "C:\\Program Files\\Mozilla Firefox\\firefox.exe")
   expect_length(app$getSessionIds(), 3)
 
   app$openPage(useViewer = F)

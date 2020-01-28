@@ -4,8 +4,8 @@ test_that("Messages from different sessions are properly stored and can be execu
   app <- openPage()
   
   ses1 <- app$getSession()
-#  ses2 <- app$openPage(browser = "google-chrome")
-  ses2 <- app$openPage(browser = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe")
+  ses2 <- app$openPage(browser = "google-chrome")
+  #ses2 <- app$openPage(browser = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe")
   
     
   expect_length(app$getSessionIds(), 2)
@@ -34,8 +34,8 @@ test_that("Each session can store and use its own state", {
   app$startServer()
   
   ses1 <- app$openPage()
-#  ses2 <- app$openPage(browser = "google-chrome")
-  ses2 <- app$openPage(browser = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe")
+  ses2 <- app$openPage(browser = "google-chrome")
+  #ses2 <- app$openPage(browser = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe")
   
   ses1$sendCommand("jrc.sendCommand('k <- 1')", wait = 3)
   ses1$authorize()
