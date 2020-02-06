@@ -1047,9 +1047,9 @@ openPage <- function(useViewer = TRUE, rootDirectory = NULL, startPage = NULL, p
   
   app <- App$new(rootDirectory, startPage, onStart, connectionNumber, allowedFunctions, allowedVariables, sessionVars)
   app$setEnvironment(parent.frame())
+  pkg.env$app <- app
   app$startServer(port)
   app$openPage(useViewer, browser)
-  pkg.env$app <- app
   
   invisible(app)
 }
