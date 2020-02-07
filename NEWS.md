@@ -2,6 +2,8 @@
 
 * Issue with file separator in Windows fixed.
 
+* Now app is stored in packages namespace immediately after initialization. This fixes a problem with wrapper functions inside `onStart`.
+
 # jrc 0.3.0
 
 * `jrc` now supports multiple connections to a single server and thus can be used to create server apps that are intended

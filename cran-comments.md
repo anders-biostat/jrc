@@ -1,5 +1,20 @@
 ## Resubmission
 
+This is a new version that fixes some existing bugs. Other than that, it doesn't change any functinality. For more details, please, check NEWS.md.
+
+## Test environments
+* local ubuntu 18.04 LST, R 3.6.2
+* win-builder: R-devel
+* ubuntu 16.04.6 LTS, R-devel, R 3.6.2, R 3.5.3 (travis ci)
+
+## R CMD check results
+
+There were no ERRORS, WARNINGS or NOTES
+
+#Previous cran-comments
+
+## Resubmission
+
 This is a new version that introduces major restructarization of the package. It now supports multiple connections to the interactive apps and
 introduces functions to manage client sessions. The app itself is now contained within a single R6 object, which allows to start multiple apps
 inside one R session.
@@ -34,8 +49,6 @@ None is affected.
 ## R CMD check results
 
 There were no ERRORS, WARNINGS or NOTES
-
-#Previous cran-comments
 
 ## Resubmission
 
