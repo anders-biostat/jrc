@@ -867,9 +867,9 @@ App <- R6Class("App", cloneable = FALSE, public = list(
       }
       
       content_type <- mime::guess_type(reqPage)
-      content <- readLines(reqPage, warn = F)
-      
+
       if(content_type == "text/html") {
+        content <- readLines(reqPage, warn = F)
         jsfile <- str_c("<script src='http_root_jrc/jrc.js'></script>")
         stop <- F
         for(i in 1:length(content))
@@ -888,12 +888,17 @@ App <- R6Class("App", cloneable = FALSE, public = list(
         }
         if(!stop)
           content <- c(jsfile, content)
+        
+        content <- str_c( content, collapse = "\n" )
+      } else {
+        content <- reqPage
+        names(content) <- "file"
       }
       
       list(
         status = 200L,
         headers = list( 'Content-Type' = content_type ),
-        body = str_c( content, collapse="\n" )
+        body = content
       )
     }
     handle_websocket_open <- function( ws ) {
