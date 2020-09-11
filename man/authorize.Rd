@@ -33,7 +33,7 @@ authorization.
 This function is a wrapper around \code{authorize} method of class \code{\link{Session}}.
 }
 \examples{
-\donttest{openPage()
+\dontrun{openPage()
 
 callFunction("jrc.sendCommand", list("k <<- 10"), wait = 1)
 allowVariables("x")

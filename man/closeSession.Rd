@@ -22,7 +22,7 @@ closes it. This function is a wrapper around method \code{closeSession} of
 class \code{\link{App}}.
 }
 \examples{
-\donttest{start <- Sys.time()
+\dontrun{start <- Sys.time()
 openPage()
 
 app <- getPage()

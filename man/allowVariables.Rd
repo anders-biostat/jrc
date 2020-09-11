@@ -18,7 +18,7 @@ This function adds variable names to the list of variables, that
 can be modified from a web page without manual confirmation on the R side.
 }
 \examples{
-\donttest{openPage()
+\dontrun{openPage()
 allowVariables(c("myVariable", "anotherOne"))
 vars <- allowVariables()
 closePage()}

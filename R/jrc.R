@@ -1111,7 +1111,7 @@ sendMessage <- function(type, id, ...) {
 #' from the session will be considered as a reply.
 #' 
 #' @examples  
-#' \donttest{k <- 0
+#' \dontrun{k <- 0
 #' openPage()
 #' sendCommand(paste0("button = document.createElement('input');",
 #'               "button.type = 'button';",
@@ -1187,7 +1187,7 @@ closePage <- function() {
 #' from the session will be considered as a reply.
 #' 
 #' @examples 
-#' \donttest{openPage()
+#' \dontrun{openPage()
 #' x <- 1:100
 #' sendData("x", x)
 #' sendCommand("console.log(x);")
@@ -1219,7 +1219,7 @@ sendData <- function(variableName, variable, keepAsVector = FALSE, rowwise = TRU
 #' @param envir Environment to be used as outer environment. 
 #' 
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' openPage()
 #' e <- new.env()
 #' setEnvironment(e)
@@ -1251,7 +1251,7 @@ setEnvironment <- function(envir) {
 #' from the session will be considered as a reply.
 #' 
 #' @examples 
-#' \donttest{
+#' \dontrun{
 #' openPage(FALSE)
 #' 
 #' sendHTML("Test...")
@@ -1327,7 +1327,7 @@ sendHTML <- function(html = "", sessionId = NULL, wait = 0) {
 #' \code{arguments} to the web page.
 #' 
 #' @examples 
-#' \donttest{
+#' \dontrun{
 #' openPage()
 #' callFunction("alert", list("Some alertText"))
 #' callFunction("Math.random", assignTo = "randomNumber")
@@ -1367,7 +1367,7 @@ callFunction <- function(name, arguments = NULL, assignTo = NULL, wait = 0, sess
 #' do nothing.
 #'
 #' @examples
-#' \donttest{openPage()
+#' \dontrun{openPage()
 #' 
 #' callFunction("jrc.sendCommand", list("k <<- 10"), wait = 1)
 #' allowVariables("x")
@@ -1406,7 +1406,7 @@ authorize <- function(sessionId = NULL, messageId = NULL, show = FALSE) {
 #' @return Names of all currently allowed functions if \code{funs = NULL}.
 #' 
 #' @examples
-#' \donttest{openPage()
+#' \dontrun{openPage()
 #' allowFunctions(c("myFunction1", "print", "someObject$method"))
 #' funs <- allowFunctions()
 #' closePage()}
@@ -1431,7 +1431,7 @@ allowFunctions <- function(funs = NULL) {
 #' returns names of all currently allowed variables.
 #' 
 #' @examples 
-#' \donttest{openPage()
+#' \dontrun{openPage()
 #' allowVariables(c("myVariable", "anotherOne"))
 #' vars <- allowVariables()
 #' closePage()}
@@ -1475,7 +1475,7 @@ allowVariables <- function(vars = NULL) {
 #' If \code{NULL}, changes will be applied to all currently active sessions.
 #' 
 #' @examples 
-#' \donttest{openPage()
+#' \dontrun{openPage()
 #' limitStorage(n = 10)
 #' limitStorage(size = 10 * 1024^2)
 #' closePage()}
@@ -1554,7 +1554,7 @@ getPage <- function() {
 #' new opened session as default ones.
 #' 
 #' @examples
-#' \donttest{openPage(allowedFunctions = "f", allowedVariables = "res")
+#' \dontrun{openPage(allowedFunctions = "f", allowedVariables = "res")
 #' 
 #' m <- 1
 #' f <- function() {v * m}
@@ -1620,7 +1620,7 @@ getSessionIds <- function() {
 #' will be closed.
 #' 
 #' @examples
-#' \donttest{start <- Sys.time()
+#' \dontrun{start <- Sys.time()
 #' openPage()
 #' 
 #' app <- getPage()
@@ -1757,7 +1757,7 @@ getSession <- function(sessionId = NULL){
 #' @return Requested variable
 #' 
 #' @examples
-#' \donttest{f <- function(x) {x * 3}
+#' \dontrun{f <- function(x) {x * 3}
 #' openPage(allowedFunctions = "f", allowedVariables = "k")
 #' getPage()$openPage(FALSE)
 #' id1 <- getSessionIds()[1]
@@ -1794,7 +1794,7 @@ getSessionVariable <- function(varName, sessionId = NULL) {
 #' @param sessionId ID of the session. If there is only one active session, this argument becomes optional.
 #' 
 #' @examples
-#' \donttest{openPage(allowedVariables = "k", sessionVars = list(k = 10))
+#' \dontrun{openPage(allowedVariables = "k", sessionVars = list(k = 10))
 #' 
 #' k <- -1
 #' getPage()$openPage(FALSE)
