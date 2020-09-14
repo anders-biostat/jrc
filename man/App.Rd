@@ -57,10 +57,18 @@ to stop. You can always get the \code{App} object for the currently running app 
       on the R side. If \code{funs = NULL}, returns a list of all currently allowed functions. For more information,
       please, check \code{\link{allowFunctions}}.
    }
-   \item{\code{allowVariables(vars)}}{
+   \item{\code{allowVariables(vars = NULL)}}{
       Adds variable names to  the list of allowed variables. These variables can be changed from a web page without 
       authorization on the R side. If \code{vars = NULL}, then returns a vector of names of all currently allowed variables.
       For more information, please, check \code{\link{allowVariables}}.
+   }
+   \item{\code{allowDirs(dir = NULL)}}{
+      Allows app to serve files from an existing directory. Files from the \code{rootDirectory} can always be accessed
+      by the app. By default, the current working directory and the temporary directory (see \code{\link[base]{tepmdir}}) are
+      added to the list of the allowed directories, when the app is initialized. All the subdirectories of the allowed 
+      directories can also be accessed. Attempt to request file from outside allowed directory will produce 
+      \code{403 Forbidden} error. If \code{dirs = NULL}, then returns a vector of names of all currently allowed directories.
+      Also see \code{\link{allowDirs}}.
    }
    \item{\code{startPage(path = NULL)}}{
       Sets path to a starting web page of the app. Path can be full, relative to the app's root directory or relative

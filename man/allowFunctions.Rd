@@ -17,6 +17,9 @@ Names of all currently allowed functions if \code{funs = NULL}.
 Adds R function names to the list of functions, that
 can be called from a web page without manual confirmation on the R side.
 }
+\details{
+This function is a wrapper around \code{allowFunctions} method of class \code{\link{App}}.
+}
 \examples{
 \dontrun{openPage()
 allowFunctions(c("myFunction1", "print", "someObject$method"))

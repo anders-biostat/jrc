@@ -2,6 +2,7 @@
 
 export(App)
 export(Session)
+export(allowDirs)
 export(allowFunctions)
 export(allowVariables)
 export(authorize)

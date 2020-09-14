@@ -511,10 +511,18 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
 #'       on the R side. If \code{funs = NULL}, returns a list of all currently allowed functions. For more information,
 #'       please, check \code{\link{allowFunctions}}.
 #'    }
-#'    \item{\code{allowVariables(vars)}}{
+#'    \item{\code{allowVariables(vars = NULL)}}{
 #'       Adds variable names to  the list of allowed variables. These variables can be changed from a web page without 
 #'       authorization on the R side. If \code{vars = NULL}, then returns a vector of names of all currently allowed variables.
 #'       For more information, please, check \code{\link{allowVariables}}.
+#'    }
+#'    \item{\code{allowDirs(dir = NULL)}}{
+#'       Allows app to serve files from an existing directory. Files from the \code{rootDirectory} can always be accessed
+#'       by the app. By default, the current working directory and the temporary directory (see \code{\link[base]{tepmdir}}) are
+#'       added to the list of the allowed directories, when the app is initialized. All the subdirectories of the allowed 
+#'       directories can also be accessed. Attempt to request file from outside allowed directory will produce 
+#'       \code{403 Forbidden} error. If \code{dirs = NULL}, then returns a vector of names of all currently allowed directories.
+#'       Also see \code{\link{allowDirs}}.
 #'    }
 #'    \item{\code{startPage(path = NULL)}}{
 #'       Sets path to a starting web page of the app. Path can be full, relative to the app's root directory or relative
@@ -723,6 +731,24 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     
     private$allowedVars <- unique(c(private$allowedVars, vars))
     invisible(self)
+  },
+  
+  allowDirs = function(dirs = NULL) {
+    if(is.null(dirs)) return(private$allowedDirs)
+    if(!is.vector(dirs) | !is.character(dirs))
+      stop("'dirs' must be a vector of paths to directories")
+    
+    for(d in dirs) {
+      if(dir.exists(d)) {
+        if(substring(d, 1, 1) != .Platform$file.sep)
+          d <- str_c(.Platform$file.sep, d)        
+        private$allowedDirs <- unique(c(private$allowedDirs, d))
+      } else {
+        warning(str_interp("Directory ${d} doesn't exist and will not 
+                           be added to the list of allowed directories"))
+      }
+      invisible(self)
+    }
     
   },
   
@@ -770,7 +796,6 @@ App <- R6Class("App", cloneable = FALSE, public = list(
       return(private$maxCon)
     
     stopifnot(is.numeric(maxCon))
-    
     private$maxCon <- maxCon
     
     invisible(self)
@@ -795,7 +820,9 @@ App <- R6Class("App", cloneable = FALSE, public = list(
   
   initialize = function(rootDirectory = NULL, startPage = NULL, onStart = NULL, 
                         connectionNumber = Inf, allowedFunctions = c(), 
-                        allowedVariables = c(), sessionVars = NULL) {
+                        allowedVariables = c(), 
+                        allowedDirs = c(getwd(), tempdir()),
+                        sessionVars = NULL) {
     if(is.null(rootDirectory)) 
       rootDirectory <- system.file("http_root", package = "jrc")
     self$rootDirectory(rootDirectory)
@@ -803,6 +830,8 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     if(is.null(startPage))
       startPage <- system.file("http_root/index.html", package = "jrc")
     self$startPage(startPage)
+    
+    
     
     private$envir <- parent.frame(n = 2)
     
@@ -812,7 +841,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     stopifnot(is.function(onStart))
     private$onStart <- onStart
     
-    
+    self$allowDirs(allowedDirs)
     self$allowFunctions(allowedFunctions)
     self$allowVariables(allowedVariables)
     self$sessionVariables(sessionVars)
@@ -827,6 +856,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
   envir = NULL,
   allowedFuns = c(),
   allowedVars = c(),
+  allowedDirs = c(),
   maxCon = Inf,
   port = NULL,
   waiting = FALSE,
@@ -839,7 +869,6 @@ App <- R6Class("App", cloneable = FALSE, public = list(
   getApp = function() {
     handle_http_request <- function( req ) {
       
-      reqPage <- req$PATH_INFO
       if(grepl("^/http_root", reqPage)) {
         pack <- substring(strsplit(reqPage, "/")[[1]][2], 11)
         reqPage <- sub(str_c("_", pack), "", reqPage)
@@ -851,23 +880,35 @@ App <- R6Class("App", cloneable = FALSE, public = list(
         if(reqPage == private$startP && !is.null(private$startPagePath)) {
           reqPage <- str_c(private$startPagePath, private$startP)
         } else {
-          reqPage <- str_c(private$rootDir, reqPage)
-        }
-      }
-      
-      if( !file.exists(reqPage) ) {
-        reqPage <- str_remove(reqPage, private$rootDir)
-        if(!file.exists(reqPage)) {
-          warning(str_interp("File '${reqPage}' is not found"))
-          return( list( 
-            status = 404L,
-            headers = list( "Content-Type" = "text/html" ),
-            body = "404: Resource not found" ) )
+          dir <- private$rootDir
+          i <- 0
+          while(!file.exists(str_c(dir, reqPage)) & i < length(self$allowDirs())) {
+            dir <- self$allowDirs()[i]
+            i <- i + 1
+          }
+          
+          if(i < length(self$allowDirs())){
+            reqPage <- str_c(dir, reqPage)
+          } else {
+            if(file.exists(reqPage)) {
+              warning(str_interp("An attempt to access file in a forbidden directory: ${normalisePath(reqPage)}"))
+              return( list( 
+                status = 403L,
+                headers = list( "Content-Type" = "text/html" ),
+                body = "403: Forbidden" ) )
+            } else {
+              warning(str_interp("File '${reqPage}' is not found"))
+              return( list( 
+                status = 404L,
+                headers = list( "Content-Type" = "text/html" ),
+                body = "404: Resource not found" ) )
+            }
+          }
         }
       }
       
       content_type <- mime::guess_type(reqPage)
-
+      
       if(content_type == "text/html") {
         content <- readLines(reqPage, warn = F)
         jsfile <- str_c("<script src='http_root_jrc/jrc.js'></script>")
@@ -1026,6 +1067,9 @@ pkg.env <- new.env()
 #' on the R side. All other variable reassignments must be confirmed in the current R session. 
 #' This argument should be a vector of variable names. Check \code{\link{authorize}} and \code{\link{allowVariables}}
 #' for more information.
+#' @param allowedDirs List of directories that can be accessed by the server. This argument should be a vector of
+#' paths (absolute or relative to the current working directory) to existing directories. Check \code{\link{allowDirs}}
+#' for more information.
 #' @param connectionNumber Maximum number of connections that is allowed to be active simultaneously.
 #' @param sessionVars Named list of variables, that will be declared for each session, when a new connection is opened.
 #' Any changes to these variables will affect only a certain session. Thus they can be used, for instance, to 
@@ -1045,12 +1089,13 @@ pkg.env <- new.env()
 #' @importFrom utils compareVersion
 #' @importFrom utils packageVersion
 openPage <- function(useViewer = TRUE, rootDirectory = NULL, startPage = NULL, port = NULL, browser = NULL,
-                     allowedFunctions = NULL, allowedVariables = NULL, connectionNumber = Inf, sessionVars = NULL,
-                     onStart = NULL) {
+                     allowedFunctions = NULL, allowedVariables = NULL, allowedDirs = c(getwd(), tempdir()), 
+                     connectionNumber = Inf, sessionVars = NULL, onStart = NULL) {
   if(!is.null(pkg.env$app))
     closePage()
   
-  app <- App$new(rootDirectory, startPage, onStart, connectionNumber, allowedFunctions, allowedVariables, sessionVars)
+  app <- App$new(rootDirectory, startPage, onStart, connectionNumber, allowedFunctions, 
+                 allowedVariables, allowedDirs, sessionVars)
   pkg.env$app <- app
   app$setEnvironment(parent.frame())
   app$startServer(port)
@@ -1400,6 +1445,8 @@ authorize <- function(sessionId = NULL, messageId = NULL, show = FALSE) {
 #' Adds R function names to the list of functions, that
 #' can be called from a web page without manual confirmation on the R side.
 #' 
+#' This function is a wrapper around \code{allowFunctions} method of class \code{\link{App}}.
+#' 
 #' @param funs Vector of function names to be added to the list. If \code{NULL},
 #' returns names of all currently allowed R functions.
 #' 
@@ -1427,6 +1474,8 @@ allowFunctions <- function(funs = NULL) {
 #' This function adds variable names to the list of variables, that
 #' can be modified from a web page without manual confirmation on the R side.
 #' 
+#' This function is a wrapper around \code{allowVariables} method of class \code{\link{App}}.
+#' 
 #' @param vars Vector of variable names to be added to the list. If \code{NULL},
 #' returns names of all currently allowed variables.
 #' 
@@ -1447,6 +1496,41 @@ allowVariables <- function(vars = NULL) {
     stop("There is no opened page. Please, use 'openPage()' function to create one.")  
   
   pkg.env$app$allowVariables(vars)
+}
+
+#' Allow server to access files in the directory
+#' 
+#' This function adds paths to existing dierctories to the list of allowed directories,
+#' which can be accessed from the server. To any request for files from outside
+#' of the allowed directories the server will response with \code{403 Forbidden} error.
+#' \code{rootDirectory} (see \code{\link{openPage}}) can always be accessed. By default,
+#' when the app is initialized, current working directory and temporary directory (see 
+#' \code{\link[base]{tempdir}}) are added to the list of allowed directories. Further changes
+#' of the working directory will not have any affect on this list or files accessibility.
+#' 
+#' This function is a wrapper around \code{allowDirs} method of class \code{\link{App}}.
+#' 
+#' @param dirs Vector of paths to existing direcotories. Can be absolute paths, or paths relative to 
+#' the current working directory. If the specified directory doesn't exist, it will be ignored and a
+#' warning will be produced. If \code{NULL}, returns absolute paths to all currently allowed directories.
+#' 
+#' @examples 
+#' \dontrun{openPage()
+#' # The directories must exist
+#' allowDirs(c("~/directory1", "../anotherDirectory"))
+#' dirs <- allowDirs()
+#' closePage()}
+#' 
+#' @return Absolute paths to all currently allowed directories, if \code{dirs = NULL}.
+#' 
+#' @seealso \code{\link{openPage}} (check arguments \code{rootDirectory} and \code{allowedDirs}).
+#' 
+#' @export
+allowDirs <- function(dirs = NULL) {
+  if(is.null(pkg.env$app))
+    stop("There is no opened page. Please, use 'openPage()' function to create one.")  
+  
+  pkg.env$app$allowDirs(dirs)
 }
 
 #' Change size of the message storage

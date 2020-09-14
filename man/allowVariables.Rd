@@ -17,6 +17,9 @@ Names of all currently allowed variables if \code{vars = NULL}.
 This function adds variable names to the list of variables, that
 can be modified from a web page without manual confirmation on the R side.
 }
+\details{
+This function is a wrapper around \code{allowVariables} method of class \code{\link{App}}.
+}
 \examples{
 \dontrun{openPage()
 allowVariables(c("myVariable", "anotherOne"))
