@@ -12,7 +12,7 @@ openPage(
   browser = NULL,
   allowedFunctions = NULL,
   allowedVariables = NULL,
-  allowedDirs = c(getwd(), tempdir()),
+  allowedDirectories = c(getwd(), tempdir()),
   connectionNumber = Inf,
   sessionVars = NULL,
   onStart = NULL
@@ -48,7 +48,7 @@ on the R side. All other variable reassignments must be confirmed in the current
 This argument should be a vector of variable names. Check \code{\link{authorize}} and \code{\link{allowVariables}}
 for more information.}
 
-\item{allowedDirs}{List of directories that can be accessed by the server. This argument should be a vector of
+\item{allowedDirectories}{List of directories that can be accessed by the server. This argument should be a vector of
 paths (absolute or relative to the current working directory) to existing directories. Check \code{\link{allowDirectories}}
 for more information.}
 

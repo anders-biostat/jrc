@@ -821,7 +821,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
   initialize = function(rootDirectory = NULL, startPage = NULL, onStart = NULL, 
                         connectionNumber = Inf, allowedFunctions = c(), 
                         allowedVariables = c(), 
-                        allowedDirs = c(getwd(), tempdir()),
+                        allowedDirectories = c(getwd(), tempdir()),
                         sessionVars = NULL) {
     if(is.null(rootDirectory)) 
       rootDirectory <- system.file("http_root", package = "jrc")
@@ -841,7 +841,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     stopifnot(is.function(onStart))
     private$onStart <- onStart
     
-    self$allowDirectories(allowedDirs)
+    self$allowDirectories(allowedDirectories)
     self$allowFunctions(allowedFunctions)
     self$allowVariables(allowedVariables)
     self$sessionVariables(sessionVars)
@@ -891,8 +891,8 @@ App <- R6Class("App", cloneable = FALSE, public = list(
           if(file.exists(str_c(dir, reqPage))){
             reqPage <- str_c(dir, reqPage)
           } else {
-            if(file.exists(reqPage)) {
-              warning(str_interp("An attempt to access file in a forbidden directory: ${normalisePath(reqPage)}"))
+            if(file.exists(reqPage) | file.exists(str_sub(reqPage, 2))) {
+              warning(str_interp("An attempt to access file in a forbidden directory: ${reqPage}"))
               return( list( 
                 status = 403L,
                 headers = list( "Content-Type" = "text/html" ),
@@ -1068,7 +1068,7 @@ pkg.env <- new.env()
 #' on the R side. All other variable reassignments must be confirmed in the current R session. 
 #' This argument should be a vector of variable names. Check \code{\link{authorize}} and \code{\link{allowVariables}}
 #' for more information.
-#' @param allowedDirs List of directories that can be accessed by the server. This argument should be a vector of
+#' @param allowedDirectories List of directories that can be accessed by the server. This argument should be a vector of
 #' paths (absolute or relative to the current working directory) to existing directories. Check \code{\link{allowDirectories}}
 #' for more information.
 #' @param connectionNumber Maximum number of connections that is allowed to be active simultaneously.
@@ -1090,13 +1090,13 @@ pkg.env <- new.env()
 #' @importFrom utils compareVersion
 #' @importFrom utils packageVersion
 openPage <- function(useViewer = TRUE, rootDirectory = NULL, startPage = NULL, port = NULL, browser = NULL,
-                     allowedFunctions = NULL, allowedVariables = NULL, allowedDirs = c(getwd(), tempdir()), 
+                     allowedFunctions = NULL, allowedVariables = NULL, allowedDirectories = c(getwd(), tempdir()), 
                      connectionNumber = Inf, sessionVars = NULL, onStart = NULL) {
   if(!is.null(pkg.env$app))
     closePage()
   
   app <- App$new(rootDirectory, startPage, onStart, connectionNumber, allowedFunctions, 
-                 allowedVariables, allowedDirs, sessionVars)
+                 allowedVariables, allowedDirectories, sessionVars)
   pkg.env$app <- app
   app$setEnvironment(parent.frame())
   app$startServer(port)
@@ -1524,7 +1524,7 @@ allowVariables <- function(vars = NULL) {
 #' 
 #' @return Absolute paths to all currently allowed directories, if \code{dirs = NULL}.
 #' 
-#' @seealso \code{\link{openPage}} (check arguments \code{rootDirectory} and \code{allowedDirs}).
+#' @seealso \code{\link{openPage}} (check arguments \code{rootDirectory} and \code{allowedDirectories}).
 #' 
 #' @export
 allowDirectories <- function(dirs = NULL) {

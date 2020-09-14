@@ -35,5 +35,5 @@ closePage()}
 
 }
 \seealso{
-\code{\link{openPage}} (check arguments \code{rootDirectory} and \code{allowedDirs}).
+\code{\link{openPage}} (check arguments \code{rootDirectory} and \code{allowedDirectories}).
 }
