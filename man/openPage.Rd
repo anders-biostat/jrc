@@ -49,7 +49,7 @@ This argument should be a vector of variable names. Check \code{\link{authorize}
 for more information.}
 
 \item{allowedDirs}{List of directories that can be accessed by the server. This argument should be a vector of
-paths (absolute or relative to the current working directory) to existing directories. Check \code{\link{allowDirs}}
+paths (absolute or relative to the current working directory) to existing directories. Check \code{\link{allowDirectories}}
 for more information.}
 
 \item{connectionNumber}{Maximum number of connections that is allowed to be active simultaneously.}

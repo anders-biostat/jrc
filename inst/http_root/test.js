@@ -1,0 +1,1 @@
+console.log("This script is here to test, if the package is working correctly")

@@ -516,13 +516,13 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
 #'       authorization on the R side. If \code{vars = NULL}, then returns a vector of names of all currently allowed variables.
 #'       For more information, please, check \code{\link{allowVariables}}.
 #'    }
-#'    \item{\code{allowDirs(dir = NULL)}}{
+#'    \item{\code{allowDirectories(dir = NULL)}}{
 #'       Allows app to serve files from an existing directory. Files from the \code{rootDirectory} can always be accessed
 #'       by the app. By default, the current working directory and the temporary directory (see \code{\link[base]{tepmdir}}) are
 #'       added to the list of the allowed directories, when the app is initialized. All the subdirectories of the allowed 
 #'       directories can also be accessed. Attempt to request file from outside allowed directory will produce 
 #'       \code{403 Forbidden} error. If \code{dirs = NULL}, then returns a vector of names of all currently allowed directories.
-#'       Also see \code{\link{allowDirs}}.
+#'       Also see \code{\link{allowDirectories}}.
 #'    }
 #'    \item{\code{startPage(path = NULL)}}{
 #'       Sets path to a starting web page of the app. Path can be full, relative to the app's root directory or relative
@@ -733,15 +733,15 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     invisible(self)
   },
   
-  allowDirs = function(dirs = NULL) {
+  allowDirectories = function(dirs = NULL) {
     if(is.null(dirs)) return(private$allowedDirs)
     if(!is.vector(dirs) | !is.character(dirs))
       stop("'dirs' must be a vector of paths to directories")
     
     for(d in dirs) {
       if(dir.exists(d)) {
-        if(substring(d, 1, 1) != .Platform$file.sep)
-          d <- str_c(.Platform$file.sep, d)        
+        if(str_sub(d, -1) == .Platform$file.sep)
+          d <- str_sub(d, end = -2)        
         private$allowedDirs <- unique(c(private$allowedDirs, d))
       } else {
         warning(str_interp("Directory ${d} doesn't exist and will not 
@@ -841,7 +841,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     stopifnot(is.function(onStart))
     private$onStart <- onStart
     
-    self$allowDirs(allowedDirs)
+    self$allowDirectories(allowedDirs)
     self$allowFunctions(allowedFunctions)
     self$allowVariables(allowedVariables)
     self$sessionVariables(sessionVars)
@@ -883,12 +883,12 @@ App <- R6Class("App", cloneable = FALSE, public = list(
         } else {
           dir <- private$rootDir
           i <- 0
-          while(!file.exists(str_c(dir, reqPage)) & i < length(self$allowDirs())) {
-            dir <- self$allowDirs()[i]
+          while(!file.exists(str_c(dir, reqPage)) & i < length(self$allowDirectories())) {
             i <- i + 1
+            dir <- self$allowDirectories()[i]
           }
           
-          if(i < length(self$allowDirs())){
+          if(file.exists(str_c(dir, reqPage))){
             reqPage <- str_c(dir, reqPage)
           } else {
             if(file.exists(reqPage)) {
@@ -1069,7 +1069,7 @@ pkg.env <- new.env()
 #' This argument should be a vector of variable names. Check \code{\link{authorize}} and \code{\link{allowVariables}}
 #' for more information.
 #' @param allowedDirs List of directories that can be accessed by the server. This argument should be a vector of
-#' paths (absolute or relative to the current working directory) to existing directories. Check \code{\link{allowDirs}}
+#' paths (absolute or relative to the current working directory) to existing directories. Check \code{\link{allowDirectories}}
 #' for more information.
 #' @param connectionNumber Maximum number of connections that is allowed to be active simultaneously.
 #' @param sessionVars Named list of variables, that will be declared for each session, when a new connection is opened.
@@ -1509,7 +1509,7 @@ allowVariables <- function(vars = NULL) {
 #' \code{\link[base]{tempdir}}) are added to the list of allowed directories. Further changes
 #' of the working directory will not have any affect on this list or files accessibility.
 #' 
-#' This function is a wrapper around \code{allowDirs} method of class \code{\link{App}}.
+#' This function is a wrapper around \code{allowDirectories} method of class \code{\link{App}}.
 #' 
 #' @param dirs Vector of paths to existing direcotories. Can be absolute paths, or paths relative to 
 #' the current working directory. If the specified directory doesn't exist, it will be ignored and a
@@ -1518,8 +1518,8 @@ allowVariables <- function(vars = NULL) {
 #' @examples 
 #' \dontrun{openPage()
 #' # The directories must exist
-#' allowDirs(c("~/directory1", "../anotherDirectory"))
-#' dirs <- allowDirs()
+#' allowDirectories(c("~/directory1", "../anotherDirectory"))
+#' dirs <- allowDirectories()
 #' closePage()}
 #' 
 #' @return Absolute paths to all currently allowed directories, if \code{dirs = NULL}.
@@ -1527,11 +1527,11 @@ allowVariables <- function(vars = NULL) {
 #' @seealso \code{\link{openPage}} (check arguments \code{rootDirectory} and \code{allowedDirs}).
 #' 
 #' @export
-allowDirs <- function(dirs = NULL) {
+allowDirectories <- function(dirs = NULL) {
   if(is.null(pkg.env$app))
     stop("There is no opened page. Please, use 'openPage()' function to create one.")  
   
-  pkg.env$app$allowDirs(dirs)
+  pkg.env$app$allowDirectories(dirs)
 }
 
 #' Change size of the message storage
