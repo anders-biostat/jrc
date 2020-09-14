@@ -869,6 +869,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
   getApp = function() {
     handle_http_request <- function( req ) {
       
+      reqPage <- req$PATH_INFO
       if(grepl("^/http_root", reqPage)) {
         pack <- substring(strsplit(reqPage, "/")[[1]][2], 11)
         reqPage <- sub(str_c("_", pack), "", reqPage)
