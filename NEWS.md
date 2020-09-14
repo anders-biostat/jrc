@@ -1,3 +1,11 @@
+# jrc 0.4.0
+
+* `allowedDirectories` argument is added to the `openPage` function (and also the corresponding function and method `allowDirectories`).
+Now user can specify the list of directories that can be accessed by server. By default, it's the `rootDirectory`, the current working 
+directory and a temporary directory for the current R session.
+
+* Issue with incorrect serving of the file types that are supposed to be send as bytes fixed
+
 # jrc 0.3.1
 
 * Issue with file separator in Windows fixed.
