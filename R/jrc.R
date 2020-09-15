@@ -518,7 +518,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
 #'    }
 #'    \item{\code{allowDirectories(dir = NULL)}}{
 #'       Allows app to serve files from an existing directory. Files from the \code{rootDirectory} can always be accessed
-#'       by the app. By default, the current working directory and the temporary directory (see \code{\link[base]{tempdir}}) are
+#'       by the app. By default, the current working directory is
 #'       added to the list of the allowed directories, when the app is initialized. All the subdirectories of the allowed 
 #'       directories can also be accessed. Attempt to request file from outside allowed directory will produce 
 #'       \code{403 Forbidden} error. If \code{dirs = NULL}, then returns a vector of names of all currently allowed directories.
@@ -543,6 +543,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
 NULL
 
 #' @import mime
+#' @importFrom R.utils filePath
 #' @export
 App <- R6Class("App", cloneable = FALSE, public = list(
   addSession = function(session) {
@@ -674,11 +675,11 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     if(is.null(private$serverHandle))
       stop("No server is running. Please, start a server before opening a page.")
     if( useViewer & !is.null( getOption("viewer") ) )
-      getOption("viewer")( str_c("http://localhost:", private$port, private$startP) )
+      getOption("viewer")( str_c("http://localhost:", private$port) )
     else{
       if(is.null(browser))
         browser = getOption("browser")
-      browseURL( str_c("http://localhost:", private$port, private$startP), browser = browser )
+      browseURL( str_c("http://localhost:", private$port), browser = browser )
     }
     
     
@@ -740,9 +741,8 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     
     for(d in dirs) {
       if(dir.exists(d)) {
-        if(str_sub(d, -1) == .Platform$file.sep)
-          d <- str_sub(d, end = -2)        
-        private$allowedDirs <- unique(c(private$allowedDirs, d))
+        private$allowedDirs <- unique(c(private$allowedDirs, 
+                                        normalizePath(d, winslash = "/")))
       } else {
         warning(str_interp("Directory ${d} doesn't exist and will not 
                            be added to the list of allowed directories"))
@@ -759,36 +759,23 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     if(!dir.exists(path))
       stop(str_c("There is no such directory: '", path, "'"))
     
-    private$rootDir <- normalizePath(path, winslash = .Platform$file.sep)
+    private$rootDir <- normalizePath(path, winslash = "/")
     
     invisible(self)
   },
   
   startPage = function(path = NULL) {
-    if(is.null(path)) {
-      if(is.null(private$startPagePath)){
-        return(path)
-      } else {
-        return(str_c(private$startPagePath, private$startP))
-      }
-    }
-    
-    if(file.exists(file.path(private$rootDir, path))){
-      if(substring(path, 1, 1) != .Platform$file.sep)
-        path <- str_c(.Platform$file.sep, path)
+    if(is.null(path)) return(private$startP)
+
+    if(file.exists(filePath(private$rootDir, path))){
       private$startP <- path
     } else {
       if(!file.exists(path))
         stop(str_c("There is no such file: '", path, "'"))
-      path <- normalizePath(path, winslash = .Platform$file.sep)
-      if(grepl(path, private$rootDir, fixed = T)) {
-        private$startP <- str_remove(path, private$rootDir)
-      } else {
-        spl <- strsplit(path, .Platform$file.sep)
-        private$startP <- str_c(.Platform$file.sep, spl[[1]][length(spl[[1]])])
-        private$startPagePath <- str_remove(path, private$startP)
-      }
+      private$startP <- normalizePath(path, winslash = "/")
     }
+    
+    invisible(self)
   },
   
   numberOfConnections = function(maxCon = NULL) {
@@ -821,7 +808,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
   initialize = function(rootDirectory = NULL, startPage = NULL, onStart = NULL, 
                         connectionNumber = Inf, allowedFunctions = c(), 
                         allowedVariables = c(), 
-                        allowedDirectories = c(getwd(), tempdir()),
+                        allowedDirectories = getwd(),
                         sessionVars = NULL) {
     if(is.null(rootDirectory)) 
       rootDirectory <- system.file("http_root", package = "jrc")
@@ -863,7 +850,6 @@ App <- R6Class("App", cloneable = FALSE, public = list(
   onStart = NULL,
   rootDir = "",
   startP = "",
-  startPagePath = NULL,
   sessionVars = list(),
   
   getApp = function() {
@@ -874,23 +860,23 @@ App <- R6Class("App", cloneable = FALSE, public = list(
         pack <- substring(strsplit(reqPage, "/")[[1]][2], 11)
         reqPage <- sub(str_c("_", pack), "", reqPage)
         reqPage <- tryCatch(system.file( reqPage, package = pack, mustWork = TRUE ),
-                 error = function(e) system.file( paste0("inst/", reqPage), package = pack)) 
+                 error = function(e) system.file( paste0("inst/", reqPage), package = pack))
       } else {
-        if(reqPage == "/index.html" || reqPage == "/")
+        if(reqPage == "/index.html" || reqPage == "/") {
           reqPage <- private$startP
-        if(reqPage == private$startP && !is.null(private$startPagePath)) {
-          reqPage <- str_c(private$startPagePath, private$startP)
         } else {
           dir <- private$rootDir
           i <- 0
-          while(!file.exists(str_c(dir, reqPage)) & i < length(self$allowDirectories())) {
+          while(!file.exists(filePath(dir, reqPage)) & !grepl(dir, reqPage, fixed = TRUE) & 
+                i < length(self$allowDirectories()))
+          {
             i <- i + 1
             dir <- self$allowDirectories()[i]
           }
-          
-          if(file.exists(str_c(dir, reqPage))){
-            reqPage <- str_c(dir, reqPage)
-          } else {
+
+          if(file.exists(filePath(dir, reqPage))){
+            reqPage <- filePath(dir, reqPage)
+          } else if(!grepl(dir, reqPage, fixed = TRUE)) {
             if(file.exists(reqPage) | file.exists(str_sub(reqPage, 2))) {
               warning(str_interp("An attempt to access file in a forbidden directory: ${reqPage}"))
               return( list( 
@@ -907,7 +893,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
           }
         }
       }
-      
+
       content_type <- mime::guess_type(reqPage)
       
       if(content_type == "text/html") {
@@ -1090,7 +1076,7 @@ pkg.env <- new.env()
 #' @importFrom utils compareVersion
 #' @importFrom utils packageVersion
 openPage <- function(useViewer = TRUE, rootDirectory = NULL, startPage = NULL, port = NULL, browser = NULL,
-                     allowedFunctions = NULL, allowedVariables = NULL, allowedDirectories = c(getwd(), tempdir()), 
+                     allowedFunctions = NULL, allowedVariables = NULL, allowedDirectories = getwd(), 
                      connectionNumber = Inf, sessionVars = NULL, onStart = NULL) {
   if(!is.null(pkg.env$app))
     closePage()
@@ -1505,8 +1491,8 @@ allowVariables <- function(vars = NULL) {
 #' which can be accessed from the server. To any request for files from outside
 #' of the allowed directories the server will response with \code{403 Forbidden} error.
 #' \code{rootDirectory} (see \code{\link{openPage}}) can always be accessed. By default,
-#' when the app is initialized, current working directory and temporary directory (see 
-#' \code{\link[base]{tempdir}}) are added to the list of allowed directories. Further changes
+#' when the app is initialized, current working directory  
+#' is added to the list of allowed directories. Further changes
 #' of the working directory will not have any affect on this list or files accessibility.
 #' 
 #' This function is a wrapper around \code{allowDirectories} method of class \code{\link{App}}.

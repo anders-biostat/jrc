@@ -19,8 +19,8 @@ This function adds paths to existing dierctories to the list of allowed director
 which can be accessed from the server. To any request for files from outside
 of the allowed directories the server will response with \code{403 Forbidden} error.
 \code{rootDirectory} (see \code{\link{openPage}}) can always be accessed. By default,
-when the app is initialized, current working directory and temporary directory (see 
-\code{\link[base]{tempdir}}) are added to the list of allowed directories. Further changes
+when the app is initialized, current working directory  
+is added to the list of allowed directories. Further changes
 of the working directory will not have any affect on this list or files accessibility.
 }
 \details{

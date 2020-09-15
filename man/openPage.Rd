@@ -12,7 +12,7 @@ openPage(
   browser = NULL,
   allowedFunctions = NULL,
   allowedVariables = NULL,
-  allowedDirectories = c(getwd(), tempdir()),
+  allowedDirectories = getwd(),
   connectionNumber = Inf,
   sessionVars = NULL,
   onStart = NULL

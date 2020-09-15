@@ -64,7 +64,7 @@ to stop. You can always get the \code{App} object for the currently running app 
    }
    \item{\code{allowDirectories(dir = NULL)}}{
       Allows app to serve files from an existing directory. Files from the \code{rootDirectory} can always be accessed
-      by the app. By default, the current working directory and the temporary directory (see \code{\link[base]{tempdir}}) are
+      by the app. By default, the current working directory is
       added to the list of the allowed directories, when the app is initialized. All the subdirectories of the allowed 
       directories can also be accessed. Attempt to request file from outside allowed directory will produce 
       \code{403 Forbidden} error. If \code{dirs = NULL}, then returns a vector of names of all currently allowed directories.
