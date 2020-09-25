@@ -31,7 +31,7 @@ If \code{makeDefault = TRUE}, it is also a wrapper around method \code{sessionVa
 second specifies default variables for each new session.
 }
 \examples{
-\dontrun{openPage(allowedFunctions = "f", allowedVariables = "res")
+\donttest{openPage(allowedFunctions = "f", allowedVariables = "res")
 
 m <- 1
 f <- function() {v * m}

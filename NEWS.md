@@ -4,7 +4,9 @@
 Now user can specify the list of directories that can be accessed by server. By default, it's the `rootDirectory`, the current working 
 directory and a temporary directory for the current R session.
 
-* Issue with incorrect serving of the file types that are supposed to be send as bytes fixed
+* Issue with incorrect serving of the file types that are supposed to be send as bytes fixed.
+
+* `jrc` now imports `R.utils` for more robust paths handling.
 
 # jrc 0.3.1
 

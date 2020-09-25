@@ -22,7 +22,7 @@ closes it. This function is a wrapper around method \code{closeSession} of
 class \code{\link{App}}.
 }
 \examples{
-\dontrun{start <- Sys.time()
+\donttest{start <- Sys.time()
 openPage()
 
 app <- getPage()
@@ -44,7 +44,10 @@ print(getSessionIds())
 time <- Sys.time()
 sendCommand("jrc.sendCommand('print(\"Hi!\")')", sessionId = getSessionIds()[1],  wait = 3)
 
+# this will close all sessions except for the one, that has just send a command to R session
 closeSession(inactive = Sys.time() - time)
+
+# if there is only one active session, sessionId becomes an optional argument
 closeSession()
 
 closePage()}

@@ -59,7 +59,7 @@ Its arguments are:
 }
 }
 \examples{
-\dontrun{openPage()
+\donttest{openPage()
 x <- 1:100
 sendData("x", x)
 sendCommand("console.log(x);")

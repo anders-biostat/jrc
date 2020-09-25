@@ -7,7 +7,7 @@
 allowDirectories(dirs = NULL)
 }
 \arguments{
-\item{dirs}{Vector of paths to existing direcotories. Can be absolute paths, or paths relative to 
+\item{dirs}{Vector of paths to existing directories. Can be absolute paths, or paths relative to 
 the current working directory. If the specified directory doesn't exist, it will be ignored and a
 warning will be produced. If \code{NULL}, returns absolute paths to all currently allowed directories.}
 }
@@ -15,7 +15,7 @@ warning will be produced. If \code{NULL}, returns absolute paths to all currentl
 Absolute paths to all currently allowed directories, if \code{dirs = NULL}.
 }
 \description{
-This function adds paths to existing dierctories to the list of allowed directories,
+This function adds paths to existing directories to the list of allowed directories,
 which can be accessed from the server. To any request for files from outside
 of the allowed directories the server will response with \code{403 Forbidden} error.
 \code{rootDirectory} (see \code{\link{openPage}}) can always be accessed. By default,
@@ -27,7 +27,8 @@ of the working directory will not have any affect on this list or files accessib
 This function is a wrapper around \code{allowDirectories} method of class \code{\link{App}}.
 }
 \examples{
-\dontrun{openPage()
+\dontrun{
+openPage()
 # The directories must exist
 allowDirectories(c("~/directory1", "../anotherDirectory"))
 dirs <- allowDirectories()

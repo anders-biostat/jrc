@@ -1034,7 +1034,7 @@ pkg.env <- new.env()
 #' 
 #' @param useViewer If \code{TRUE}, the new web page will be opened in the RStudio Viewer. If \code{FALSE},
 #' a default web browser will be used (if other is not specified with the \code{browser} argument).
-#' @param rootDirectory A path to the root directory fpr the server. Any file, requested by the server
+#' @param rootDirectory A path to the root directory for the server. Any file, requested by the server
 #' will be searched for in this directory. If \code{rootDirectory} is not 
 #' defined, the \code{http_root} in the package directory will be used as a root directory.
 #' @param startPage A path to an HTML file that should be used as a starting page of the app.
@@ -1143,7 +1143,7 @@ sendMessage <- function(type, id, ...) {
 #' from the session will be considered as a reply.
 #' 
 #' @examples  
-#' \dontrun{k <- 0
+#' \donttest{k <- 0
 #' openPage()
 #' sendCommand(paste0("button = document.createElement('input');",
 #'               "button.type = 'button';",
@@ -1219,7 +1219,7 @@ closePage <- function() {
 #' from the session will be considered as a reply.
 #' 
 #' @examples 
-#' \dontrun{openPage()
+#' \donttest{openPage()
 #' x <- 1:100
 #' sendData("x", x)
 #' sendCommand("console.log(x);")
@@ -1251,7 +1251,7 @@ sendData <- function(variableName, variable, keepAsVector = FALSE, rowwise = TRU
 #' @param envir Environment to be used as outer environment. 
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' openPage()
 #' e <- new.env()
 #' setEnvironment(e)
@@ -1283,7 +1283,7 @@ setEnvironment <- function(envir) {
 #' from the session will be considered as a reply.
 #' 
 #' @examples 
-#' \dontrun{
+#' \donttest{
 #' openPage(FALSE)
 #' 
 #' sendHTML("Test...")
@@ -1359,11 +1359,12 @@ sendHTML <- function(html = "", sessionId = NULL, wait = 0) {
 #' \code{arguments} to the web page.
 #' 
 #' @examples 
-#' \dontrun{
+#' \donttest{
 #' openPage()
 #' callFunction("alert", list("Some alertText"))
 #' callFunction("Math.random", assignTo = "randomNumber")
 #' sendCommand("alert(randomNumber)")
+#' closePage()
 #' }
 #' 
 #' @seealso \code{\link{authorize}}, \code{\link{allowFunctions}}, \code{\link{allowVariables}},
@@ -1399,7 +1400,7 @@ callFunction <- function(name, arguments = NULL, assignTo = NULL, wait = 0, sess
 #' do nothing.
 #'
 #' @examples
-#' \dontrun{openPage()
+#' \donttest{openPage()
 #' 
 #' callFunction("jrc.sendCommand", list("k <<- 10"), wait = 1)
 #' allowVariables("x")
@@ -1440,7 +1441,7 @@ authorize <- function(sessionId = NULL, messageId = NULL, show = FALSE) {
 #' @return Names of all currently allowed functions if \code{funs = NULL}.
 #' 
 #' @examples
-#' \dontrun{openPage()
+#' \donttest{openPage()
 #' allowFunctions(c("myFunction1", "print", "someObject$method"))
 #' funs <- allowFunctions()
 #' closePage()}
@@ -1467,7 +1468,7 @@ allowFunctions <- function(funs = NULL) {
 #' returns names of all currently allowed variables.
 #' 
 #' @examples 
-#' \dontrun{openPage()
+#' \donttest{openPage()
 #' allowVariables(c("myVariable", "anotherOne"))
 #' vars <- allowVariables()
 #' closePage()}
@@ -1487,7 +1488,7 @@ allowVariables <- function(vars = NULL) {
 
 #' Allow server to access files in the directory
 #' 
-#' This function adds paths to existing dierctories to the list of allowed directories,
+#' This function adds paths to existing directories to the list of allowed directories,
 #' which can be accessed from the server. To any request for files from outside
 #' of the allowed directories the server will response with \code{403 Forbidden} error.
 #' \code{rootDirectory} (see \code{\link{openPage}}) can always be accessed. By default,
@@ -1497,12 +1498,13 @@ allowVariables <- function(vars = NULL) {
 #' 
 #' This function is a wrapper around \code{allowDirectories} method of class \code{\link{App}}.
 #' 
-#' @param dirs Vector of paths to existing direcotories. Can be absolute paths, or paths relative to 
+#' @param dirs Vector of paths to existing directories. Can be absolute paths, or paths relative to 
 #' the current working directory. If the specified directory doesn't exist, it will be ignored and a
 #' warning will be produced. If \code{NULL}, returns absolute paths to all currently allowed directories.
 #' 
 #' @examples 
-#' \dontrun{openPage()
+#' \dontrun{
+#' openPage()
 #' # The directories must exist
 #' allowDirectories(c("~/directory1", "../anotherDirectory"))
 #' dirs <- allowDirectories()
@@ -1546,7 +1548,8 @@ allowDirectories <- function(dirs = NULL) {
 #' If \code{NULL}, changes will be applied to all currently active sessions.
 #' 
 #' @examples 
-#' \dontrun{openPage()
+#' \donttest{
+#' openPage()
 #' limitStorage(n = 10)
 #' limitStorage(size = 10 * 1024^2)
 #' closePage()}
@@ -1625,7 +1628,7 @@ getPage <- function() {
 #' new opened session as default ones.
 #' 
 #' @examples
-#' \dontrun{openPage(allowedFunctions = "f", allowedVariables = "res")
+#' \donttest{openPage(allowedFunctions = "f", allowedVariables = "res")
 #' 
 #' m <- 1
 #' f <- function() {v * m}
@@ -1691,7 +1694,7 @@ getSessionIds <- function() {
 #' will be closed.
 #' 
 #' @examples
-#' \dontrun{start <- Sys.time()
+#' \donttest{start <- Sys.time()
 #' openPage()
 #' 
 #' app <- getPage()
@@ -1713,7 +1716,10 @@ getSessionIds <- function() {
 #' time <- Sys.time()
 #' sendCommand("jrc.sendCommand('print(\"Hi!\")')", sessionId = getSessionIds()[1],  wait = 3)
 #' 
+#' # this will close all sessions except for the one, that has just send a command to R session
 #' closeSession(inactive = Sys.time() - time)
+#' 
+#' # if there is only one active session, sessionId becomes an optional argument
 #' closeSession()
 #' 
 #' closePage()}
@@ -1828,8 +1834,9 @@ getSession <- function(sessionId = NULL){
 #' @return Requested variable
 #' 
 #' @examples
-#' \dontrun{f <- function(x) {x * 3}
-#' openPage(allowedFunctions = "f", allowedVariables = "k")
+#' \donttest{f <- function(x) {x * 3}
+#' openPage(allowedFunctions = "f", allowedVariables = "k", sessionVars = list(k = 0))
+#' k <- getSessionVariable("k")
 #' getPage()$openPage(FALSE)
 #' id1 <- getSessionIds()[1]
 #' id2 <- getSessionIds()[2]
@@ -1865,7 +1872,7 @@ getSessionVariable <- function(varName, sessionId = NULL) {
 #' @param sessionId ID of the session. If there is only one active session, this argument becomes optional.
 #' 
 #' @examples
-#' \dontrun{openPage(allowedVariables = "k", sessionVars = list(k = 10))
+#' \donttest{openPage(allowedVariables = "k", sessionVars = list(k = 10))
 #' 
 #' k <- -1
 #' getPage()$openPage(FALSE)

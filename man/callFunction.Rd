@@ -82,11 +82,12 @@ This function is a wrapper
 around \code{callFunction} method of class \code{\link{Session}}.
 }
 \examples{
-\dontrun{
+\donttest{
 openPage()
 callFunction("alert", list("Some alertText"))
 callFunction("Math.random", assignTo = "randomNumber")
 sendCommand("alert(randomNumber)")
+closePage()
 }
 
 }

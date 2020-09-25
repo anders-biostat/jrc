@@ -21,7 +21,7 @@ can be modified from a web page without manual confirmation on the R side.
 This function is a wrapper around \code{allowVariables} method of class \code{\link{App}}.
 }
 \examples{
-\dontrun{openPage()
+\donttest{openPage()
 allowVariables(c("myVariable", "anotherOne"))
 vars <- allowVariables()
 closePage()}

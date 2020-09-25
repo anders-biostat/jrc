@@ -37,7 +37,7 @@ This function is a wrapper around \code{sendCommand} method of class \code{\link
 }
 \examples{
  
-\dontrun{k <- 0
+\donttest{k <- 0
 openPage()
 sendCommand(paste0("button = document.createElement('input');",
               "button.type = 'button';",

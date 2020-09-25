@@ -22,7 +22,7 @@ or the \code{body} element. This function is a wrapper around \code{sendHTML} me
 class \code{\link{Session}}.
 }
 \examples{
-\dontrun{
+\donttest{
 openPage(FALSE)
 
 sendHTML("Test...")

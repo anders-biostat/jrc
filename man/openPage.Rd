@@ -22,7 +22,7 @@ openPage(
 \item{useViewer}{If \code{TRUE}, the new web page will be opened in the RStudio Viewer. If \code{FALSE},
 a default web browser will be used (if other is not specified with the \code{browser} argument).}
 
-\item{rootDirectory}{A path to the root directory fpr the server. Any file, requested by the server
+\item{rootDirectory}{A path to the root directory for the server. Any file, requested by the server
 will be searched for in this directory. If \code{rootDirectory} is not 
 defined, the \code{http_root} in the package directory will be used as a root directory.}
 
