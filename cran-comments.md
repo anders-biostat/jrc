@@ -1,4 +1,23 @@
 ## Resubmission
+This is a new version of the package. It fixes a major security issue by restricting server access to only to specified directories.
+
+All the examples were checked locally by both R CMD check --run-donttest and running them manually in RStudio. 
+However, all other checks were performed with _R_CHECK_DONTTEST_EXAMPLES_=FALSE.
+Examples, wrapped in donttest{}, are functional and don't produce errors, but require some browser to be installed. 
+I would rather not change `donttest` to `dontrun`, since it can confuse users.
+
+## Test environments
+* local ubuntu 20.04 LST, R 4.0.2
+* win-builder: R-devel
+* ubuntu 16.04.6 LTS, R-devel, R 4.0.2, R 3.6.3 (travis ci)
+
+## R CMD check results
+
+There were no ERRORS, WARNINGS or NOTES
+
+#Previous cran-comments
+
+## Resubmission
 
 This is a new version that fixes some existing bugs. Other than that, it doesn't change any functinality. For more details, please, check NEWS.md.
 
@@ -10,8 +29,6 @@ This is a new version that fixes some existing bugs. Other than that, it doesn't
 ## R CMD check results
 
 There were no ERRORS, WARNINGS or NOTES
-
-#Previous cran-comments
 
 ## Resubmission
 
