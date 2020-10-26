@@ -80,10 +80,6 @@ to stop. You can always get the \code{App} object for the currently running app 
       Can be a full path or a path relative to the current R working directory. If \code{path = NULL}, returns path to the
       current root directory.
    }
-   \item{\code{numberOfConnections(maxCon = NULL)}}{
-      Sets maximum number of connections that can be active simultaneously. If \code{maxCon = NULL}, returns current value of 
-      maximum allowed number of connections. Default value is \code{Inf}.
-   }
 }
 }
 
