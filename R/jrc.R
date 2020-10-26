@@ -416,7 +416,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
       if(!is.character(message))
         stop("Closing message must be a string.")
       
-      self$sendCommand(str_c("alert('", mesage, "');"))
+      self$sendCommand(str_c("alert('", message, "');"))
     }
     if(!is.null(private$ws))
       private$ws$close()
@@ -572,8 +572,9 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     stopifnot("Session" %in% class(session))
     if(length(private$sessions) >= private$limits$maxCon) {
       session$close("Maximum number of active connections has been reached.")
-      stop("Maximum number of connections has been reached. Please, close some of 
+      message("Maximum number of connections has been reached. Please, close some of 
            the existing sessions, before adding a new one.")
+      return()
     }
     oldSession <- self$getSession(session$id)
     if(!is.null(oldSession)) {
@@ -972,7 +973,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
       ws$onMessage( function( isBinary, msg ) {
         if( isBinary )
           stop( "Unexpected binary message received via WebSocket" )
-        time <- as.numeric(Sys.time())
+        time <- round(as.numeric(Sys.time()))
         if(session$log[1] != time) {
           session$log <- c(time, 0, 0)
         }
@@ -1619,10 +1620,7 @@ setLimits <- function(maxCon = NULL, storageSize = NULL, storedMsg = NULL,
   
   if(is.null(pkg.env$app))
     stop("There is no opened page. Please, use 'openPage()' function to create one.")
-  
-  if(is.null(sessionId))
-    sessionId <- getSessionIds()
-  
+
   pkg.env$app$setLimits(maxCon, storageSize, storedMsg, varSize, msgPerSec, msgSize, 
                         bytesPerSec)
 }
