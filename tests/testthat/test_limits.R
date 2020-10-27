@@ -79,24 +79,24 @@ test_that("Variable size can be limited", {
 })
 
 test_that("Number of received messages per second can be limited", {
-  app <- openPage(allowedVariables = "x")
+  app <- openPage(allowedVariables = "x", useViewer = FALSE)
   ses <- app$getSession()
   
   x <- -1
   
   ses$setLimits(list(msgPerSec = 2))
-  ses$sendCommand("i = 0; while(i < 10) {jrc.sendData('x', i); i++;}", wait = 2)
+  ses$sendCommand("i = 0; while(i < 4) {jrc.sendData('x', i); i++;}")
   
   t <- 0
   while(t < 2) {
     httpuv::service(0.1)
     t <- t + 0.1
   }
-  
   expect_equal(x, 1)
   
+  Sys.sleep(1)
   ses$setLimits(list(msgPerSec = 3))
-  ses$sendCommand("i = 0; while(i < 10) {jrc.sendCommand('print(1)'); i++;}", wait = 2)
+  ses$sendCommand("j = 0; while(j < 10) {jrc.sendCommand('print(1)'); j++;}")
 
   t <- 0
   while(t < 2) {
