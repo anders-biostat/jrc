@@ -19,7 +19,7 @@ to stop. You can always get the \code{App} object for the currently running app 
 \section{Methods}{
 
 \describe{
-   \item{\code{new(rootDirectory = NULL, startPage = NULL, onStart = NULL, 
+   \item{\code{new(rootDirectory = NULL, startPage = NULL, onStart = NULL, onClose = NULL,  
    connectionNumber = Inf, allowedFunctions = c(), allowedVariables = c(), sessionVars = NULL)}}{
       Creates a new instance of class \code{App}. Check \code{\link{openPage}} man page for information about
       arguments.

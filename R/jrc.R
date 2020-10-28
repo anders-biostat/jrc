@@ -504,7 +504,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
 #' 
 #' @section Methods:
 #' \describe{
-#'    \item{\code{new(rootDirectory = NULL, startPage = NULL, onStart = NULL, 
+#'    \item{\code{new(rootDirectory = NULL, startPage = NULL, onStart = NULL, onClose = NULL,  
 #'    connectionNumber = Inf, allowedFunctions = c(), allowedVariables = c(), sessionVars = NULL)}}{
 #'       Creates a new instance of class \code{App}. Check \code{\link{openPage}} man page for information about
 #'       arguments.
@@ -848,7 +848,8 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     invisible(self)
   },
   
-  initialize = function(rootDirectory = NULL, startPage = NULL, onStart = NULL, 
+  initialize = function(rootDirectory = NULL, startPage = NULL, onStart = NULL,
+                        onClose = NULL,
                         connectionNumber = Inf, allowedFunctions = c(), 
                         allowedVariables = c(), 
                         allowedDirectories = getwd(),
@@ -868,7 +869,13 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     }
     stopifnot(is.function(onStart))
     private$onStart <- onStart
-    
+
+    if(is.null(onClose)) {
+      onClose <- function(session) {}
+    }
+    stopifnot(is.function(onClose))
+    private$onClose <- onClose
+        
     self$allowDirectories(allowedDirectories)
     self$allowFunctions(allowedFunctions)
     self$allowVariables(allowedVariables)
@@ -888,6 +895,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
   port = NULL,
   waiting = FALSE,
   onStart = NULL,
+  onClose = NULL,
   rootDir = "",
   startP = "",
   sessionVars = list(),
@@ -1048,6 +1056,8 @@ App <- R6Class("App", cloneable = FALSE, public = list(
       } );
       
       ws$onClose(function() {
+        private$onClose(session)
+        
         if(!is.null(self$getSession(session$id)))
           self$closeSession(session$id)
       })
@@ -1126,9 +1136,12 @@ pkg.env <- new.env()
 #' @param sessionVars Named list of variables, that will be declared for each session, when a new connection is opened.
 #' Any changes to these variables will affect only a certain session. Thus they can be used, for instance, to 
 #' store a state of each session. For more information, please, check \code{\link{setSessionVariables}}.
-#' @param onStart A callback function that will be executed when a new connection is opened. This function gets a single 
+#' @param onStart A callback function that will be executed, when a new connection is opened. This function gets a single 
 #' argument, which is an object of class \code{\link{Session}}. General purpose of the function is to populate each 
 #' new web page with some default content.
+#' @param onClose A callback function that will be executed, when a connection is closed. This function gets a single
+#' argument, which is an object of class \code{\link{Session}}. General purpose of the function is to store session 
+#' variables if needed or in any other form to finilize user's interaction with the app.
 #' 
 #' @seealso \code{\link{closePage}}, \code{\link{setEnvironment}}, \code{\link{setLimits}}, \code{\link{allowVariables}},
 #' \code{\link{allowFunctions}}, \code{\link{setSessionVariables}}.
@@ -1142,11 +1155,11 @@ pkg.env <- new.env()
 #' @importFrom utils packageVersion
 openPage <- function(useViewer = TRUE, rootDirectory = NULL, startPage = NULL, port = NULL, browser = NULL,
                      allowedFunctions = NULL, allowedVariables = NULL, allowedDirectories = getwd(), 
-                     connectionNumber = Inf, sessionVars = NULL, onStart = NULL) {
+                     connectionNumber = Inf, sessionVars = NULL, onStart = NULL, onClose = NULL) {
   if(!is.null(pkg.env$app))
     closePage()
   
-  app <- App$new(rootDirectory, startPage, onStart, connectionNumber, allowedFunctions, 
+  app <- App$new(rootDirectory, startPage, onStart, onClose, connectionNumber, allowedFunctions, 
                  allowedVariables, allowedDirectories, sessionVars)
   pkg.env$app <- app
   app$setEnvironment(parent.frame())

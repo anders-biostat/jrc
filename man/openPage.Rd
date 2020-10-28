@@ -15,7 +15,8 @@ openPage(
   allowedDirectories = getwd(),
   connectionNumber = Inf,
   sessionVars = NULL,
-  onStart = NULL
+  onStart = NULL,
+  onClose = NULL
 )
 }
 \arguments{
@@ -58,9 +59,13 @@ for more information.}
 Any changes to these variables will affect only a certain session. Thus they can be used, for instance, to 
 store a state of each session. For more information, please, check \code{\link{setSessionVariables}}.}
 
-\item{onStart}{A callback function that will be executed when a new connection is opened. This function gets a single 
+\item{onStart}{A callback function that will be executed, when a new connection is opened. This function gets a single 
 argument, which is an object of class \code{\link{Session}}. General purpose of the function is to populate each 
 new web page with some default content.}
+
+\item{onClose}{A callback function that will be executed, when a connection is closed. This function gets a single
+argument, which is an object of class \code{\link{Session}}. General purpose of the function is to store session 
+variables if needed or in any other form to finilize user's interaction with the app.}
 }
 \value{
 Object of class \code{\link{App}}.
