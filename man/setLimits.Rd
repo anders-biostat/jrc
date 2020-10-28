@@ -2,7 +2,7 @@
 % Please edit documentation in R/jrc.R
 \name{setLimits}
 \alias{setLimits}
-\title{Change size of the message storage}
+\title{Set security limits}
 \usage{
 setLimits(
   maxCon = NULL,
@@ -15,41 +15,68 @@ setLimits(
 )
 }
 \arguments{
-\item{n}{Maximum number of messages that can be stored simultaneously.}
+\item{maxCon}{Maximal allowed number of web socket connections simultaneously. A new
+connection is established whenever someone requests an HTML page from the server
+or when the \code{openPage} method of class \code{\link{App}} is used. If number of
+the allowed connections is reached the newly opened web socked will be immediately
+closed and the user will see a warning.}
 
-\item{size}{Maximum total size of all stored messages in bytes.}
+\item{storageSize}{Maximal total size of all stored messages in bytes.}
 
-\item{variableSize}{Maximum size of a variable that can be received from a web-page. 
+\item{storedMsg}{Maximal number of messages that can be stored simultaneously.}
+
+\item{varSize}{Maximal size of a variable that can be received from a web page. 
 Attempt to assign data of larger size to a variable will be ignored.}
 
-\item{sessionId}{ID of the session, for which the storage size should be changed.
-Can also be a vector of session IDs to change storage size for multiple sessions at once.
-If \code{NULL}, changes will be applied to all currently active sessions.}
+\item{msgPerSec}{Maximal number of messages that can be received per second. 
+All extra messages will be disposed of immediately without any attempt to 
+process their content.}
+
+\item{msgSize}{Maximal allowed size of a message in bytes. Note, that here a
+size of character string that contains all the received information is estimated.
+All larger messages will be ignored.}
+
+\item{bytesPerSec}{Number of bytes that can be received per second. After the 
+limit is reached, all the incoming messages will be ignored.}
 }
 \description{
-This function allows to change number or total size of the messages
-that are received via the websocket and are stored in memory.
+This function allows to control memory usage and limit number of messages processed per
+second or simultaneously active connections to the app. 
+ 
+If an app is deployed on a server and is publicly available, it may be useful to limit
+resources that are available to each user. There are various things that can be
+controlled by this function: storage size and number of stored messages, 
+maximal variable size, number of messages processed per second and bytes received
+per second.
+ 
+Messages are all the communication received via web socket from an opened web page.
+Each message contains a command that is to be evaluated in the R session, name
+of a function to call or variable to store. If number or size of messages exceeds
+the preset limit, they are completely ignored by the app.
 }
 \details{
-For security reasons, control of the currently running R session is limited
-to calling and changing only some user specified functions and variables. All other 
-messages are stored in memory and can be later processed
-by calling \code{\link{authorize}} function. To prevent overuse of memory, one can 
-limit size of the storage by number of messages or by their total size estimated
-by \code{\link[utils]{object.size}}. If the storage grows above these limits, older
-messages are removed. The last received message will not be removed even if it 
-takes more memory than is allowed. If any of the size parameters are
-set to zero, no massages will be stored. In this case, any message that requires authorization will be
-automatically discarded.
+For security reasons, some messages has to be first authorized by the 
+\code{\link{authorize}} function, before they can be processed. Such messages
+are saved until they are manually removed or authorized. If number or total 
+size of the stored messages exceeds the limits, new messages are still saved, 
+but the older ones are removed from the memory. If storage size is set to zero
+no messages can be stored and every message that requires authorization will 
+be automatically discarded.
 
-One can also directly change public fields \code{maxN} and \code{maxSize} of any object
-of class \code{\link{Session}} (see also \code{\link{getSession}}).
+Size of variables or messages is estimated in \code{\link[utils]{object.size}}
+and is always measured in byte.
+
+The limits are set for the entire app and are applied for each new connection.
+One can also change security limits for any connection separately by using
+method \code{setLimits} of a corresponding object of class \code{\link{Session}}.
+
+This function is a wrapper for method \code{setLimits} of class \code{\link{App}}.
 }
 \examples{
 \donttest{
 openPage()
-limitStorage(n = 10)
-limitStorage(size = 10 * 1024^2)
+setLimits(maxCon = 10)
+setLimits(varSize = 10 * 1024^2)
 closePage()}
 
 }

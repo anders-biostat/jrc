@@ -62,6 +62,11 @@
 #'      get one back and remove variables with a single function call. Check \code{\link{setSessionVariables}},
 #'      \code{\link{getSessionVariable}}, \code{\link{removeSessionVariables}} for more information.
 #'   }
+#'  \item{\code{setLimits(limits)}}{
+#'       Sets limits for memory usage, number of simultaneously active connections and amount of messages processed per second. 
+#'       For information about possible arguments, please, check \code{\link{setLimits}}. This method accepts all the same arguments,
+#'       but they should be supplied in a form of list.
+#'    }
 #' }
 #' Note, that \code{Session} class has some other public methods that are not mentioned in this list. These methods are
 #' intended to be used only by other functions of \code{jrc} package and therefore are not documented.
@@ -82,7 +87,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
   storeMessage = function(msg) {
     if(private$limits$storedMsg == 0 | private$limits$storageSize == 0) {
       message(str_c("Message can't be stored, sincse message storage is set to zero. ",
-                    "Please, use 'limitStorage' function to change the limits."))
+                    "Please, use 'setLimits' function to change the limits."))
       return()
     }
     if(!is.vector(msg))
@@ -559,6 +564,11 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
 #'       Sets path to the root directory for the server. Any file, requested by the server, will be looked for in this directory.
 #'       Can be a full path or a path relative to the current R working directory. If \code{path = NULL}, returns path to the
 #'       current root directory.
+#'    }
+#'    \item{\code{setLimits(...)}}{
+#'       Sets limits for memory usage, number of simultaneously active connections and amount of messages processed per second. 
+#'       These settings will apply for each new connection. To change memory usage for an existing session use method \code{setLimits}
+#'       of class \code{\link{Session}}. For information about possible arguments, please, check \code{\link{setLimits}}.
 #'    }
 #' }
 #' 
@@ -1120,7 +1130,7 @@ pkg.env <- new.env()
 #' argument, which is an object of class \code{\link{Session}}. General purpose of the function is to populate each 
 #' new web page with some default content.
 #' 
-#' @seealso \code{\link{closePage}}, \code{\link{setEnvironment}}, \code{\link{limitStorage}}, \code{\link{allowVariables}},
+#' @seealso \code{\link{closePage}}, \code{\link{setEnvironment}}, \code{\link{setLimits}}, \code{\link{allowVariables}},
 #' \code{\link{allowFunctions}}, \code{\link{setSessionVariables}}.
 #' 
 #' @return Object of class \code{\link{App}}.
@@ -1467,7 +1477,7 @@ callFunction <- function(name, arguments = NULL, assignTo = NULL, wait = 0, sess
 #' #authorize(messageId = msgId[2], show = TRUE)
 #' 
 #' closePage()}
-#' @seealso \code{\link{allowFunctions}}, \code{\link{allowVariables}}, \code{\link{limitStorage}}, \code{\link{getSessionIds}},
+#' @seealso \code{\link{allowFunctions}}, \code{\link{allowVariables}}, \code{\link{setLimits}}, \code{\link{getSessionIds}},
 #' \code{\link{getMessageIds}}.
 #' 
 #' @export
@@ -1577,38 +1587,62 @@ allowDirectories <- function(dirs = NULL) {
   pkg.env$app$allowDirectories(dirs)
 }
 
-#' Change size of the message storage
+#' Set security limits
 #' 
-#' This function allows to change number or total size of the messages
-#' that are received via the websocket and are stored in memory.
+#' This function allows to control memory usage and limit number of messages processed per
+#' second or simultaneously active connections to the app. 
+#'  
+#' If an app is deployed on a server and is publicly available, it may be useful to limit
+#' resources that are available to each user. There are various things that can be
+#' controlled by this function: storage size and number of stored messages, 
+#' maximal variable size, number of messages processed per second and bytes received
+#' per second.
+#'  
+#' Messages are all the communication received via web socket from an opened web page.
+#' Each message contains a command that is to be evaluated in the R session, name
+#' of a function to call or variable to store. If number or size of messages exceeds
+#' the preset limit, they are completely ignored by the app.
 #' 
-#' For security reasons, control of the currently running R session is limited
-#' to calling and changing only some user specified functions and variables. All other 
-#' messages are stored in memory and can be later processed
-#' by calling \code{\link{authorize}} function. To prevent overuse of memory, one can 
-#' limit size of the storage by number of messages or by their total size estimated
-#' by \code{\link[utils]{object.size}}. If the storage grows above these limits, older
-#' messages are removed. The last received message will not be removed even if it 
-#' takes more memory than is allowed. If any of the size parameters are
-#' set to zero, no massages will be stored. In this case, any message that requires authorization will be
-#' automatically discarded.
+#' For security reasons, some messages has to be first authorized by the 
+#' \code{\link{authorize}} function, before they can be processed. Such messages
+#' are saved until they are manually removed or authorized. If number or total 
+#' size of the stored messages exceeds the limits, new messages are still saved, 
+#' but the older ones are removed from the memory. If storage size is set to zero
+#' no messages can be stored and every message that requires authorization will 
+#' be automatically discarded.
 #' 
-#' One can also directly change public fields \code{maxN} and \code{maxSize} of any object
-#' of class \code{\link{Session}} (see also \code{\link{getSession}}). 
+#' Size of variables or messages is estimated in \code{\link[utils]{object.size}}
+#' and is always measured in byte.
 #' 
-#' @param n Maximum number of messages that can be stored simultaneously.
-#' @param size Maximum total size of all stored messages in bytes.
-#' @param variableSize Maximum size of a variable that can be received from a web-page. 
+#' The limits are set for the entire app and are applied for each new connection.
+#' One can also change security limits for any connection separately by using
+#' method \code{setLimits} of a corresponding object of class \code{\link{Session}}.
+#' 
+#' This function is a wrapper for method \code{setLimits} of class \code{\link{App}}.
+#' 
+#' @param maxCon Maximal allowed number of web socket connections simultaneously. A new
+#' connection is established whenever someone requests an HTML page from the server
+#' or when the \code{openPage} method of class \code{\link{App}} is used. If number of
+#' the allowed connections is reached the newly opened web socked will be immediately
+#' closed and the user will see a warning.
+#' @param storageSize Maximal total size of all stored messages in bytes.
+#' @param storedMsg Maximal number of messages that can be stored simultaneously.
+#' @param varSize Maximal size of a variable that can be received from a web page. 
 #' Attempt to assign data of larger size to a variable will be ignored.
-#' @param sessionId ID of the session, for which the storage size should be changed.
-#' Can also be a vector of session IDs to change storage size for multiple sessions at once.
-#' If \code{NULL}, changes will be applied to all currently active sessions.
+#' @param msgPerSec Maximal number of messages that can be received per second. 
+#' All extra messages will be disposed of immediately without any attempt to 
+#' process their content.
+#' @param msgSize Maximal allowed size of a message in bytes. Note, that here a
+#' size of character string that contains all the received information is estimated.
+#' All larger messages will be ignored.
+#' @param bytesPerSec Number of bytes that can be received per second. After the 
+#' limit is reached, all the incoming messages will be ignored.
 #' 
 #' @examples 
 #' \donttest{
 #' openPage()
-#' limitStorage(n = 10)
-#' limitStorage(size = 10 * 1024^2)
+#' setLimits(maxCon = 10)
+#' setLimits(varSize = 10 * 1024^2)
 #' closePage()}
 #' 
 #' @seealso \code{\link{authorize}}, \code{\link{allowFunctions}}, \code{\link{allowVariables}}.

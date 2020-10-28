@@ -69,6 +69,11 @@ One can manipulate a session directly, using its methods that are described bell
      get one back and remove variables with a single function call. Check \code{\link{setSessionVariables}},
      \code{\link{getSessionVariable}}, \code{\link{removeSessionVariables}} for more information.
   }
+ \item{\code{setLimits(limits)}}{
+      Sets limits for memory usage, number of simultaneously active connections and amount of messages processed per second. 
+      For information about possible arguments, please, check \code{\link{setLimits}}. This method accepts all the same arguments,
+      but they should be supplied in a form of list.
+   }
 }
 Note, that \code{Session} class has some other public methods that are not mentioned in this list. These methods are
 intended to be used only by other functions of \code{jrc} package and therefore are not documented.

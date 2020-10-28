@@ -47,6 +47,6 @@ authorize(messageId = msgId[1])
 closePage()}
 }
 \seealso{
-\code{\link{allowFunctions}}, \code{\link{allowVariables}}, \code{\link{limitStorage}}, \code{\link{getSessionIds}},
+\code{\link{allowFunctions}}, \code{\link{allowVariables}}, \code{\link{setLimits}}, \code{\link{getSessionIds}},
 \code{\link{getMessageIds}}.
 }

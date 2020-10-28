@@ -93,6 +93,6 @@ to open a new web page. It also stores a new app object in the package namespace
 wrapper functions to access it.
 }
 \seealso{
-\code{\link{closePage}}, \code{\link{setEnvironment}}, \code{\link{limitStorage}}, \code{\link{allowVariables}},
+\code{\link{closePage}}, \code{\link{setEnvironment}}, \code{\link{setLimits}}, \code{\link{allowVariables}},
 \code{\link{allowFunctions}}, \code{\link{setSessionVariables}}.
 }

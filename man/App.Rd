@@ -80,6 +80,11 @@ to stop. You can always get the \code{App} object for the currently running app 
       Can be a full path or a path relative to the current R working directory. If \code{path = NULL}, returns path to the
       current root directory.
    }
+   \item{\code{setLimits(...)}}{
+      Sets limits for memory usage, number of simultaneously active connections and amount of messages processed per second. 
+      These settings will apply for each new connection. To change memory usage for an existing session use method \code{setLimits}
+      of class \code{\link{Session}}. For information about possible arguments, please, check \code{\link{setLimits}}.
+   }
 }
 }
 
