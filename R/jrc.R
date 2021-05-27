@@ -570,6 +570,9 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
 #'       These settings will apply for each new connection. To change memory usage for an existing session use method \code{setLimits}
 #'       of class \code{\link{Session}}. For information about possible arguments, please, check \code{\link{setLimits}}.
 #'    }
+#'    \item{\code{getPort()}}{
+#'       Returns number of the port which the running server listens to. After the app has been initialized, the port number cannot be changed.
+#'    }
 #' }
 #' 
 NULL
@@ -846,6 +849,10 @@ App <- R6Class("App", cloneable = FALSE, public = list(
       }
     
     invisible(self)
+  },
+  
+  getPort = function() {
+    private$port
   },
   
   initialize = function(rootDirectory = NULL, startPage = NULL, onStart = NULL,
@@ -1981,4 +1988,22 @@ removeSessionVariables <- function(varNames, sessionId = NULL) {
     stop(str_c("There is no session with ID ", sessionId))
   
   session$sessionVariables(remove = varNames)
+}
+
+
+#' Get number of the port on which the local server is running
+#' 
+#' This function returns port number for the running server. By default, a random available port is used. One can also
+#' set a port number as an argument of the \code{\link{openPage}} function. The port number can't be changed after the app
+#' was initialized.This function
+#' is a wrapper around method \code{getPort} of the class \code{\link{App}}.
+#' 
+#' @seealso \code{\link{openPage}}
+#' 
+#' @export
+getPort <- function() {
+  if(is.null(pkg.env$app))
+    stop("There is no opened page. Please, use 'openPage()' function to create one.")
+  
+  pkg.env$app$getPort()
 }
