@@ -52,7 +52,7 @@ jrc.ws.addEventListener( "message", function(event) {
 			window[msg[1]] = turnToScalar(window[msg[1]]);			
 		}
 
-		if(window[msg[1]].length && window[msg[1]][0]._row) {
+		if(window[msg[1]] && window[msg[1]].length && window[msg[1]][0]._row) {
 			var converted = {}, rowname;
 			for(var i = 0; i < window[msg[1]].length; i++) {
 				rowname = window[msg[1]][i]._row;
