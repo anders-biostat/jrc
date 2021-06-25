@@ -5,9 +5,9 @@ if(urlSpl[0] == "https:")
 	urlWs += "wss://"
 else
 	urlWs += "ws://";
-urlWs += urlSpl[2] + "/";
-if(urlSpl[3] == "p")
-	urlWs += "p/" + urlSpl[4] + "/";
+urlWs += urlSpl[2] + "/" + urlSpl.slice(3).join("/") + "/";
+// if(urlSpl[3] == "p")
+// 	urlWs += "p/" + urlSpl[4] + "/";
 
 jrc = {};
 
