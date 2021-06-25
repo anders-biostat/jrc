@@ -5,7 +5,10 @@ if(urlSpl[0] == "https:")
 	urlWs += "wss://"
 else
 	urlWs += "ws://";
-urlWs += urlSpl[2] + "/" + urlSpl.slice(3).join("/") + "/";
+urlWs += urlSpl[2] + "/" + urlSpl.slice(3).join("/");
+urlWs = urlWs.split("?")[0];
+if(urlWs.slice(-1) != "/")
+	urlWs += "/";
 // if(urlSpl[3] == "p")
 // 	urlWs += "p/" + urlSpl[4] + "/";
 
