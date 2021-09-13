@@ -4,8 +4,7 @@
 
 ## jrc
 
-An R package to exchange commands between R and JavaScript. It opens a new or an existing web page and establishes a websocket connection
-to the currently running R session. 
+An R package to exchange commands between R and JavaScript. It opens a new or an existing web page and establishes a WebSocket connection to the currently running R session. 
 
 ## Installation
 
@@ -15,10 +14,10 @@ install.packages("jrc")
 
 ## Usage
 
-Main R functions are `sendData()`, `sendCommand()`, and `sendHTML()`. The first one sends a variable
-from the R session to the web page, the second one executes a JavaScript code, and the last one 
+Main R functions are `sendData()`, `sendCommand()`, `callFunction()`, and `sendHTML()`. The first one sends a variable
+from the R session to the web page, the second one executes a JavaScript code, the third one calls a JavaScript function (optionally, with the specified arguments), and the last one 
 adds some HTML to the web page.
-Their JavaScript counterparts are `jrc.sendData()` and `jrc.sendCommand()`.
+Their JavaScript counterparts are `jrc.sendData()`, `jrc.callFunction()`, and `jrc.sendCommand()`.
 
 `openPage()` and `closePage()` respectively opens and closes a web page.
 
