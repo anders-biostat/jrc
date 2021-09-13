@@ -1,4 +1,10 @@
 ## Resubmission
+This is a new version of the package. It introduces minor changes in functionality and also fixes a
+couple of existing issues. See NEWS.md for more details.
+
+# Previous cran-comments
+
+## Resubmission
 This is a new version of the package. It fixes a major security issue by restricting server access to only to specified directories.
 
 All the examples were checked locally by both R CMD check --run-donttest and running them manually in RStudio. 
@@ -14,8 +20,6 @@ I would rather not change `donttest` to `dontrun`, since it can confuse users.
 ## R CMD check results
 
 There were no ERRORS, WARNINGS or NOTES
-
-#Previous cran-comments
 
 ## Resubmission
 

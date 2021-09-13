@@ -42,7 +42,7 @@ to stop. You can always get the \code{App} object for the currently running app 
       and there is only one active session, returns it. See also \code{\link{getSession}}.
    }
    \item{\code{closeSession(sessionId = NULL, inactive = NULL, old = NULL)}}{
-      Closes websocket connection of one or multiple sessions and removes all the related data from the app. For more information on 
+      Closes WebSocket connection of one or multiple sessions and removes all the related data from the app. For more information on 
       the arguments, please, check \code{\link{closeSession}} man page.
    }
    \item{\code{getSessionIds()}}{

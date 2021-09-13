@@ -18,7 +18,7 @@ For this time (or until the reply is received), execution of other commands will
 from the session will be considered as a reply.}
 }
 \description{
-\code{sendCommand} sends JavaScript code through the selected websocket connection and evaluates it on the specified
+\code{sendCommand} sends JavaScript code through the selected WebSocket connection and evaluates it on the specified
 web page. Use JavaScript function \code{jrc.sendCommand} to send R code from the web page
 and evaluate it in the current R session. All commands send to R from the server will be evaluated
 only after authorization in the currently running R session (see \code{\link{authorize}}).

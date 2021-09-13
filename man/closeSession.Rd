@@ -16,7 +16,7 @@ specified amount of time (in seconds) will be closed.}
 will be closed.}
 }
 \description{
-Closes websocket connections for the selected client sessions and removes all the related
+Closes WebSocket connections for the selected client sessions and removes all the related
 information from memory. If no arguments are provided and there is only one active session,
 closes it. This function is a wrapper around method \code{closeSession} of 
 class \code{\link{App}}.

@@ -244,7 +244,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
   
   sendCommand = function(command, wait = 0) {
     if(is.null(private$ws))
-      stop("Websocket is already closed.")
+      stop("WebSocket is already closed.")
     
     stopifnot(is.character(command))
     
@@ -256,7 +256,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
   
   callFunction = function(name, arguments = NULL, assignTo = NULL, wait = 0, thisArg = NULL,  ...) {
     if(is.null(private$ws))
-      stop("Websocket is already closed.")
+      stop("WebSocket is already closed.")
     
     if(!is.character(name))
       stop("Function name must be a character")
@@ -278,7 +278,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
   
   sendData = function(variableName, variable, wait = 0, keepAsVector = FALSE, rowwise = TRUE) {
     if(is.null(private$ws))
-      stop("Websocket is already closed.")
+      stop("WebSocket is already closed.")
     
     stopifnot(is.character(variableName))
     if(length(variableName) > 1) {
@@ -302,7 +302,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
   
   sendHTML = function(html, wait = 0) {
     if(is.null(private$ws))
-      stop("Websocket is already closed.")
+      stop("WebSocket is already closed.")
     
     stopifnot(is.character(html))
     
@@ -481,7 +481,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
     }
     
     if(private$waiting) 
-      warning(str_c("Failed to receive response from the websocket. Session ID: ", self$id))
+      warning(str_c("Failed to receive response from the WebSocket. Session ID: ", self$id))
     
     private$waiting <- FALSE
   }
@@ -527,7 +527,7 @@ Session <- R6Class("Session", cloneable = FALSE, public = list(
 #'       and there is only one active session, returns it. See also \code{\link{getSession}}.
 #'    }
 #'    \item{\code{closeSession(sessionId = NULL, inactive = NULL, old = NULL)}}{
-#'       Closes websocket connection of one or multiple sessions and removes all the related data from the app. For more information on 
+#'       Closes WebSocket connection of one or multiple sessions and removes all the related data from the app. For more information on 
 #'       the arguments, please, check \code{\link{closeSession}} man page.
 #'    }
 #'    \item{\code{getSessionIds()}}{
@@ -719,7 +719,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     }
     
     
-    # Wait up to 5 seconds for the a websocket connection
+    # Wait up to 5 seconds for the a WebSocket connection
     # incoming from the client
     private$waiting <- TRUE
     for( i in 1:(5/0.05) ) {
@@ -731,7 +731,7 @@ App <- R6Class("App", cloneable = FALSE, public = list(
     }
     if( private$waiting ) {
       self$stopServer()
-      stop( "Timeout waiting for websocket." )
+      stop( "Timeout waiting for WebSocket." )
     }
     
     invisible(private$sessions[[length(private$sessions)]])
@@ -1089,7 +1089,7 @@ pkg.env <- new.env()
 
 #' Create a server
 #' 
-#' \code{openPage} starts a server and opens a new page with a websocket connection between it and the current
+#' \code{openPage} starts a server and opens a new page with a WebSocket connection between it and the current
 #' R session. After that, messages can be exchanged between R session and the web page to generate content on the
 #' web page and to trigger calculations in R as a response to user activity on the page.
 #' 
@@ -1102,7 +1102,7 @@ pkg.env <- new.env()
 #'    \item{Data is any variable that is sent to or from the R session. It must always come with a 
 #'    name of the variable to which it should be assigned on the receiving side. For more information, please,
 #'    check \code{\link{sendData}}.}
-#'    \item{Function calls can be triggered on each side of the websocket connection. Alongside the function name,
+#'    \item{Function calls can be triggered on each side of the WebSocket connection. Alongside the function name,
 #'    one can also send a list of arguments and name of a variable to which the returned value of the function will
 #'    be assigned. For more information, please, check \code{\link{callFunction}}.}
 #'    \item{Unlike other types of messages, HTML code can be sent only from the R session to a web page. This code will
@@ -1148,7 +1148,7 @@ pkg.env <- new.env()
 #' new web page with some default content.
 #' @param onClose A callback function that will be executed, when a connection is closed. This function gets a single
 #' argument, which is an object of class \code{\link{Session}}. General purpose of the function is to store session 
-#' variables if needed or in any other form to finilize user's interaction with the app.
+#' variables if needed or in any other form to finalize user's interaction with the app.
 #' 
 #' @seealso \code{\link{closePage}}, \code{\link{setEnvironment}}, \code{\link{setLimits}}, \code{\link{allowVariables}},
 #' \code{\link{allowFunctions}}, \code{\link{setSessionVariables}}.
@@ -1189,9 +1189,9 @@ sendMessage <- function(type, id, ...) {
     } else {
       tryCatch(session[[type]](...), 
                error = function(e) {
-                 if(e$message == "Websocket is already closed.") {
+                 if(e$message == "WebSocket is already closed.") {
                    pkg.env$app$closeSession(session)
-                   stop(str_c("Websocket is already closed.", 
+                   stop(str_c("WebSocket is already closed.", 
                               "Session ", session$id, " has been terminated."))
                  } else {
                    stop(e)
@@ -1204,7 +1204,7 @@ sendMessage <- function(type, id, ...) {
 
 #' Send a command to a web page
 #' 
-#' \code{sendCommand} sends JavaScript code through the selected websocket connection and evaluates it on the specified
+#' \code{sendCommand} sends JavaScript code through the selected WebSocket connection and evaluates it on the specified
 #' web page. Use JavaScript function \code{jrc.sendCommand} to send R code from the web page
 #' and evaluate it in the current R session. All commands send to R from the server will be evaluated
 #' only after authorization in the currently running R session (see \code{\link{authorize}}).
@@ -1771,7 +1771,7 @@ getSessionIds <- function() {
 
 #' Close one or several client sessions
 #' 
-#' Closes websocket connections for the selected client sessions and removes all the related
+#' Closes WebSocket connections for the selected client sessions and removes all the related
 #' information from memory. If no arguments are provided and there is only one active session,
 #' closes it. This function is a wrapper around method \code{closeSession} of 
 #' class \code{\link{App}}. 
