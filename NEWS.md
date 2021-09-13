@@ -1,3 +1,15 @@
+# jrc 0.5.0
+
+* `setLimits` now used to set any kind of restriction to memory usage. It replaces `numberOfConnections` and `limitStorage`. Now, also number of processed messages per second or the amount of processed information can be limited, so that the app will not get stuck after receiving too many messages.
+
+* `onClose` callback added to the `openPage` function. It allows to specify actions to be taken when a WebSocket connection is closed (user closes the page).
+
+* `getPort` added as a function and as a method of class `App` to query for a port number of the running app.
+
+* `sendData` now handles the NAs properly.
+
+* Issue with failing to establish a WebSocket connection to a complex address fixed.
+
 # jrc 0.4.0
 
 * `allowedDirectories` argument is added to the `openPage` function (and also the corresponding function and method `allowDirectories`).

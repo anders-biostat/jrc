@@ -2,7 +2,7 @@
 % Please edit documentation in R/jrc.R
 \name{allowDirectories}
 \alias{allowDirectories}
-\title{Allow server to access files in the directory}
+\title{Allow server to access files in a directory}
 \usage{
 allowDirectories(dirs = NULL)
 }

@@ -85,6 +85,9 @@ to stop. You can always get the \code{App} object for the currently running app 
       These settings will apply for each new connection. To change memory usage for an existing session use method \code{setLimits}
       of class \code{\link{Session}}. For information about possible arguments, please, check \code{\link{setLimits}}.
    }
+   \item{\code{getPort()}}{
+      Returns number of the port which the running server listens to. After the app has been initialized, the port number cannot be changed.
+   }
 }
 }
 
