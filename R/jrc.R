@@ -60,7 +60,7 @@
 #'      the session. If the variable doesn't exist, throws an error. If \code{remove} is a vector of characters, removes
 #'      variables with these names from the session environment. One can add variables to the session environment,
 #'      get one back and remove variables with a single function call. Check \code{\link{setSessionVariables}},
-#'      \code{\link{getSessionVarilable}}, \code{\link{removeSessionVariables}} for more information.
+#'      \code{\link{getSessionVariable}}, \code{\link{removeSessionVariables}} for more information.
 #'   }
 #'  \item{\code{setLimits(limits)}}{
 #'       Sets limits for memory usage, number of simultaneously active connections and amount of messages processed per second. 
