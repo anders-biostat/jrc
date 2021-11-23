@@ -77,3 +77,27 @@ test_that("Methods of an object can be called", {
   
   closePage()
 })
+
+test_that("The correct 'this' object is used", {
+  openPage(allowedVariables = "thisName")
+  thisName <- "none"
+  
+  sendCommand("a = {name: 'a', b: {f: function() {jrc.sendData('thisName', this.name)}, c: {name: 'c'}, name: 'b'}}")
+  callFunction("a.b.f", wait = 3)
+  expect_equal(thisName, "b")
+  
+  callFunction("a.b.f", thisArg = "a.b.c", wait = 3)
+  expect_equal(thisName, "c")
+  
+  sendData("name", "w")
+  callFunction("a.b.f", thisArg = "window", wait = 3)
+  expect_equal(thisName, "w")
+  
+  thisName <- "none"
+  
+  sendCommand("f2 = function() {jrc.sendData('thisName', this.name)}")
+  callFunction("f2", wait = 3)
+  expect_equal(thisName, "w")
+  
+  closePage()
+})

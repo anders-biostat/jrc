@@ -23,20 +23,22 @@ jrc.ws.addEventListener( "open", function(event) {
 
 jrc.ws.addEventListener( "message", function(event) {
 	msg = JSON.parse( event.data );
-	if(msg[0] == "COM") {
-		eval(msg[1]);
+	for(el in msg) msg[el] = msg[el][0];
+
+	if(msg.type == "COM") {
+		eval(msg.com);
 		return;
 	}
-	if(msg[0] == "DATA") {
-		//msg[1] - variable name
-		//msg[2] - variable content
-		//msg[3] - keepAsVector ('TRUE' or 'FALSE')
-		if(msg[1] == undefined || !jrc.isValidName(msg[1])) {
-			console.log("DATA message with invalid variable name has been recieved: " + msg[1])
-			ws.send("warning('Invalid variable name: " + msg[1] + "')");
+	if(msg.type == "DATA") {
+		//msg.variableName - variable name
+		//msg.variable - variable content
+		//msg.keepAsVector - 'TRUE' or 'FALSE'
+		if(msg.variableName == undefined || !jrc.isValidName(msg.variableName)) {
+			console.log("DATA message with invalid variable name has been recieved: " + msg.variableName)
+			ws.send("warning('Invalid variable name: " + msg.variableName + "')");
 			return;
 		}
-		window[msg[1]] = JSON.parse(msg[2]);
+		window[msg.variableName] = JSON.parse(msg.variable);
 		// check if we also got `keepAsVector` parameter and it's false
 		turnToScalar = function(v) {
 			if(!v || (v.length === undefined && typeof v !== "object") || typeof v === "string") return v;
@@ -51,55 +53,62 @@ jrc.ws.addEventListener( "message", function(event) {
 			}
 			return v;
 		}
-		if(msg[3] == "FALSE") {
-			window[msg[1]] = turnToScalar(window[msg[1]]);			
+		if(!msg.keepAsVector) {
+			window[msg.variableName] = turnToScalar(window[msg.variableName]);			
 		}
 
-		if(window[msg[1]] && window[msg[1]].length && window[msg[1]][0]._row) {
+		if(window[msg.variableName] && window[msg.variableName].length && window[msg.variableName][0]._row) {
 			var converted = {}, rowname;
-			for(var i = 0; i < window[msg[1]].length; i++) {
-				rowname = window[msg[1]][i]._row;
-				delete window[msg[1]][i]._row;
-				converted[rowname] = window[msg[1]][i];
+			for(var i = 0; i < window[msg.variableName].length; i++) {
+				rowname = window[msg.variableName][i]._row;
+				delete window[msg.variableName][i]._row;
+				converted[rowname] = window[msg.variableName][i];
 			}
-			window[msg[1]] = converted;
+			window[msg.variableName] = converted;
 		}
 		return;
 	}
-	if(msg[0] == "HTML") {
-		document.body.innerHTML += msg[1];
+	if(msg.type == "HTML") {
+		document.body.innerHTML += msg.html;
 		return;
 	}
-	if(msg[0] == "FUN") {
-		//msg[1] - function name
-		//msg[2] - variable name
-		//msg[3] - thisArg
+	if(msg.type == "FUN") {
+		//msg.name - function name
+		//msg.assignTo - variable name
+		//msg.thisArg - apply to this
 		//___args___ - arguments 
 		
-		var fCall = msg[1].split("."),
+		var fCall = msg.name.split("."),
 			obj = window;
-		for(var i = 0; i < fCall.length; i++)
+		
+		for(var i = 0; i < fCall.length; i++){
+			if(i == fCall.length - 1)
+				self = obj;
 			obj = obj[fCall[i]];
+		}
 
-		self = window;
-		if(msg[3])
-			self = window[msg[3]];
+		if(msg.thisArg) {
+			var thisName = msg.thisArg.split(".");
+			self = window;
+			for(let i = 0; i < thisName.length; i++)
+				self = self[thisName[i]];
+		}
 
 		var ___tmp___ = obj.apply(self, window["___args___"]);
 
-		if(msg[2]) 
-			window[msg[2]] = ___tmp___;
+		if(msg.assignTo) 
+			window[msg.assignTo] = ___tmp___;
 
 		window["___args___"] = null;
 
 		return;
 	}
-	if(msg[0] == "ID") {
-		jrc.id = msg[1]
+	if(msg.type == "ID") {
+		jrc.id = msg.id
 		return;
 	}
-	console.log("Unknown message type: " + msg[0])
-	jrc.ws.send("warning('Unknown message type: " + msg[0] + "')");
+	console.log("Unknown message type: " + msg.type)
+	jrc.ws.send("warning('Unknown message type: " + msg.type + "')");
 } );
 jrc.ws.addEventListener( "close", function(event) { 
    window.close()

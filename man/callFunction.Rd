@@ -37,7 +37,7 @@ session IDs. If \code{NULL}, the function call will be sent to all currently act
 is referred to as \code{this} inside the function (e.g. in
 \code{someObject.myFunction()} function \code{myFunction} is a method of \code{someObject}).
 \code{thisArg} specifies object that will be known as \code{this} inside the function. If \code{NULL},
-the function will be applied to the global object (\code{window}).}
+the function will use its parent as \code{this} object (as it happens in JavaScript by default).}
 
 \item{...}{further arguments passed to \code{\link{sendData}}. It is used to send
 \code{arguments} to the web page.}
