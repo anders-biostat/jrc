@@ -16,7 +16,8 @@ openPage(
   connectionNumber = Inf,
   sessionVars = NULL,
   onStart = NULL,
-  onClose = NULL
+  onClose = NULL,
+  onlyServer = FALSE
 )
 }
 \arguments{
@@ -66,6 +67,8 @@ new web page with some default content.}
 \item{onClose}{A callback function that will be executed, when a connection is closed. This function gets a single
 argument, which is an object of class \code{\link{Session}}. General purpose of the function is to store session 
 variables if needed or in any other form to finalize user's interaction with the app.}
+
+\item{onlyServer}{If \code{TRUE}, then an app will initialise without trying to open a new page in a browser.}
 }
 \value{
 Object of class \code{\link{App}}.

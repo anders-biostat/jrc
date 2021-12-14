@@ -1151,6 +1151,7 @@ pkg.env <- new.env()
 #' @param onClose A callback function that will be executed, when a connection is closed. This function gets a single
 #' argument, which is an object of class \code{\link{Session}}. General purpose of the function is to store session 
 #' variables if needed or in any other form to finalize user's interaction with the app.
+#' @param onlyServer If \code{TRUE}, then an app will initialise without trying to open a new page in a browser.
 #' 
 #' @seealso \code{\link{closePage}}, \code{\link{setEnvironment}}, \code{\link{setLimits}}, \code{\link{allowVariables}},
 #' \code{\link{allowFunctions}}, \code{\link{setSessionVariables}}.
@@ -1164,7 +1165,8 @@ pkg.env <- new.env()
 #' @importFrom utils packageVersion
 openPage <- function(useViewer = TRUE, rootDirectory = NULL, startPage = NULL, port = NULL, browser = NULL,
                      allowedFunctions = NULL, allowedVariables = NULL, allowedDirectories = getwd(), 
-                     connectionNumber = Inf, sessionVars = NULL, onStart = NULL, onClose = NULL) {
+                     connectionNumber = Inf, sessionVars = NULL, onStart = NULL, onClose = NULL, 
+                     onlyServer = FALSE) {
   if(!is.null(pkg.env$app))
     closePage()
   
@@ -1173,7 +1175,8 @@ openPage <- function(useViewer = TRUE, rootDirectory = NULL, startPage = NULL, p
   pkg.env$app <- app
   app$setEnvironment(parent.frame())
   app$startServer(port)
-  app$openPage(useViewer, browser)
+  if(!onlyServer)
+    app$openPage(useViewer, browser)
   
   invisible(app)
 }
