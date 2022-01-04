@@ -1,3 +1,10 @@
+# jrc 0.5.1
+
+* `onlyServer` argument is added to the `openPage` function to prevent opening a browser tab.
+
+* Bug in the `thisArg` argument of the `callFunction` function is fixed.
+
+
 # jrc 0.5.0
 
 * `setLimits` now used to set any kind of restriction to memory usage. It replaces `numberOfConnections` and `limitStorage`. Now, also number of processed messages per second or the amount of processed information can be limited, so that the app will not get stuck after receiving too many messages.

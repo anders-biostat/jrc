@@ -1,8 +1,8 @@
 Package: jrc
 Type: Package
 Title: Exchange Commands Between R and 'JavaScript'
-Version: 0.5.0
-Date: 2021-09-13
+Version: 0.5.1
+Date: 2022-01-03
 Authors@R: c(
 	person("Svetlana", "Ovchinnikova", role = c("aut", "cre"), email = "s.ovchinnikova@zmbh.uni-heidelberg.de"),
 	person("Simon", "Anders", role = c("aut"), email = "sanders@fs.tum.de")
@@ -13,5 +13,6 @@ Imports: httpuv, jsonlite, utils, stringr, stringi, mime, R6, R.utils
 RoxygenNote: 7.1.2
 URL: https://github.com/anders-biostat/jrc
 BugReports: https://github.com/anders-biostat/jrc/issues
-Suggests: 
+Suggests:
     testthat
+Language: en-GB
