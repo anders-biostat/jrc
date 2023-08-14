@@ -2012,3 +2012,49 @@ getPort <- function() {
   
   pkg.env$app$getPort()
 }
+
+#' Listen to the server
+#' 
+#' When R session is not interactive, messages from the server are not processed automatically. In this case, one needs to 
+#' keep this function running.
+#' This function, is a wrapper around \code{\link[later]{run_now}} or \code{\link[httpuv]{service}}. It runs 
+#' the \code{\link[httpuv]{service}} in a loop with a specified condition.
+#' 
+#' @param time Time (in seconds), during which the R session should listen to the server. By default, the function runs until
+#' it is not interrupted (\code{time = Inf}).
+#' @param activeSessions The function runs, until there is at least one active session in the provided app. If there is only
+#' one active app, this argument can be set to \code{TRUE} for the same effect.
+#' @param condition Custom condition. This argument must be a function that returns \code{TRUE} or \code{FALSE}. R session will 
+#' listen to the server, while the condition function returns \code{TRUE}.
+#' 
+#' @importFrom httpuv service
+#' @export
+listen <- function(time = Inf, activeSessions = NULL, condition = NULL) {
+  if(!is.null(condition)) {
+    if(!is.function(condition))
+      stop("'codition' must be a function that return TRUE or FALSE")
+    message("Condition function is defined. Listening to the server, while it is TRUE")
+    while(isTRUE(condition()))
+      httpuv::service()
+  } else if(!is.null(activeSessions)) {
+    if(isTRUE(activeSessions)) {
+      if(is.null(pkg.env$app)) 
+        stop("There is no opened page. Please, use 'openPage()' function to create one.")
+      activeSessions <- pkg.env$app
+    }
+    if(!("App" %in% class(activeSessions)))
+      stop("'activeSessions' must be a jrc app or 'TRUE'")
+    
+    message("'activeSessions' is defined. Listening to the server, until the app has at least one active session.")
+    while(length(activeSessions$getSessionIds()) > 0)
+      httpuv::service()    
+  } else {
+    if(!is.numeric(time))
+      stop("'time' must be a number")
+    
+    t <- Sys.time()
+    
+    while(difftime(Sys.time(), t, units = "secs") < time)
+      httpuv::service()
+  }
+}
