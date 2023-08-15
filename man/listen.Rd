@@ -22,3 +22,8 @@ keep this function running.
 This function, is a wrapper around \code{\link[later]{run_now}} or \code{\link[httpuv]{service}}. It runs 
 the \code{\link[httpuv]{service}} in a loop with a specified condition.
 }
+\examples{
+\donttest{openPage()
+listen(time = 3)}
+
+}

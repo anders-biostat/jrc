@@ -1,5 +1,41 @@
 ## Resubmission
 
+This is a new version of the package. It adds a function to block the R session and listen to the server. It is needed to use jrc apps, for instance, in Jupyter Notebooks or in other cases, where the R
+session is not interactive.
+
+## Test environments
+* local Ubuntu 23.04, R 4.2.2
+* win-builder: R-devel
+* Ubuntu Linux 20.04.1 LTS, R-release; Windows Server 2022, R-devel, 64 bit; Fedora Linux, R-devel (R-hub)
+
+There were 2 NOTES when testing the package for Windows with R-hub:
+
+```
+* checking for non-standard things in the check directory ... NOTE
+Found the following files/directories:
+  ''NULL''
+
+* checking for detritus in the temp directory ... NOTE
+Found the following files/directories:
+  'lastMiKTeXException'
+```
+
+Both are mentioned in the open issues of the rhub package.
+
+
+There was 1 NOTE when testing on R-hub (for both Ubuntu and Fedora), which, as far as I undertood, is caused by some promlem on the side of the testing platform.
+
+```
+* checking HTML version of manual ... NOTE
+Skipping checking HTML validation: no command 'tidy' found
+```
+
+For these two checks, _R_CHECK_DONTTEST_EXAMPLES_ was also set to false, since all the examples require presence of a browser. All other checks include running the examples.
+
+# Previous cran-comments
+
+## Resubmission
+
 This is a new version of the package. It introduces minor changes in functionality and also fixes a
 couple of existing issues. See NEWS.md for more details.
 
@@ -15,8 +51,6 @@ Found the following files/directories:
   'lastMiKTeXException'
 ```
 However, I can't neither understand the cause of this note, nor reproduce it locally on my Windows machine (Windows 10, 64 bit, R 4.0.2, MiKTeX installed). There are also no notes or errors in the win-builder. So I decided to submit the package anyway.
-
-# Previous cran-comments
 
 ## Resubmission
 This is a new version of the package. It introduces minor changes in functionality and also fixes a

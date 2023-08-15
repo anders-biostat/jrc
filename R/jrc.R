@@ -2027,6 +2027,10 @@ getPort <- function() {
 #' @param condition Custom condition. This argument must be a function that returns \code{TRUE} or \code{FALSE}. R session will 
 #' listen to the server, while the condition function returns \code{TRUE}.
 #' 
+#' @examples
+#' \donttest{openPage()
+#' listen(time = 3)}
+#' 
 #' @importFrom httpuv service
 #' @export
 listen <- function(time = Inf, activeSessions = NULL, condition = NULL) {

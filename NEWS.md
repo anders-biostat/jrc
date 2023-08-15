@@ -1,3 +1,7 @@
+# jrc 0.6.0
+
+* `listen` function (a wrapper around `httpuv::service` or `later::run_now`) added to for more convenient use of JRC apps in Jupyter Notebooks.
+
 # jrc 0.5.1
 
 * `onlyServer` argument is added to the `openPage` function to prevent opening a browser tab.
