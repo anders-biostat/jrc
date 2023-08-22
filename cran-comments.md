@@ -33,9 +33,7 @@ Found the following files/directories:
 Found the following files/directories:
   'lastMiKTeXException'
 ```
-
 Both are mentioned in the open issues of the rhub package.
-
 
 There was 1 NOTE when testing on R-hub (for both Ubuntu and Fedora), which, as far as I undertood, is caused by some promlem on the side of the testing platform.
 
@@ -43,8 +41,6 @@ There was 1 NOTE when testing on R-hub (for both Ubuntu and Fedora), which, as f
 * checking HTML version of manual ... NOTE
 Skipping checking HTML validation: no command 'tidy' found
 ```
-
-For these two checks, _R_CHECK_DONTTEST_EXAMPLES_ was also set to false, since all the examples require presence of a browser. All other checks include running the examples.
 
 # Previous cran-comments
 
