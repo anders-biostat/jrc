@@ -3,6 +3,20 @@
 This is a new version of the package. It adds a function to block the R session and listen to the server. It is needed to use jrc apps, for instance, in Jupyter Notebooks or in other cases, where the R
 session is not interactive.
 
+Regarding the auto-check issues at https://www.stats.ox.ac.uk/pub/bdr/donttest/jrc.out
+  
+I've replaced all donttest examples with dontrun and added a comment for the users that one needs a browser to run the code.
+
+  >> Dear CRAN Team,
+
+  >> The error occurs because all the provided examples require a browser to be installed, which is not always the case for automated checks. The examples are checked locally (manually in RStudio and with R CMD check --run-donttest). Also, they work when testing for Windows platform with rhub, or check_win_devel. In other cases (rhub Ubuntu and Fedora) I set _R_CHECK_DONTTEST_EXAMPLES_=FALSE. Should I do something like that for the CRAN auto-check? Or maybe replace donttest with dontrun?
+
+  >Yes, please \dontrun{} plus an exlplanation as comment.
+  >Or perhaps protect by if(interactive()) in case it should only run for users working interactivbely with the package.
+
+  >Best,
+  >Uwe Ligges
+
 ## Test environments
 * local Ubuntu 23.04, R 4.2.2
 * win-builder: R-devel

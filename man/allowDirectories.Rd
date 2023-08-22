@@ -28,6 +28,7 @@ This function is a wrapper around \code{allowDirectories} method of class \code{
 }
 \examples{
 \dontrun{
+# to run this example an installed web browser is required
 openPage()
 # The directories must exist
 allowDirectories(c("~/directory1", "../anotherDirectory"))

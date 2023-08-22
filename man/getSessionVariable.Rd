@@ -25,7 +25,9 @@ This function
 is a wrapper around method \code{sessionVariables} of the class \code{\link{Session}}.
 }
 \examples{
-\donttest{f <- function(x) {x * 3}
+\dontrun{
+# to run this example an installed web browser is required
+f <- function(x) {x * 3}
 openPage(allowedFunctions = "f", allowedVariables = "k", sessionVars = list(k = 0))
 k <- getSessionVariable("k")
 getPage()$openPage(FALSE)

@@ -22,7 +22,8 @@ is used.
 This function is a wrapper around \code{setEnvironment} method of class \code{\link{App}}.
 }
 \examples{
-\donttest{
+\dontrun{
+# to run this example an installed web browser is required
 openPage()
 e <- new.env()
 setEnvironment(e)

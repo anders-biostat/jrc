@@ -82,7 +82,8 @@ This function is a wrapper
 around \code{callFunction} method of class \code{\link{Session}}.
 }
 \examples{
-\donttest{
+\dontrun{
+# to run this example an installed web browser is required
 openPage()
 callFunction("alert", list("Some alertText"))
 callFunction("Math.random", assignTo = "randomNumber")

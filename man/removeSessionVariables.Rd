@@ -18,7 +18,9 @@ a variable with the same name from the outer app environment (see \code{\link{se
 is a wrapper around method \code{sessionVariables} of the class \code{\link{Session}}.
 }
 \examples{
-\donttest{openPage(allowedVariables = "k", sessionVars = list(k = 10))
+\dontrun{
+# to run this example an installed web browser is required
+openPage(allowedVariables = "k", sessionVars = list(k = 10))
 
 k <- -1
 getPage()$openPage(FALSE)

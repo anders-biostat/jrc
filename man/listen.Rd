@@ -23,7 +23,9 @@ This function, is a wrapper around \code{\link[later]{run_now}} or \code{\link[h
 the \code{\link[httpuv]{service}} in a loop with a specified condition.
 }
 \examples{
-\donttest{openPage()
+\dontrun{
+# to run this example an installed web browser is required
+openPage()
 listen(time = 3)}
 
 }

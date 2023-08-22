@@ -21,7 +21,9 @@ can be called from a web page without manual confirmation on the R side.
 This function is a wrapper around \code{allowFunctions} method of class \code{\link{App}}.
 }
 \examples{
-\donttest{openPage()
+\dontrun{
+# to run this example an installed web browser is required
+openPage()
 allowFunctions(c("myFunction1", "print", "someObject$method"))
 funs <- allowFunctions()
 closePage()}

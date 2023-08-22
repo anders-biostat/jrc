@@ -59,7 +59,9 @@ Its arguments are:
 }
 }
 \examples{
-\donttest{openPage()
+\dontrun{
+# to run this example an installed web browser is required
+openPage()
 x <- 1:100
 sendData("x", x)
 sendCommand("console.log(x);")

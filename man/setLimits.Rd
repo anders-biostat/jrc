@@ -73,7 +73,8 @@ method \code{setLimits} of a corresponding object of class \code{\link{Session}}
 This function is a wrapper for method \code{setLimits} of class \code{\link{App}}.
 }
 \examples{
-\donttest{
+\dontrun{
+# to run this example an installed web browser is required
 openPage()
 setLimits(maxCon = 10)
 setLimits(varSize = 10 * 1024^2)
